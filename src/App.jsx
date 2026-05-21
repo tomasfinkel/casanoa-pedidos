@@ -1,4 +1,4 @@
-mport { useState, useCallback } from "react";
+import { useState, useCallback } from "react";
 import * as XLSX from "xlsx";
 
 const C = {bg:"#1C1612",card:"#F5F0E8",cardDark:"#EDE6D6",dark:"#1A1410",muted:"#6B6158",terracotta:"#B85C38",gold:"#C9A252",green:"#3A5A3C",border:"#2E2820",borderCard:"#DDD5C0",surface:"#242018",cream:"#F5F0E8",creamDim:"#B8AD96",red:"#C0392B",orange:"#E67E22"};
@@ -737,7 +737,9 @@ const realizados=lista.filter(g=>pedidosRealizados[g.prov]?.realizado);
 const transfFiltradas=transferencias.filter(t=>{
 const mb=t.nombre.toLowerCase().includes(busq.toLowerCase())||nCorto(t.prov).toLowerCase().includes(busq.toLowerCase());
 const sf=sucursal==="C"?t.hacia===SUC1:sucursal==="A"?t.hacia===SUC2:true;
-return mb&&sf;
+// Excluir si el proveedor ya fue pedido
+const yaPedido=pedidosRealizados[t.prov]?.realizado;
+return mb&&sf&&!yaPedido;
 });
 
 return(
@@ -936,8 +938,8 @@ return(
 <div style={{background:"#27AE6015",border:"1px solid #27AE6030",borderRadius:10,padding:"10px 14px",marginBottom:10,fontSize:11,color:"#27AE60",fontWeight:600}}>
 Productos donde conviene pedir UN solo bulto y dividirlo entre las dos sucursales
 </div>
-{conjuntos.length===0&&<div style={{textAlign:"center",padding:"30px",color:C.creamDim}}>No hay pedidos conjuntos sugeridos</div>}
-{conjuntos.map((t,i)=>(
+{conjuntos.filter(t=>!pedidosRealizados[t.prov]?.realizado).length===0&&<div style={{textAlign:"center",padding:"30px",color:C.creamDim}}>No hay pedidos conjuntos sugeridos</div>}
+{conjuntos.filter(t=>!pedidosRealizados[t.prov]?.realizado).map((t,i)=>(
 <div key={t.cod+i} style={{background:C.card,borderRadius:12,border:"1.5px solid #27AE60",padding:"12px 14px",marginBottom:8}}>
 <div style={{fontSize:12,fontWeight:700,color:C.dark,marginBottom:4}}>{t.nombre}</div>
 <div style={{fontSize:10,color:C.muted,marginBottom:6}}>{nCorto(t.prov)} · bulto x{t.bulto}</div>
