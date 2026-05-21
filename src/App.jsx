@@ -2,7 +2,6 @@ import { useState, useCallback } from "react";
 import * as XLSX from "xlsx";
 
 const C = {bg:"#1C1612",card:"#F5F0E8",cardDark:"#EDE6D6",dark:"#1A1410",muted:"#6B6158",terracotta:"#B85C38",gold:"#C9A252",green:"#3A5A3C",border:"#2E2820",borderCard:"#DDD5C0",surface:"#242018",cream:"#F5F0E8",creamDim:"#B8AD96",red:"#C0392B",orange:"#E67E22"};
-
 const SUC1 = "Castex";
 const SUC2 = "Rep. Arabe Siria 2990";
 
@@ -74,7 +73,7 @@ const headers=raw[hr];
 return raw.slice(hr+1).filter(r=>r&&r[0]).map(r=>{const o={};headers.forEach((h,i)=>{o[String(h)]=r[i]??"";});return o;});
 }
 
-function ventasMap(ventas){
+function mkVM(ventas){
 const vm={};
 ventas.forEach(v=>{
 const keys=Object.keys(v);
@@ -86,17 +85,16 @@ if(cod)vm[cod]=parseFloat(v[vendKey])||0;
 return vm;
 }
 
-function calcular(stockC,ventasC,stockA,ventasA,diasV,soloQuiebre){
-const vmC=ventasMap(ventasC);
-const vmA=ventasMap(ventasA);
-// Unir stocks de ambas sucursales
+// sucursal: "C"=Castex, "A"=Siria, ""=Ambas
+function calcular(stockC,ventasC,stockA,ventasA,diasV,soloQuiebre,sucursal){
+const vmC=mkVM(ventasC);
+const vmA=mkVM(ventasA);
 const mapaC={};
 stockC.forEach(p=>{mapaC[String(p["Código Producto"]||"").trim()]=p;});
 const mapaA={};
 stockA.forEach(p=>{mapaA[String(p["Código Producto"]||"").trim()]=p;});
-// Procesar todos los productos
 const codigos=new Set([...Object.keys(mapaC),...Object.keys(mapaA)]);
-const resultados=[];
+const res=[];
 codigos.forEach(cod=>{
 const pC=mapaC[cod];
 const pA=mapaA[cod];
@@ -105,37 +103,76 @@ if(!p)return;
 const ean=String(p["Código Barra"]||"").trim();
 const nombre=String(p["Producto"]||"").trim();
 const prov=String(p["Proveedor"]||"SIN PROVEEDOR").trim()||"SIN PROVEEDOR";
-// Stock total de ambas sucursales
+if(!nombre)return;
 const sRC=parseFloat((pC||{})["Stock Real"])||0;
 const sRA=parseFloat((pA||{})["Stock Real"])||0;
-const sR=sRC+sRA;
-const sI=parseFloat(p["Stock Ideal"])||0;
 const faltC=parseFloat((pC||{})["Ctd. Faltante"])||0;
 const faltA=parseFloat((pA||{})["Ctd. Faltante"])||0;
-const falt=faltC+faltA;
-const esQuiebre=sRC===0||sRA===0||falt>0;
-if(soloQuiebre){if(!esQuiebre||FRECUENCIAS[prov]===0)return;}
-else{if(!debeAparecer(prov,diasV))return;}
 const vendC=vmC[cod]||0;
 const vendA=vmA[cod]||0;
-const vend=vendC+vendA;
+
+// Calcular por sucursal seleccionada
+let sR,falt,vend;
+if(sucursal==="C"){sR=sRC;falt=faltC;vend=vendC;}
+else if(sucursal==="A"){sR=sRA;falt=faltA;vend=vendA;}
+else{sR=sRC+sRA;falt=faltC+faltA;vend=vendC+vendA;}
+
+const esQuiebre=sR===0||falt>0;
+if(soloQuiebre){if(!esQuiebre||FRECUENCIAS[prov]===0)return;}
+else{if(!debeAparecer(prov,diasV))return;}
+
 const frecProv=FRECUENCIAS[prov];
 const diasProy=(!soloQuiebre&&frecProv&&frecProv>0)?frecProv+3:diasV+3;
-const proy=Math.round((vend/diasV)*diasProy);
-const hP=Math.max(0,proy-sR);
-const cant=Math.max(falt,hP);
+const proy=diasV>0?Math.round((vend/diasV)*diasProy):0;
+const cant=Math.max(falt,Math.max(0,proy-sR));
 const bulto=getBulto(prov,ean,cod,nombre);
 let cantF=bulto?redondear(Math.round(cant),bulto):Math.round(cant);
 if(BULTO_MIN[prov]&&cantF>0&&cantF<BULTO_MIN[prov])cantF=BULTO_MIN[prov];
 if(BULTO_MAX[prov]&&cantF>BULTO_MAX[prov])cantF=BULTO_MAX[prov];
 if(cantF<=0&&!esQuiebre)return;
-// Transferencias posibles
-const transferDesde=TRANSF_C_A[cod]?SUC1:(TRANSF_A_C[cod]?SUC2:null);
-const cantTransf=TRANSF_C_A[cod]||TRANSF_A_C[cod]||0;
-// Stock por sucursal
-resultados.push({cod,ean,nombre,prov,sR,sRC,sRA,sI,falt,vend,vendC,vendA,proy,cant:cantF,bulto,esQuiebre,transferDesde,cantTransf});
+
+// Alertas de transferencia segun sucursal activa
+let transferDesde=null,cantTransf=0;
+if(sucursal==="C"&&TRANSF_A_C[cod]){transferDesde=SUC2;cantTransf=TRANSF_A_C[cod];}
+else if(sucursal==="A"&&TRANSF_C_A[cod]){transferDesde=SUC1;cantTransf=TRANSF_C_A[cod];}
+else if(!sucursal){
+if(TRANSF_C_A[cod]){transferDesde=SUC1;cantTransf=TRANSF_C_A[cod];}
+else if(TRANSF_A_C[cod]){transferDesde=SUC2;cantTransf=TRANSF_A_C[cod];}
+}
+
+res.push({cod,ean,nombre,prov,sR,sRC,sRA,falt,vend,vendC,vendA,proy,cant:cantF,bulto,esQuiebre,transferDesde,cantTransf});
 });
-return resultados.filter(p=>p.nombre);
+return res;
+}
+
+// Calcular solo transferencias posibles entre sucursales
+function calcularTransferencias(stockC,stockA){
+const mapaC={};
+stockC.forEach(p=>{mapaC[String(p["Código Producto"]||"").trim()]=p;});
+const mapaA={};
+stockA.forEach(p=>{mapaA[String(p["Código Producto"]||"").trim()]=p;});
+const res=[];
+Object.keys(TRANSF_C_A).forEach(cod=>{
+const pC=mapaC[cod];
+const pA=mapaA[cod];
+if(!pC||!pA)return;
+const nombre=String(pC["Producto"]||"").trim();
+const prov=String(pC["Proveedor"]||"").trim();
+const sRC=parseFloat(pC["Stock Real"])||0;
+const sRA=parseFloat(pA["Stock Real"])||0;
+if(nombre)res.push({cod,nombre,prov,sRC,sRA,desde:SUC1,hacia:SUC2,cant:TRANSF_C_A[cod]});
+});
+Object.keys(TRANSF_A_C).forEach(cod=>{
+const pC=mapaC[cod];
+const pA=mapaA[cod];
+if(!pC||!pA)return;
+const nombre=String(pC["Producto"]||"").trim();
+const prov=String(pC["Proveedor"]||"").trim();
+const sRC=parseFloat(pC["Stock Real"])||0;
+const sRA=parseFloat(pA["Stock Real"])||0;
+if(nombre)res.push({cod,nombre,prov,sRC,sRA,desde:SUC2,hacia:SUC1,cant:TRANSF_A_C[cod]});
+});
+return res.sort((a,b)=>b.cant-a.cant);
 }
 
 function agrupar(productos){
@@ -152,7 +189,7 @@ tieneTransf:items.some(i=>i.transferDesde),
 })).sort((a,b)=>b.items.length-a.items.length);
 }
 
-function mkOrden(g,cants,numOrden,sucursal){
+function mkOrden(g,cants,numOrden,sucLabel){
 const fecha=new Date().toLocaleDateString("es-AR");
 const lineas=g.items.map(p=>{
 const c=cants[p.cod]!==undefined?cants[p.cod]:p.cant;
@@ -160,11 +197,11 @@ const bi=p.bulto&&c>0?" ("+Math.round(c/p.bulto)+" bulto"+(Math.round(c/p.bulto)
 return "- "+p.nombre+": *"+c+" u.*"+bi;
 }).join("\n");
 const total=g.items.reduce((s,p)=>s+(cants[p.cod]!==undefined?cants[p.cod]:p.cant),0);
-const sucLabel=sucursal?"\n*Sucursal:* "+sucursal:"";
-return "*ORDEN DE COMPRA #"+numOrden+"*\n*Casa NOA* | "+fecha+sucLabel+"\n*Proveedor:* "+g.nombre+"\n"+"─".repeat(25)+"\n"+lineas+"\n"+"─".repeat(25)+"\n*Total: "+total+" unidades*\n\nGracias!";
+const sl=sucLabel?"\n*Sucursal:* "+sucLabel:"";
+return "*ORDEN DE COMPRA #"+numOrden+"*\n*Casa NOA* | "+fecha+sl+"\n*Proveedor:* "+g.nombre+"\n"+"─".repeat(25)+"\n"+lineas+"\n"+"─".repeat(25)+"\n*Total: "+total+" unidades*\n\nGracias!";
 }
 
-function UploadZone({label,icon,onFile,loaded,small}){
+function UploadZone({label,icon,onFile,loaded}){
 const handle=useCallback((file)=>{
 if(!file)return;
 const r=new FileReader();
@@ -172,25 +209,24 @@ r.onload=e=>{onFile(XLSX.read(e.target.result,{type:"array"}));};
 r.readAsArrayBuffer(file);
 },[onFile]);
 const id="inp"+label.replace(/[^a-z]/gi,"");
-const pad=small?"14px 10px":"22px 14px";
 return(
 <div onClick={()=>document.getElementById(id).click()}
-style={{border:"2px dashed "+(loaded?C.green:C.border),borderRadius:12,padding:pad,textAlign:"center",cursor:"pointer",background:loaded?"#3A5A3C12":C.surface,flex:1,minWidth:120}}>
+style={{border:"2px dashed "+(loaded?C.green:C.border),borderRadius:12,padding:"14px 10px",textAlign:"center",cursor:"pointer",background:loaded?"#3A5A3C12":C.surface,flex:1,minWidth:120}}>
 <input id={id} type="file" accept=".xlsx,.xls" style={{display:"none"}} onChange={e=>handle(e.target.files[0])}/>
-<div style={{fontSize:small?20:28,marginBottom:4}}>{loaded?"✅":icon}</div>
+<div style={{fontSize:22,marginBottom:4}}>{loaded?"✅":icon}</div>
 <div style={{fontSize:10,fontWeight:700,color:loaded?C.green:C.cream,marginBottom:2}}>{loaded?"Cargado":label}</div>
-{!small&&<div style={{fontSize:9,color:C.creamDim}}>{loaded?"Toca para cambiar":"Arrastra o toca"}</div>}
+<div style={{fontSize:9,color:C.creamDim}}>{loaded?"Toca para cambiar":"Arrastra o toca"}</div>
 </div>
 );
 }
 
-function Card({g,num,onCantChange,esAlerta,pedido,onMarcarPedido,numOrden,sucursal}){
+function Card({g,num,onCantChange,esAlerta,pedido,onMarcarPedido,numOrden,sucLabel}){
 const [open,setOpen]=useState(false);
 const [cants,setCants]=useState({});
 const [copiado,setCopiado]=useState(false);
 const [numWA,setNumWA]=useState("");
 const getC=(cod,def)=>cants[cod]!==undefined?cants[cod]:def;
-const orden=mkOrden(g,cants,numOrden,sucursal);
+const orden=mkOrden(g,cants,numOrden,sucLabel);
 const setCant=(cod,valor,bulto)=>{
 let n=parseInt(valor)||0;
 if(bulto&&n>0)n=redondear(n,bulto);
@@ -222,13 +258,13 @@ return(
 }
 
 return(
-<div style={{background:C.card,borderRadius:16,border:"1.5px solid "+(esAlerta?"#C0392B":g.tieneTransf?"#E67E22":C.borderCard),overflow:"hidden",marginBottom:10}}>
+<div style={{background:C.card,borderRadius:16,border:"1.5px solid "+(esAlerta?C.red:g.tieneTransf?C.orange:C.borderCard),overflow:"hidden",marginBottom:10}}>
 <div onClick={()=>setOpen(!open)} style={{padding:"13px 14px",display:"flex",alignItems:"center",gap:10,cursor:"pointer",background:open?C.cardDark:C.card}}>
 <div style={{background:esAlerta?C.red:C.terracotta,color:"#fff",borderRadius:8,width:26,height:26,display:"flex",alignItems:"center",justifyContent:"center",fontSize:esAlerta?14:11,fontWeight:800,flexShrink:0}}>{esAlerta?"!":num}</div>
 <div style={{flex:1,minWidth:0}}>
 <div style={{fontSize:13,fontWeight:700,color:C.dark,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{g.nombre}</div>
-<div style={{fontSize:10,color:esAlerta?C.red:C.muted,fontWeight:esAlerta?700:400}}>
-{esAlerta?"QUIEBRE - ":""}{g.tieneTransf&&!esAlerta?"⚠️ HAY TRANSFERENCIAS · ":""}{g.items.length} prod · {g.total} u.{g.frecDias&&!esAlerta?" · "+frecLabel(g.frecDias):""}
+<div style={{fontSize:10,color:esAlerta?C.red:g.tieneTransf?C.orange:C.muted,fontWeight:700}}>
+{esAlerta?"QUIEBRE · ":g.tieneTransf?"⚠️ HAY TRANSFERENCIAS · ":""}{g.items.length} prod · {g.total} u.{g.frecDias&&!esAlerta?" · "+frecLabel(g.frecDias):""}
 </div>
 </div>
 <div style={{display:"flex",gap:5,alignItems:"center",flexShrink:0}}>
@@ -264,35 +300,35 @@ return(
 <table style={{width:"100%",borderCollapse:"collapse",fontSize:11}}>
 <thead>
 <tr style={{background:C.dark}}>
-<th style={{padding:"7px 8px",color:"#fff",textAlign:"left",fontSize:10}}>Producto</th>
-<th style={{padding:"7px 8px",color:"#fff",textAlign:"center",fontSize:10}}>Cast.</th>
-<th style={{padding:"7px 8px",color:"#fff",textAlign:"center",fontSize:10}}>Siria</th>
-<th style={{padding:"7px 8px",color:"#fff",textAlign:"center",fontSize:10}}>Vend.</th>
-<th style={{padding:"7px 8px",color:"#fff",textAlign:"center",fontSize:10}}>Proy.</th>
-{g.tieneBulto&&<th style={{padding:"7px 8px",color:"#fff",textAlign:"center",fontSize:10}}>Bulto</th>}
-<th style={{padding:"7px 8px",color:C.gold,textAlign:"center",fontSize:10}}>PEDIR</th>
+<th style={{padding:"7px 8px",color:"#fff",textAlign:"left",fontSize:9}}>Producto</th>
+<th style={{padding:"7px 5px",color:"#fff",textAlign:"center",fontSize:9}}>Cast.</th>
+<th style={{padding:"7px 5px",color:"#fff",textAlign:"center",fontSize:9}}>Siria</th>
+<th style={{padding:"7px 5px",color:"#fff",textAlign:"center",fontSize:9}}>Vend.</th>
+<th style={{padding:"7px 5px",color:"#fff",textAlign:"center",fontSize:9}}>Proy.</th>
+{g.tieneBulto&&<th style={{padding:"7px 5px",color:"#fff",textAlign:"center",fontSize:9}}>Bulto</th>}
+<th style={{padding:"7px 5px",color:C.gold,textAlign:"center",fontSize:9}}>PEDIR</th>
 </tr>
 </thead>
 <tbody>
 {g.items.map((p,i)=>{
 const c=getC(p.cod,p.cant);
 const nb=p.bulto&&c>0?Math.round(c/p.bulto):null;
-const rowBg=p.sRC===0||p.sRA===0?"#FDECEA":i%2===0?C.card:C.cardDark;
+const rowBg=p.esQuiebre?"#FDECEA":i%2===0?C.card:C.cardDark;
 return(
 <tr key={p.cod} style={{background:rowBg}}>
-<td style={{padding:"6px 8px",maxWidth:160,fontSize:10}}>
-<div style={{color:C.dark,fontWeight:p.esQuiebre?700:400}}>{p.nombre}</div>
+<td style={{padding:"5px 8px",maxWidth:150,fontSize:10}}>
+<div style={{color:p.esQuiebre?C.red:C.dark,fontWeight:p.esQuiebre?700:400}}>{p.nombre}</div>
 {p.transferDesde&&<div style={{fontSize:9,color:C.orange,fontWeight:700,marginTop:1}}>⚠️ Transferir {p.cantTransf}u. desde {p.transferDesde}</div>}
 </td>
-<td style={{padding:"6px 4px",textAlign:"center",color:p.sRC===0?C.red:C.dark,fontWeight:p.sRC===0?800:400,fontSize:10}}>{p.sRC}</td>
-<td style={{padding:"6px 4px",textAlign:"center",color:p.sRA===0?C.red:C.dark,fontWeight:p.sRA===0?800:400,fontSize:10}}>{p.sRA}</td>
-<td style={{padding:"6px 4px",textAlign:"center",color:C.muted,fontSize:10}}>{p.vend}</td>
-<td style={{padding:"6px 4px",textAlign:"center",color:C.muted,fontSize:10}}>{p.proy}</td>
-{g.tieneBulto&&<td style={{padding:"6px 4px",textAlign:"center"}}>{p.bulto?<span style={{background:"#C9A25220",color:"#8B6914",borderRadius:6,padding:"2px 5px",fontSize:9,fontWeight:700}}>{"x"+p.bulto}</span>:<span style={{color:C.muted}}>-</span>}</td>}
-<td style={{padding:"5px 4px",textAlign:"center"}}>
+<td style={{padding:"5px 4px",textAlign:"center",color:p.sRC===0?C.red:C.dark,fontWeight:p.sRC===0?800:400,fontSize:10}}>{p.sRC}</td>
+<td style={{padding:"5px 4px",textAlign:"center",color:p.sRA===0?C.red:C.dark,fontWeight:p.sRA===0?800:400,fontSize:10}}>{p.sRA}</td>
+<td style={{padding:"5px 4px",textAlign:"center",color:C.muted,fontSize:10}}>{p.vend}</td>
+<td style={{padding:"5px 4px",textAlign:"center",color:C.muted,fontSize:10}}>{p.proy}</td>
+{g.tieneBulto&&<td style={{padding:"5px 4px",textAlign:"center"}}>{p.bulto?<span style={{background:"#C9A25220",color:"#8B6914",borderRadius:6,padding:"2px 5px",fontSize:9,fontWeight:700}}>{"x"+p.bulto}</span>:<span style={{color:C.muted}}>-</span>}</td>}
+<td style={{padding:"4px 4px",textAlign:"center"}}>
 <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
 <input type="number" min="0" value={c} onChange={e=>setCant(p.cod,e.target.value,p.bulto)}
-style={{width:50,textAlign:"center",border:"2px solid "+C.gold,borderRadius:7,padding:3,fontSize:12,fontWeight:800,color:C.dark,background:"#FFFDE7",outline:"none"}}/>
+style={{width:48,textAlign:"center",border:"2px solid "+C.gold,borderRadius:7,padding:3,fontSize:12,fontWeight:800,color:C.dark,background:"#FFFDE7",outline:"none"}}/>
 {p.bulto&&nb&&<span style={{fontSize:8,color:"#8B6914",fontWeight:600}}>{nb+"b"}</span>}
 </div>
 </td>
@@ -302,32 +338,21 @@ style={{width:50,textAlign:"center",border:"2px solid "+C.gold,borderRadius:7,pa
 </tbody>
 </table>
 </div>
-
 <div style={{margin:"10px 12px 0",background:C.dark,borderRadius:12,padding:12}}>
-<div style={{fontSize:9,fontWeight:700,color:C.gold,marginBottom:6,letterSpacing:1,textTransform:"uppercase"}}>Orden de Compra #{numOrden}{sucursal?" - "+sucursal:""}</div>
-<div style={{fontSize:11,color:C.cream,lineHeight:1.7,whiteSpace:"pre-wrap",maxHeight:130,overflowY:"auto"}}>{orden}</div>
+<div style={{fontSize:9,fontWeight:700,color:C.gold,marginBottom:6,letterSpacing:1,textTransform:"uppercase"}}>Orden #{numOrden}{sucLabel?" - "+sucLabel:""}</div>
+<div style={{fontSize:11,color:C.cream,lineHeight:1.7,whiteSpace:"pre-wrap",maxHeight:120,overflowY:"auto"}}>{orden}</div>
 </div>
-
 <div style={{margin:"8px 12px",display:"flex",gap:8,alignItems:"center"}}>
 <div style={{fontSize:11,color:C.muted,whiteSpace:"nowrap"}}>Nro. proveedor:</div>
 <input type="tel" placeholder="+54 11 1234-5678" value={numWA} onChange={e=>setNumWA(e.target.value)}
 style={{flex:1,border:"1px solid "+C.borderCard,borderRadius:8,padding:"7px 10px",fontSize:12,color:C.dark,outline:"none",background:C.card}}/>
 </div>
-
 <div style={{display:"flex",gap:6,padding:"0 12px 8px"}}>
-<button onClick={envWA} style={{flex:2,background:"#25D366",color:"#fff",border:"none",borderRadius:12,padding:"12px",fontSize:13,fontWeight:800,cursor:"pointer"}}>
-💬 Enviar por WhatsApp
-</button>
-<button onClick={copiar} style={{flex:1,background:copiado?C.green:C.cardDark,color:copiado?"#fff":C.dark,border:"1px solid "+C.borderCard,borderRadius:12,padding:"12px",fontSize:12,fontWeight:700,cursor:"pointer"}}>
-{copiado?"✓":"📋"}
-</button>
+<button onClick={envWA} style={{flex:2,background:"#25D366",color:"#fff",border:"none",borderRadius:12,padding:"12px",fontSize:13,fontWeight:800,cursor:"pointer"}}>💬 Enviar por WhatsApp</button>
+<button onClick={copiar} style={{flex:1,background:copiado?C.green:C.cardDark,color:copiado?"#fff":C.dark,border:"1px solid "+C.borderCard,borderRadius:12,padding:"12px",fontSize:12,fontWeight:700,cursor:"pointer"}}>{copiado?"✓":"📋"}</button>
 </div>
-
 <div style={{padding:"0 12px 12px"}}>
-<button onClick={()=>onMarcarPedido(g.prov,true)}
-style={{width:"100%",background:C.green,color:"#fff",border:"none",borderRadius:12,padding:"11px",fontSize:13,fontWeight:800,cursor:"pointer"}}>
-✓ Marcar como pedido
-</button>
+<button onClick={()=>onMarcarPedido(g.prov,true)} style={{width:"100%",background:C.green,color:"#fff",border:"none",borderRadius:12,padding:"11px",fontSize:13,fontWeight:800,cursor:"pointer"}}>✓ Marcar como pedido</button>
 </div>
 </>
 )}
@@ -337,13 +362,31 @@ style={{width:"100%",background:C.green,color:"#fff",border:"none",borderRadius:
 );
 }
 
+function TransfCard({t}){
+return(
+<div style={{background:C.card,borderRadius:12,border:"1.5px solid "+C.orange,padding:"10px 14px",marginBottom:8,display:"flex",alignItems:"center",gap:10}}>
+<div style={{fontSize:20}}>↔️</div>
+<div style={{flex:1,minWidth:0}}>
+<div style={{fontSize:12,fontWeight:700,color:C.dark,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{t.nombre}</div>
+<div style={{fontSize:10,color:C.muted}}>{nCorto(t.prov)}</div>
+</div>
+<div style={{textAlign:"right",flexShrink:0}}>
+<div style={{fontSize:12,fontWeight:800,color:C.orange}}>{t.cant} u.</div>
+<div style={{fontSize:9,color:C.muted}}>{t.desde} → {t.hacia==="Castex"?"Castex":"Siria"}</div>
+<div style={{fontSize:9,color:C.muted}}>Cast:{t.sRC} / Siria:{t.sRA}</div>
+</div>
+</div>
+);
+}
+
 export default function App(){
-const [wbS1,setWbS1]=useState(null); // Stock Castex
-const [wbV1,setWbV1]=useState(null); // Ventas Castex
-const [wbS2,setWbS2]=useState(null); // Stock Siria
-const [wbV2,setWbV2]=useState(null); // Ventas Siria
+const [wbS1,setWbS1]=useState(null);
+const [wbV1,setWbV1]=useState(null);
+const [wbS2,setWbS2]=useState(null);
+const [wbV2,setWbV2]=useState(null);
 const [grupos,setGrupos]=useState(null);
 const [alertas,setAlertas]=useState(null);
+const [transferencias,setTransferencias]=useState([]);
 const [busq,setBusq]=useState("");
 const [proc,setProc]=useState(false);
 const [err,setErr]=useState("");
@@ -358,6 +401,7 @@ const [sucursal,setSucursal]=useState("");
 
 const diasFinal=diasCustom?parseInt(diasCustom)||7:dias;
 const todosListos=wbS1&&wbV1&&wbS2&&wbV2;
+const sucLabel=sucursal==="C"?SUC1:sucursal==="A"?SUC2:"";
 
 const procesar=()=>{
 if(!todosListos){setErr("Subi los 4 archivos primero");return;}
@@ -366,29 +410,31 @@ setTimeout(()=>{
 try{
 const sC=parseStock(wbS1);const vC=parseVentas(wbV1);
 const sA=parseStock(wbS2);const vA=parseVentas(wbV2);
-const gNorm=agrupar(calcular(sC,vC,sA,vA,diasFinal,false).filter(p=>p.cant>0));
-const gAlert=agrupar(calcular(sC,vC,sA,vA,diasFinal,true).filter(p=>p.esQuiebre));
-setGrupos(gNorm);setAlertas(gAlert);
+const gNorm=agrupar(calcular(sC,vC,sA,vA,diasFinal,false,sucursal).filter(p=>p.cant>0));
+const gAlert=agrupar(calcular(sC,vC,sA,vA,diasFinal,true,sucursal).filter(p=>p.esQuiebre));
+const transf=calcularTransferencias(sC,sA);
+setGrupos(gNorm);setAlertas(gAlert);setTransferencias(transf);
 setTab(gAlert.length>0?"alertas":"pedidos");
-}catch(e){setErr("Error procesando los archivos. "+e.message);console.error(e);}
+}catch(e){setErr("Error: "+e.message);console.error(e);}
 setProc(false);
 },100);
 };
 
-const handleCantChange=(prov,nuevasCants)=>{setCantsPorProv(prev=>({...prev,[prov]:nuevasCants}));};
+const handleCantChange=(prov,nc)=>{setCantsPorProv(prev=>({...prev,[prov]:nc}));};
 const marcarPedido=(prov,estado)=>{
 setPedidosRealizados(prev=>({...prev,[prov]:estado}));
 if(estado)setOrdenCounter(n=>n+1);
 };
 
-const listaActual=tab==="alertas"?(alertas||[]):(grupos||[]);
+const listaActual=tab==="alertas"?(alertas||[]):tab==="transferencias"?[]:(grupos||[]);
 const lista=listaActual.filter(g=>{
 const mb=g.nombre.toLowerCase().includes(busq.toLowerCase())||g.prov.toLowerCase().includes(busq.toLowerCase());
-const mf=filtro==="todos"||(filtro==="bulto"&&g.tieneBulto)||(filtro==="link"&&(g.esLink||g.esWeb))||(filtro==="wa"&&!g.tieneBulto&&!g.esLink&&!g.esWeb)||(filtro==="transf"&&g.tieneTransf);
+const mf=filtro==="todos"||(filtro==="bulto"&&g.tieneBulto)||(filtro==="link"&&(g.esLink||g.esWeb))||(filtro==="wa"&&!g.tieneBulto&&!g.esLink&&!g.esWeb);
 return mb&&mf;
 });
 const pendientes=lista.filter(g=>!pedidosRealizados[g.prov]);
 const realizados=lista.filter(g=>pedidosRealizados[g.prov]);
+const transfFiltradas=transferencias.filter(t=>t.nombre.toLowerCase().includes(busq.toLowerCase())||nCorto(t.prov).toLowerCase().includes(busq.toLowerCase()));
 
 return(
 <div style={{minHeight:"100vh",background:C.bg,fontFamily:"Arial,sans-serif"}}>
@@ -406,7 +452,12 @@ return(
 <div style={{fontSize:15,fontWeight:700,color:C.red}}>{alertas.length}</div>
 <div style={{fontSize:7,color:C.red}}>Quiebre</div>
 </div>}
-{[["📦",grupos.filter(g=>g.tieneBulto).length,"Bulto"],["🌐",grupos.filter(g=>g.esLink||g.esWeb).length,"Web"],["💬",grupos.filter(g=>!g.tieneBulto&&!g.esLink&&!g.esWeb).length,"WA"]].map(([ic,v,lb])=>(
+<div style={{background:"#E67E2222",border:"1px solid #E67E2244",borderRadius:8,padding:"5px 7px",textAlign:"center"}}>
+<div style={{fontSize:11}}>↔️</div>
+<div style={{fontSize:15,fontWeight:700,color:C.orange}}>{transferencias.length}</div>
+<div style={{fontSize:7,color:C.orange}}>Transf.</div>
+</div>
+{[["📦",grupos.filter(g=>g.tieneBulto).length,"Bulto"],["💬",grupos.filter(g=>!g.tieneBulto&&!g.esLink&&!g.esWeb).length,"WA"]].map(([ic,v,lb])=>(
 <div key={lb} style={{background:C.surface,border:"1px solid "+C.border,borderRadius:8,padding:"5px 7px",textAlign:"center"}}>
 <div style={{fontSize:11}}>{ic}</div>
 <div style={{fontSize:15,fontWeight:700,color:C.cream}}>{v}</div>
@@ -424,38 +475,46 @@ return(
 <div style={{fontSize:20,fontWeight:700,color:C.cream,marginBottom:4}}>Subi los archivos de DUX</div>
 <div style={{fontSize:11,color:C.creamDim,marginBottom:16}}>Stock y ventas de cada sucursal por separado</div>
 
-{/* Sucursal Castex */}
 <div style={{marginBottom:12}}>
-<div style={{fontSize:11,fontWeight:700,color:C.gold,marginBottom:6,textTransform:"uppercase",letterSpacing:1}}>Sucursal {SUC1}</div>
+<div style={{fontSize:10,fontWeight:700,color:C.gold,marginBottom:6,textTransform:"uppercase",letterSpacing:1}}>Sucursal {SUC1}</div>
 <div style={{display:"flex",gap:8}}>
-<UploadZone label="Stock Castex" icon="📦" onFile={setWbS1} loaded={!!wbS1} small/>
-<UploadZone label="Ventas Castex" icon="📈" onFile={setWbV1} loaded={!!wbV1} small/>
+<UploadZone label="Stock Castex" icon="📦" onFile={setWbS1} loaded={!!wbS1}/>
+<UploadZone label="Ventas Castex" icon="📈" onFile={setWbV1} loaded={!!wbV1}/>
+</div>
+</div>
+<div style={{marginBottom:16}}>
+<div style={{fontSize:10,fontWeight:700,color:C.gold,marginBottom:6,textTransform:"uppercase",letterSpacing:1}}>Sucursal {SUC2}</div>
+<div style={{display:"flex",gap:8}}>
+<UploadZone label="Stock Siria" icon="📦" onFile={setWbS2} loaded={!!wbS2}/>
+<UploadZone label="Ventas Siria" icon="📈" onFile={setWbV2} loaded={!!wbV2}/>
 </div>
 </div>
 
-{/* Sucursal Siria */}
-<div style={{marginBottom:16}}>
-<div style={{fontSize:11,fontWeight:700,color:C.gold,marginBottom:6,textTransform:"uppercase",letterSpacing:1}}>Sucursal {SUC2}</div>
-<div style={{display:"flex",gap:8}}>
-<UploadZone label="Stock Siria" icon="📦" onFile={setWbS2} loaded={!!wbS2} small/>
-<UploadZone label="Ventas Siria" icon="📈" onFile={setWbV2} loaded={!!wbV2} small/>
+<div style={{marginBottom:12}}>
+<div style={{fontSize:10,fontWeight:700,color:C.gold,marginBottom:8,textTransform:"uppercase",letterSpacing:1}}>Para que sucursal calcular?</div>
+<div style={{display:"flex",gap:8,marginBottom:10}}>
+{[["","Ambas"],["C",SUC1],["A",SUC2]].map(([v,lb])=>(
+<div key={v} onClick={()=>setSucursal(v)}
+style={{flex:1,background:sucursal===v?C.terracotta:C.surface,border:"2px solid "+(sucursal===v?C.terracotta:C.border),borderRadius:12,padding:"10px 6px",textAlign:"center",cursor:"pointer"}}>
+<div style={{fontSize:12,fontWeight:800,color:sucursal===v?"#fff":C.cream}}>{lb}</div>
+</div>
+))}
 </div>
 </div>
 
-{/* Dias */}
 <div style={{marginBottom:16}}>
-<div style={{fontSize:11,fontWeight:700,color:C.gold,marginBottom:8,textTransform:"uppercase",letterSpacing:1}}>Cuantos dias tienen las ventas?</div>
+<div style={{fontSize:10,fontWeight:700,color:C.gold,marginBottom:8,textTransform:"uppercase",letterSpacing:1}}>Cuantos dias tienen las ventas?</div>
 <div style={{display:"flex",gap:8,marginBottom:10,flexWrap:"wrap"}}>
 {[[7,"7 dias","Semanal"],[15,"15 dias","Quincenal"],[30,"30 dias","Mensual"],[60,"60 dias","Bimestral"]].map(([d,label,sub])=>(
 <div key={d} onClick={()=>{setDias(d);setDiasCustom("");}}
 style={{flex:1,minWidth:70,background:(dias===d&&!diasCustom)?C.terracotta:C.surface,border:"2px solid "+((dias===d&&!diasCustom)?C.terracotta:C.border),borderRadius:12,padding:"10px 4px",textAlign:"center",cursor:"pointer"}}>
-<div style={{fontSize:13,fontWeight:800,color:(dias===d&&!diasCustom)?"#fff":C.cream}}>{label}</div>
+<div style={{fontSize:12,fontWeight:800,color:(dias===d&&!diasCustom)?"#fff":C.cream}}>{label}</div>
 <div style={{fontSize:9,color:(dias===d&&!diasCustom)?"rgba(255,255,255,0.8)":C.creamDim,marginTop:1}}>{sub}</div>
 </div>
 ))}
 </div>
 <div style={{display:"flex",gap:8,alignItems:"center"}}>
-<div style={{fontSize:11,color:C.creamDim,whiteSpace:"nowrap"}}>O escribi los dias exactos:</div>
+<div style={{fontSize:10,color:C.creamDim,whiteSpace:"nowrap"}}>O dias exactos:</div>
 <input type="number" min="1" max="365" placeholder="ej: 20" value={diasCustom}
 onChange={e=>{setDiasCustom(e.target.value);setDias(0);}}
 style={{width:80,border:"1px solid "+C.border,borderRadius:8,padding:"7px 10px",background:diasCustom?C.terracotta:C.surface,color:diasCustom?"#fff":C.cream,fontSize:13,fontWeight:700,outline:"none",textAlign:"center"}}/>
@@ -473,53 +532,58 @@ style={{width:"100%",background:!todosListos?C.border:C.terracotta,color:"#fff",
 
 {grupos&&(
 <>
-<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:10}}>
-<div onClick={()=>setTab("alertas")} style={{background:tab==="alertas"?"#C0392B22":C.surface,border:"1.5px solid "+(tab==="alertas"?"#C0392B":C.border),borderRadius:14,padding:"12px 14px",cursor:"pointer",textAlign:"center"}}>
-<div style={{fontSize:18,marginBottom:2}}>⚠️</div>
-<div style={{fontSize:18,fontWeight:800,color:tab==="alertas"?C.red:C.cream}}>{alertas?alertas.length:0}</div>
-<div style={{fontSize:10,color:tab==="alertas"?C.red:C.creamDim,fontWeight:700}}>Quiebres de stock</div>
-<div style={{fontSize:9,color:C.muted,marginTop:2}}>Pedir urgente</div>
+{/* Tabs */}
+<div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:6,marginBottom:10}}>
+<div onClick={()=>setTab("alertas")} style={{background:tab==="alertas"?"#C0392B22":C.surface,border:"1.5px solid "+(tab==="alertas"?"#C0392B":C.border),borderRadius:12,padding:"10px 8px",cursor:"pointer",textAlign:"center"}}>
+<div style={{fontSize:16,marginBottom:1}}>⚠️</div>
+<div style={{fontSize:16,fontWeight:800,color:tab==="alertas"?C.red:C.cream}}>{alertas?alertas.length:0}</div>
+<div style={{fontSize:9,color:tab==="alertas"?C.red:C.creamDim,fontWeight:700}}>Quiebres</div>
 </div>
-<div onClick={()=>setTab("pedidos")} style={{background:tab==="pedidos"?C.terracotta+"22":C.surface,border:"1.5px solid "+(tab==="pedidos"?C.terracotta:C.border),borderRadius:14,padding:"12px 14px",cursor:"pointer",textAlign:"center"}}>
-<div style={{fontSize:18,marginBottom:2}}>📋</div>
-<div style={{fontSize:18,fontWeight:800,color:tab==="pedidos"?C.terracotta:C.cream}}>{grupos?grupos.length:0}</div>
-<div style={{fontSize:10,color:tab==="pedidos"?C.terracotta:C.creamDim,fontWeight:700}}>Pedido normal</div>
-<div style={{fontSize:9,color:C.muted,marginTop:2}}>Periodo de {diasFinal} dias</div>
+<div onClick={()=>setTab("pedidos")} style={{background:tab==="pedidos"?C.terracotta+"22":C.surface,border:"1.5px solid "+(tab==="pedidos"?C.terracotta:C.border),borderRadius:12,padding:"10px 8px",cursor:"pointer",textAlign:"center"}}>
+<div style={{fontSize:16,marginBottom:1}}>📋</div>
+<div style={{fontSize:16,fontWeight:800,color:tab==="pedidos"?C.terracotta:C.cream}}>{grupos?grupos.length:0}</div>
+<div style={{fontSize:9,color:tab==="pedidos"?C.terracotta:C.creamDim,fontWeight:700}}>Pedidos{sucLabel?" - "+sucLabel:""}</div>
+</div>
+<div onClick={()=>setTab("transferencias")} style={{background:tab==="transferencias"?"#E67E2222":C.surface,border:"1.5px solid "+(tab==="transferencias"?C.orange:C.border),borderRadius:12,padding:"10px 8px",cursor:"pointer",textAlign:"center"}}>
+<div style={{fontSize:16,marginBottom:1}}>↔️</div>
+<div style={{fontSize:16,fontWeight:800,color:tab==="transferencias"?C.orange:C.cream}}>{transferencias.length}</div>
+<div style={{fontSize:9,color:tab==="transferencias"?C.orange:C.creamDim,fontWeight:700}}>Transferir</div>
 </div>
 </div>
 
-{Object.values(pedidosRealizados).filter(Boolean).length>0&&(
+{Object.values(pedidosRealizados).filter(Boolean).length>0&&tab!=="transferencias"&&(
 <div style={{background:"#3A5A3C15",border:"1px solid #3A5A3C40",borderRadius:12,padding:"10px 14px",marginBottom:10,fontSize:12,color:C.green,fontWeight:700}}>
 ✅ {Object.values(pedidosRealizados).filter(Boolean).length} pedidos realizados hoy
 </div>
 )}
 
-{/* Selector sucursal para orden */}
-<div style={{background:C.surface,borderRadius:12,padding:"10px 14px",marginBottom:8,border:"1px solid "+C.border}}>
-<div style={{fontSize:10,color:C.gold,fontWeight:700,marginBottom:6,textTransform:"uppercase",letterSpacing:1}}>Sucursal para la orden de compra:</div>
-<div style={{display:"flex",gap:6}}>
-{[["","Ambas"],[SUC1,SUC1],[SUC2,"Rep. Arabe Siria"]].map(([v,lb])=>(
-<button key={v} onClick={()=>setSucursal(v)}
-style={{flex:1,background:sucursal===v?C.gold:C.surface,color:sucursal===v?C.dark:C.creamDim,border:"1px solid "+(sucursal===v?C.gold:C.border),borderRadius:20,padding:"6px 8px",fontSize:10,fontWeight:600,cursor:"pointer"}}>
-{lb}
-</button>
-))}
-</div>
-</div>
-
+{tab!=="transferencias"&&(
 <div style={{display:"flex",gap:6,marginBottom:8,flexWrap:"wrap"}}>
-{[["todos","Todos"],["bulto","Bulto"],["link","Web"],["wa","WhatsApp"],["transf","⚠️ Transferir"]].map(([v,lb])=>(
+{[["todos","Todos"],["bulto","Bulto"],["link","Web"],["wa","WhatsApp"]].map(([v,lb])=>(
 <button key={v} onClick={()=>setFiltro(v)} style={{background:filtro===v?C.terracotta:C.surface,color:filtro===v?"#fff":C.creamDim,border:"1px solid "+(filtro===v?C.terracotta:C.border),borderRadius:20,padding:"6px 12px",fontSize:10,fontWeight:600,cursor:"pointer"}}>{lb}</button>
 ))}
 </div>
+)}
 
 <div style={{background:C.surface,borderRadius:12,display:"flex",alignItems:"center",padding:"9px 12px",gap:8,border:"1px solid "+C.border,marginBottom:10}}>
 <span style={{opacity:0.4,color:C.cream,fontSize:13}}>🔍</span>
-<input value={busq} onChange={e=>setBusq(e.target.value)} placeholder="Buscar proveedor..."
+<input value={busq} onChange={e=>setBusq(e.target.value)} placeholder={tab==="transferencias"?"Buscar producto...":"Buscar proveedor..."}
 style={{border:"none",background:"transparent",flex:1,fontSize:13,color:C.cream,outline:"none"}}/>
 {busq&&<button onClick={()=>setBusq("")} style={{border:"none",background:"none",cursor:"pointer",color:C.creamDim}}>X</button>}
 </div>
 
+{/* Tab Transferencias */}
+{tab==="transferencias"&&(
+<>
+<div style={{background:"#E67E2215",border:"1px solid #E67E2230",borderRadius:10,padding:"10px 14px",marginBottom:10,fontSize:11,color:C.orange,fontWeight:600}}>
+Estos productos se pueden mover entre sucursales sin pedir al proveedor
+</div>
+{transfFiltradas.length===0&&<div style={{textAlign:"center",padding:"30px",color:C.creamDim}}>No hay transferencias posibles</div>}
+{transfFiltradas.map((t,i)=><TransfCard key={t.cod+i} t={t}/>)}
+</>
+)}
+
+{/* Tab Alertas y Pedidos */}
 {tab==="alertas"&&alertas&&alertas.length===0&&(
 <div style={{background:"#3A5A3C15",border:"1px solid #3A5A3C40",borderRadius:14,padding:"24px",textAlign:"center",marginBottom:10}}>
 <div style={{fontSize:36,marginBottom:8}}>✅</div>
@@ -527,23 +591,23 @@ style={{border:"none",background:"transparent",flex:1,fontSize:13,color:C.cream,
 </div>
 )}
 
-{pendientes.map((g,i)=>(
+{tab!=="transferencias"&&pendientes.map((g,i)=>(
 <Card key={g.prov} g={g} num={i+1} onCantChange={handleCantChange}
 esAlerta={tab==="alertas"} pedido={false}
-onMarcarPedido={marcarPedido} numOrden={ordenCounter+i} sucursal={sucursal}/>
+onMarcarPedido={marcarPedido} numOrden={ordenCounter+i} sucLabel={sucLabel}/>
 ))}
 
-{realizados.length>0&&(
+{tab!=="transferencias"&&realizados.length>0&&(
 <>
 <div style={{fontSize:11,fontWeight:700,color:C.green,margin:"12px 0 6px",letterSpacing:1,textTransform:"uppercase"}}>Ya pedidos hoy</div>
 {realizados.map(g=>(
 <Card key={g.prov} g={g} num={0} onCantChange={handleCantChange}
-esAlerta={false} pedido={true} onMarcarPedido={marcarPedido} numOrden={0} sucursal={sucursal}/>
+esAlerta={false} pedido={true} onMarcarPedido={marcarPedido} numOrden={0} sucLabel={sucLabel}/>
 ))}
 </>
 )}
 
-<button onClick={()=>{setGrupos(null);setAlertas(null);setWbS1(null);setWbV1(null);setWbS2(null);setWbV2(null);setBusq("");setFiltro("todos");setCantsPorProv({});setPedidosRealizados({});}}
+<button onClick={()=>{setGrupos(null);setAlertas(null);setTransferencias([]);setWbS1(null);setWbV1(null);setWbS2(null);setWbV2(null);setBusq("");setFiltro("todos");setCantsPorProv({});setPedidosRealizados({});}}
 style={{width:"100%",background:"transparent",color:C.creamDim,border:"1px solid "+C.border,borderRadius:14,padding:12,fontSize:13,fontWeight:600,cursor:"pointer",marginTop:14,marginBottom:32}}>
 Cargar nuevos archivos
 </button>
