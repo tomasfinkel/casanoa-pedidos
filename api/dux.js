@@ -1,4 +1,7 @@
-export default async function handler(req, res) {
+const https = require('https');
+const url = require('url');
+
+module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type');
@@ -13,16 +16,40 @@ export default async function handler(req, res) {
   if (!token) return res.status(401).json({ error: 'Token requerido' });
   if (!endpoint) return res.status(400).json({ error: 'Endpoint requerido' });
 
-  const url = new URL('https://erp.duxsoftware.com.ar/WSERP/rest/services/' + endpoint);
-  Object.entries(params).forEach(([k, v]) => url.searchParams.append(k, v));
+  const baseUrl = 'https://erp.duxsoftware.com.ar/WSERP/rest/services/' + endpoint;
+  const urlObj = new url.URL(baseUrl);
+  Object.entries(params).forEach(([k, v]) => urlObj.searchParams.append(k, v));
 
-  try {
-    const resp = await fetch(url.toString(), {
-      headers: { 'Authorization': token, 'Content-Type': 'application/json' }
+  return new Promise((resolve) => {
+    const options = {
+      hostname: urlObj.hostname,
+      path: urlObj.pathname + urlObj.search,
+      method: 'GET',
+      headers: {
+        'Authorization': token,
+        'Content-Type': 'application/json'
+      }
+    };
+
+    const proxyReq = https.request(options, (proxyRes) => {
+      let data = '';
+      proxyRes.on('data', chunk => data += chunk);
+      proxyRes.on('end', () => {
+        try {
+          const json = JSON.parse(data);
+          res.status(proxyRes.statusCode).json(json);
+        } catch(e) {
+          res.status(500).json({ error: 'Parse error', raw: data.substring(0, 200) });
+        }
+        resolve();
+      });
     });
-    const data = await resp.json();
-    return res.status(resp.status).json(data);
-  } catch (e) {
-    return res.status(500).json({ error: e.message });
-  }
-}
+
+    proxyReq.on('error', (e) => {
+      res.status(500).json({ error: e.message });
+      resolve();
+    });
+
+    proxyReq.end();
+  });
+};
