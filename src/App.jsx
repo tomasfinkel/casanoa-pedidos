@@ -203,20 +203,26 @@ const vdA=vmA?vmA[cod]||0:0;
 // Si vmC/vmA son venta diaria, usarlos directo; si no, dividir por dias
 const proyC=Math.round(vdC*diasProy);
 const proyA=Math.round(vdA*diasProy);
-// Sobrante y faltante
-const sobranteC=sRC-proyC;
-const sobranteA=sRA-proyA;
-const faltanteC=proyC-sRC;
-const faltanteA=proyA-sRA;
-// Castex tiene de mas, Siria necesita
+// Sobrante real: lo que queda despues de cubrir la proyeccion propia
+const sobranteC=Math.max(0,sRC-proyC);
+const sobranteA=Math.max(0,sRA-proyA);
+const faltanteC=Math.max(0,proyC-sRC);
+const faltanteA=Math.max(0,proyA-sRA);
+// Castex tiene sobrante real y Siria necesita
 if(sobranteC>=MIN_TRANSF&&faltanteA>=MIN_TRANSF){
+// Transferir lo minimo entre lo que sobra y lo que falta
+// Y verificar que Castex no quede en negativo
 const cant=Math.min(sobranteC,faltanteA);
-if(cant>=MIN_TRANSF)res.push({cod,nombre,prov,sRC,sRA,proyC,proyA,desde:SUC1,hacia:SUC2,cant:Math.round(cant)});
+const castexDespues=sRC-cant;
+if(cant>=MIN_TRANSF&&castexDespues>=0)
+res.push({cod,nombre,prov,sRC,sRA,proyC,proyA,desde:SUC1,hacia:SUC2,cant:Math.round(cant)});
 }
-// Siria tiene de mas, Castex necesita
+// Siria tiene sobrante real y Castex necesita
 else if(sobranteA>=MIN_TRANSF&&faltanteC>=MIN_TRANSF){
 const cant=Math.min(sobranteA,faltanteC);
-if(cant>=MIN_TRANSF)res.push({cod,nombre,prov,sRC,sRA,proyC,proyA,desde:SUC2,hacia:SUC1,cant:Math.round(cant)});
+const siriaDespues=sRA-cant;
+if(cant>=MIN_TRANSF&&siriaDespues>=0)
+res.push({cod,nombre,prov,sRC,sRA,proyC,proyA,desde:SUC2,hacia:SUC1,cant:Math.round(cant)});
 }
 });
 return res.sort((a,b)=>b.cant-a.cant);
@@ -350,14 +356,14 @@ callback(url);
 },"image/png");
 }
 
-function UploadZone({label,icon,onFile,loaded}){
+function UploadZone({label,icon,onFile,loaded,uid}){
 const handle=useCallback((file)=>{
 if(!file)return;
 const r=new FileReader();
 r.onload=e=>{onFile(XLSX.read(e.target.result,{type:"array"}));};
 r.readAsArrayBuffer(file);
 },[onFile]);
-const id="inp"+label.replace(/[^a-z]/gi,"");
+const id="inp"+(uid||"")+label.replace(/[^a-z]/gi,"");
 return(
 <div onClick={()=>document.getElementById(id).click()}
 style={{border:"2px dashed "+(loaded?C.green:C.border),borderRadius:12,padding:"14px 10px",textAlign:"center",cursor:"pointer",background:loaded?"#3A5A3C12":C.surface,flex:1,minWidth:120}}>
@@ -592,6 +598,7 @@ const [err,setErr]=useState("");
 const [filtro,setFiltro]=useState("todos");
 const [dias,setDias]=useState(7);
 const [diasCustom,setDiasCustom]=useState("");
+const [diasCorriente,setDiasCorriente]=useState(String(new Date().getDate()));
 const [cantsPorProv,setCantsPorProv]=useState({});
 const [tab,setTab]=useState("alertas");
 const [pedidosRealizados,setPedidosRealizados]=useState(()=>{
@@ -625,7 +632,7 @@ setTimeout(()=>{
 try{
 const sC=wbS1?parseStock(wbS1):[];
 const sA=wbS2?parseStock(wbS2):[];
-const diaActual=new Date().getDate();
+const diaActual=parseInt(diasCorriente)||new Date().getDate();
 const vC5=wbV1a?parseVentas(wbV1a):null;
 const vC30=wbV1b?parseVentas(wbV1b):null;
 const vC51=wbV1c?parseVentas(wbV1c):null;
@@ -658,7 +665,7 @@ try{
 const sC=wbS1?parseStock(wbS1):[];
 const sA=wbS2?parseStock(wbS2):[];
 // Ventas Castex - combinar los que haya
-const diaActual=new Date().getDate();
+const diaActual=parseInt(diasCorriente)||new Date().getDate();
 const vC5=wbV1a?parseVentas(wbV1a):null;
 const vC30=wbV1b?parseVentas(wbV1b):null;
 const vC51=wbV1c?parseVentas(wbV1c):null;
@@ -772,30 +779,41 @@ return(
 <div style={{marginBottom:14,background:C.bg,borderRadius:12,padding:12,border:"1px solid "+C.border}}>
 <div style={{fontSize:10,fontWeight:700,color:C.gold,marginBottom:8,textTransform:"uppercase",letterSpacing:1}}>Sucursal {SUC1}</div>
 <div style={{display:"flex",gap:8,marginBottom:8}}>
-<UploadZone label="Stock Castex" icon="📦" onFile={setWbS1} loaded={!!wbS1}/>
+<UploadZone label="Stock Castex" icon="📦" onFile={setWbS1} loaded={!!wbS1} uid="c0"/>
 </div>
 <div style={{fontSize:9,color:C.creamDim,marginBottom:6,fontWeight:600}}>VENTAS (subí las que tengas):</div>
 <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-<UploadZone label="Últimos 5 días" icon="📈" onFile={setWbV1a} loaded={!!wbV1a}/>
-<UploadZone label="Mes corriente" icon="📈" onFile={setWbV1d} loaded={!!wbV1d}/>
-<UploadZone label="Mes anterior" icon="📈" onFile={setWbV1b} loaded={!!wbV1b}/>
-<UploadZone label="Ant.+Corriente" icon="📈" onFile={setWbV1c} loaded={!!wbV1c}/>
+<UploadZone label="Últimos 5 días" icon="📈" onFile={setWbV1a} loaded={!!wbV1a} uid="c1"/>
+<UploadZone label="Mes corriente" icon="📈" onFile={setWbV1d} loaded={!!wbV1d} uid="c2"/>
+<UploadZone label="Mes anterior" icon="📈" onFile={setWbV1b} loaded={!!wbV1b} uid="c3"/>
+<UploadZone label="Ant.+Corriente" icon="📈" onFile={setWbV1c} loaded={!!wbV1c} uid="c4"/>
 </div>
 </div>
 {/* SIRIA */}
 <div style={{marginBottom:14,background:C.bg,borderRadius:12,padding:12,border:"1px solid "+C.border}}>
 <div style={{fontSize:10,fontWeight:700,color:C.gold,marginBottom:8,textTransform:"uppercase",letterSpacing:1}}>Sucursal {SUC2}</div>
 <div style={{display:"flex",gap:8,marginBottom:8}}>
-<UploadZone label="Stock Siria" icon="📦" onFile={setWbS2} loaded={!!wbS2}/>
+<UploadZone label="Stock Siria" icon="📦" onFile={setWbS2} loaded={!!wbS2} uid="a0"/>
 </div>
 <div style={{fontSize:9,color:C.creamDim,marginBottom:6,fontWeight:600}}>VENTAS (subí las que tengas):</div>
 <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-<UploadZone label="Últimos 5 días" icon="📈" onFile={setWbV2a} loaded={!!wbV2a}/>
-<UploadZone label="Mes corriente" icon="📈" onFile={setWbV2d} loaded={!!wbV2d}/>
-<UploadZone label="Mes anterior" icon="📈" onFile={setWbV2b} loaded={!!wbV2b}/>
-<UploadZone label="Ant.+Corriente" icon="📈" onFile={setWbV2c} loaded={!!wbV2c}/>
+<UploadZone label="Últimos 5 días" icon="📈" onFile={setWbV2a} loaded={!!wbV2a} uid="a1"/>
+<UploadZone label="Mes corriente" icon="📈" onFile={setWbV2d} loaded={!!wbV2d} uid="a2"/>
+<UploadZone label="Mes anterior" icon="📈" onFile={setWbV2b} loaded={!!wbV2b} uid="a3"/>
+<UploadZone label="Ant.+Corriente" icon="📈" onFile={setWbV2c} loaded={!!wbV2c} uid="a4"/>
 </div>
 </div>
+{(wbV1d||wbV2d)&&(
+<div style={{background:C.bg,borderRadius:10,padding:"10px 12px",marginBottom:10,border:"1px solid "+C.border}}>
+<div style={{fontSize:10,fontWeight:700,color:C.gold,marginBottom:6}}>¿Cuántos días van del mes corriente?</div>
+<div style={{display:"flex",gap:8,alignItems:"center"}}>
+<input type="number" min="1" max="31" value={diasCorriente}
+onChange={e=>setDiasCorriente(e.target.value)}
+style={{width:70,border:"1px solid "+C.border,borderRadius:8,padding:"7px 10px",background:C.terracotta,color:"#fff",fontSize:14,fontWeight:700,outline:"none",textAlign:"center"}}/>
+<div style={{fontSize:11,color:C.creamDim}}>días van del mes corriente</div>
+</div>
+</div>
+)}
 <div style={{marginBottom:12}}>
 <div style={{fontSize:10,fontWeight:700,color:C.gold,marginBottom:8,textTransform:"uppercase",letterSpacing:1}}>Para que sucursal calcular?</div>
 <div style={{display:"flex",gap:8}}>
