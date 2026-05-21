@@ -116,6 +116,75 @@ function mkOrden(g,cants,numOrden){
   return "*ORDEN DE COMPRA #"+numOrden+"*\n*Casa NOA* | "+fecha+"\n*Proveedor:* "+g.nombre+"\n"+"─".repeat(25)+"\n"+lineas+"\n"+"─".repeat(25)+"\n*Total: "+total+" unidades*\n\nGracias!";
 }
 
+
+function descargarImagenOrden(g, cants, numOrden) {
+  const fecha = new Date().toLocaleDateString('es-AR');
+  const items = g.items.map(p => {
+    const c = cants[p.cod] !== undefined ? cants[p.cod] : p.cant;
+    const bi = p.bulto && c > 0 ? ' (' + Math.round(c/p.bulto) + ' bulto' + (Math.round(c/p.bulto)!==1?'s':'') + ' x' + p.bulto + ')' : '';
+    return {nombre: p.nombre, cant: c, bultoInfo: bi, sinStock: p.sR === 0};
+  });
+  const lineH = 30;
+  const padding = 24;
+  const width = 640;
+  const headerH = 110;
+  const footerH = 70;
+  const height = headerH + (items.length * lineH) + footerH + padding * 2;
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#1A1410';
+  ctx.fillRect(0, 0, width, height);
+  ctx.fillStyle = '#B85C38';
+  ctx.fillRect(0, 0, width, headerH);
+  ctx.fillStyle = '#FFFFFF';
+  ctx.font = 'bold 24px Arial';
+  ctx.fillText('CASA NOA', padding, 38);
+  ctx.font = '11px Arial';
+  ctx.fillStyle = '#E8C97A';
+  ctx.fillText('ORDEN DE COMPRA #' + numOrden, padding, 58);
+  ctx.fillStyle = 'rgba(255,255,255,0.9)';
+  ctx.font = '13px Arial';
+  ctx.fillText('Proveedor: ' + g.nombre, padding, 80);
+  ctx.fillText('Fecha: ' + fecha, padding, 98);
+  items.forEach((item, i) => {
+    const y = headerH + padding + (i * lineH);
+    ctx.fillStyle = item.sinStock ? '#3A1510' : (i%2===0 ? '#242018' : '#1C1612');
+    ctx.fillRect(0, y, width, lineH);
+    ctx.fillStyle = '#2E2820';
+    ctx.fillRect(0, y + lineH - 1, width, 1);
+    ctx.fillStyle = item.sinStock ? '#E07070' : '#F5F0E8';
+    ctx.font = item.sinStock ? 'bold 12px Arial' : '12px Arial';
+    const maxN = 58;
+    const nombre = item.nombre.length > maxN ? item.nombre.substring(0, maxN) + '...' : item.nombre;
+    ctx.fillText(nombre, padding, y + 20);
+    ctx.fillStyle = '#E8C97A';
+    ctx.font = 'bold 13px Arial';
+    ctx.textAlign = 'right';
+    ctx.fillText(item.cant + ' u.' + item.bultoInfo, width - padding, y + 20);
+    ctx.textAlign = 'left';
+  });
+  const fy = headerH + padding + (items.length * lineH);
+  ctx.fillStyle = '#B85C38';
+  ctx.fillRect(0, fy, width, footerH);
+  ctx.fillStyle = '#FFFFFF';
+  ctx.font = 'bold 15px Arial';
+  const totalU = items.reduce((s, i) => s + i.cant, 0);
+  ctx.fillText('Total: ' + totalU + ' unidades (' + items.length + ' productos)', padding, fy + 30);
+  ctx.fillStyle = 'rgba(255,255,255,0.6)';
+  ctx.font = '11px Arial';
+  ctx.fillText('Casa NOA - Tienda Natural', padding, fy + 52);
+  canvas.toBlob(blob => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'OrdenCompra_' + g.nombre.replace(/[^a-zA-Z0-9]/g,'_') + '_' + numOrden + '.png';
+    a.click();
+    URL.revokeObjectURL(url);
+  }, 'image/png');
+}
+
 function UploadZone({label,icon,onFile,loaded}){
   const handle=useCallback((file)=>{
     if(!file)return;
@@ -264,12 +333,18 @@ function Card({g,num,onCantChange,esAlerta,pedido,onMarcarPedido,numOrden}){
               </div>
 
               {/* Botones */}
-              <div style={{display:"flex",gap:6,padding:"0 12px 8px"}}>
+              <div style={{display:"flex",gap:6,padding:"0 12px 6px"}}>
                 <button onClick={envWA} style={{flex:2,background:"#25D366",color:"#fff",border:"none",borderRadius:12,padding:"12px",fontSize:13,fontWeight:800,cursor:"pointer"}}>
                   💬 Enviar por WhatsApp
                 </button>
                 <button onClick={copiar} style={{flex:1,background:copiado?C.green:C.cardDark,color:copiado?"#fff":C.dark,border:"1px solid "+C.borderCard,borderRadius:12,padding:"12px",fontSize:12,fontWeight:700,cursor:"pointer"}}>
                   {copiado?"✓":"📋"}
+                </button>
+              </div>
+              <div style={{padding:"0 12px 8px"}}>
+                <button onClick={()=>descargarImagenOrden(g,cants,numOrden)}
+                  style={{width:"100%",background:"#1A1410",color:C.gold,border:"1px solid "+C.border,borderRadius:12,padding:"11px",fontSize:13,fontWeight:700,cursor:"pointer"}}>
+                  🖼️ Descargar imagen de la orden
                 </button>
               </div>
 
