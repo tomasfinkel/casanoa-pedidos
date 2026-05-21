@@ -76,14 +76,13 @@ return raw.slice(hr+1).filter(r=>r&&r[0]).map(r=>{const o={};headers.forEach((h,
 }
 
 // Combina multiples exports de ventas ponderando por dias
-function combinarVentas(v5d,v30d,v51d){
-// Construir mapa de ventas ponderado
-// Si tenemos multiples periodos, calculamos venta diaria de cada uno y promediamos
+function combinarVentas(v5d,v30d,v51d,vCorr,diasCorr){
 const maps=[];
 if(v5d){const vm=mkVM(v5d);maps.push({vm,dias:5});}
 if(v30d){const vm=mkVM(v30d);maps.push({vm,dias:30});}
 if(v51d){const vm=mkVM(v51d);maps.push({vm,dias:51});}
-if(maps.length===0)return{vm:{},dias:1};
+if(vCorr&&diasCorr){const vm=mkVM(vCorr);maps.push({vm,dias:diasCorr});}
+if(maps.length===0)return{vm:null,dias:1,esVentaDiaria:false};
 // Obtener todos los codigos
 const codigos=new Set(maps.flatMap(m=>Object.keys(m.vm)));
 const vmFinal={};
@@ -100,7 +99,6 @@ ventaDiaria+=(v/dias)*(pesos[i]/pesoTotal);
 });
 vmFinal[cod]=ventaDiaria; // guardamos venta DIARIA
 });
-// Dias representativos = promedio ponderado de dias
 const diasRep=Math.round(maps.reduce((s,{dias},i)=>s+dias*(pesos[i]/pesoTotal),0));
 return{vm:vmFinal,dias:diasRep,esVentaDiaria:true};
 }
@@ -150,11 +148,11 @@ if(soloQuiebre){if(!esQuiebre||FRECUENCIAS[prov]===0)return;}
 else{if(!debeAparecer(prov,diasV))return;}
 const frecProv=FRECUENCIAS[prov];
 const diasProy=(!soloQuiebre&&frecProv&&frecProv>0)?frecProv+3:diasV+3;
-// Calcular venta diaria combinada si hay multiples periodos
+// Calcular venta diaria combinada
 let ventaDiaria;
+const vdC=ventasDiariaC?ventasDiariaC[cod]||0:0;
+const vdA=ventasDiariaA?ventasDiariaA[cod]||0:0;
 if(ventasDiariaC||ventasDiariaA){
-const vdC=ventasDiariaC?ventasDiariaC[cod]||0:diasV>0?vendC/diasV:0;
-const vdA=ventasDiariaA?ventasDiariaA[cod]||0:diasV>0?vendA/diasV:0;
 if(sucursal==="C")ventaDiaria=vdC;
 else if(sucursal==="A")ventaDiaria=vdA;
 else ventaDiaria=vdC+vdA;
@@ -181,35 +179,96 @@ res.push({cod,ean,nombre,prov,sR,sRC,sRA,falt,vend,vendC,vendA,proy,cant:cantF,b
 return res;
 }
 
-function calcularTransferencias(stockC,stockA){
+function calcularTransferencias(stockC,stockA,vmC,vmA,dias){
 const mapaC={};
 stockC.forEach(p=>{mapaC[String(p["Código Producto"]||"").trim()]=p;});
 const mapaA={};
 stockA.forEach(p=>{mapaA[String(p["Código Producto"]||"").trim()]=p;});
+const codigos=new Set([...Object.keys(mapaC),...Object.keys(mapaA)]);
 const res=[];
-// Castex -> Siria
-Object.entries(TRANSF_C_A).forEach(([cod,cant])=>{
-if(cant<MIN_TRANSF)return;
-const pC=mapaC[cod];const pA=mapaA[cod];
+codigos.forEach(cod=>{
+const pC=mapaC[cod];
+const pA=mapaA[cod];
 if(!pC||!pA)return;
 const nombre=String(pC["Producto"]||"").trim();
 const prov=String(pC["Proveedor"]||"").trim();
+if(!nombre)return;
 const sRC=parseFloat(pC["Stock Real"])||0;
 const sRA=parseFloat(pA["Stock Real"])||0;
-if(nombre)res.push({cod,nombre,prov,sRC,sRA,desde:SUC1,hacia:SUC2,cant});
-});
-// Siria -> Castex
-Object.entries(TRANSF_A_C).forEach(([cod,cant])=>{
-if(cant<MIN_TRANSF)return;
-const pC=mapaC[cod];const pA=mapaA[cod];
-if(!pC||!pA)return;
-const nombre=String(pC["Producto"]||"").trim();
-const prov=String(pC["Proveedor"]||"").trim();
-const sRC=parseFloat(pC["Stock Real"])||0;
-const sRA=parseFloat(pA["Stock Real"])||0;
-if(nombre)res.push({cod,nombre,prov,sRC,sRA,desde:SUC2,hacia:SUC1,cant});
+// Calcular proyeccion por sucursal
+const frecProv=FRECUENCIAS[prov];
+const diasProy=(frecProv&&frecProv>0)?frecProv+3:dias+3;
+const vdC=vmC?vmC[cod]||0:0;
+const vdA=vmA?vmA[cod]||0:0;
+// Si vmC/vmA son venta diaria, usarlos directo; si no, dividir por dias
+const proyC=Math.round(vdC*diasProy);
+const proyA=Math.round(vdA*diasProy);
+// Sobrante y faltante
+const sobranteC=sRC-proyC;
+const sobranteA=sRA-proyA;
+const faltanteC=proyC-sRC;
+const faltanteA=proyA-sRA;
+// Castex tiene de mas, Siria necesita
+if(sobranteC>=MIN_TRANSF&&faltanteA>=MIN_TRANSF){
+const cant=Math.min(sobranteC,faltanteA);
+if(cant>=MIN_TRANSF)res.push({cod,nombre,prov,sRC,sRA,proyC,proyA,desde:SUC1,hacia:SUC2,cant:Math.round(cant)});
+}
+// Siria tiene de mas, Castex necesita
+else if(sobranteA>=MIN_TRANSF&&faltanteC>=MIN_TRANSF){
+const cant=Math.min(sobranteA,faltanteC);
+if(cant>=MIN_TRANSF)res.push({cod,nombre,prov,sRC,sRA,proyC,proyA,desde:SUC2,hacia:SUC1,cant:Math.round(cant)});
+}
 });
 return res.sort((a,b)=>b.cant-a.cant);
+}
+
+function calcularPedidosConjuntos(stockC,stockA,vmC,vmA,dias){
+const mapaC={};
+stockC.forEach(p=>{mapaC[String(p["Código Producto"]||"").trim()]=p;});
+const mapaA={};
+stockA.forEach(p=>{mapaA[String(p["Código Producto"]||"").trim()]=p;});
+const codigos=new Set([...Object.keys(mapaC),...Object.keys(mapaA)]);
+const res=[];
+codigos.forEach(cod=>{
+const pC=mapaC[cod];
+const pA=mapaA[cod];
+if(!pC||!pA)return;
+const nombre=String(pC["Producto"]||"").trim();
+const prov=String(pC["Proveedor"]||"").trim();
+if(!nombre)return;
+const ean=String(pC["Código Barra"]||"").trim();
+const bulto=getBulto(prov,ean,cod,nombre);
+if(!bulto||bulto<=1)return; // Solo productos con bulto
+const sRC=parseFloat(pC["Stock Real"])||0;
+const sRA=parseFloat(pA["Stock Real"])||0;
+const frecProv=FRECUENCIAS[prov];
+const diasProy=(frecProv&&frecProv>0)?frecProv+3:dias+3;
+const vdC=vmC?vmC[cod]||0:0;
+const vdA=vmA?vmA[cod]||0:0;
+const proyC=Math.round(vdC*diasProy);
+const proyA=Math.round(vdA*diasProy);
+const necesitaC=Math.max(0,proyC-sRC);
+const necesitaA=Math.max(0,proyA-sRA);
+if(necesitaC<=0&&necesitaA<=0)return;
+const totalNecesita=necesitaC+necesitaA;
+if(totalNecesita<=0)return;
+// Ver cuantos bultos conviene pedir en total
+const bultosTotal=Math.ceil(totalNecesita/bulto);
+const cantTotal=bultosTotal*bulto;
+// Solo sugerir si con un solo bulto se cubre ambas sucursales
+// y si ambas necesitan algo
+if(necesitaC>0&&necesitaA>0&&bultosTotal>=1){
+// Distribucion: proporcional a lo que necesita cada una
+const distC=Math.round(cantTotal*(necesitaC/totalNecesita)/bulto)*bulto||bulto;
+const distA=cantTotal-distC;
+if(distA>=0)res.push({
+cod,nombre,prov,bulto,bultosTotal,cantTotal,
+sRC,sRA,proyC,proyA,necesitaC,necesitaA,
+distC:Math.round(distC),distA:Math.round(distA)
+});
+}
+});
+return res.sort((a,b)=>b.cantTotal-a.cantTotal);
 }
 
 function agrupar(productos){
@@ -489,7 +548,6 @@ style={{flex:1,border:"1px solid "+C.borderCard,borderRadius:8,padding:"7px 10px
 }
 
 function TransfCard({t,sucursal}){
-// Filtrar por sucursal seleccionada
 if(sucursal==="C"&&t.hacia!==SUC1)return null;
 if(sucursal==="A"&&t.hacia!==SUC2)return null;
 return(
@@ -498,11 +556,15 @@ return(
 <div style={{flex:1,minWidth:0}}>
 <div style={{fontSize:12,fontWeight:700,color:C.dark,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{t.nombre}</div>
 <div style={{fontSize:10,color:C.muted}}>{nCorto(t.prov)}</div>
-<div style={{fontSize:10,color:C.orange,fontWeight:600,marginTop:2}}>{t.desde==="Castex"?"Castex":"Siria"} → {t.hacia==="Castex"?"Castex":"Siria"}</div>
+<div style={{fontSize:10,color:C.orange,fontWeight:600,marginTop:2}}>
+{t.desde===SUC1?"Castex":"Siria"} → {t.hacia===SUC1?"Castex":"Siria"}
+</div>
+<div style={{fontSize:9,color:C.muted,marginTop:1}}>
+Stock Cast:{t.sRC} / Siria:{t.sRA} · Proy Cast:{t.proyC||0} / Siria:{t.proyA||0}
+</div>
 </div>
 <div style={{textAlign:"right",flexShrink:0}}>
-<div style={{fontSize:14,fontWeight:800,color:C.orange}}>{t.cant} u.</div>
-<div style={{fontSize:9,color:C.muted}}>Cast:{t.sRC} / Siria:{t.sRA}</div>
+<div style={{fontSize:16,fontWeight:800,color:C.orange}}>{t.cant} u.</div>
 </div>
 </div>
 );
@@ -513,15 +575,17 @@ const [wbS1,setWbS1]=useState(null); // Stock Castex
 const [wbV1a,setWbV1a]=useState(null); // Ventas Castex 5 dias
 const [wbV1b,setWbV1b]=useState(null); // Ventas Castex mes anterior
 const [wbV1c,setWbV1c]=useState(null); // Ventas Castex mes ant+corriente
+const [wbV1d,setWbV1d]=useState(null); // Ventas Castex mes corriente
 const [wbS2,setWbS2]=useState(null); // Stock Siria
 const [wbV2a,setWbV2a]=useState(null); // Ventas Siria 5 dias
 const [wbV2b,setWbV2b]=useState(null); // Ventas Siria mes anterior
 const [wbV2c,setWbV2c]=useState(null); // Ventas Siria mes ant+corriente
-// Dias correspondientes a cada tipo
-const DIAS_A=5,DIAS_B=30,DIAS_C=51; // 5d, 30d, ~21+30d
+const [wbV2d,setWbV2d]=useState(null); // Ventas Siria mes corriente
+const DIAS_A=5,DIAS_B=30,DIAS_C=51,DIAS_D=new Date().getDate();
 const [grupos,setGrupos]=useState(null);
 const [alertas,setAlertas]=useState(null);
 const [transferencias,setTransferencias]=useState([]);
+const [conjuntos,setConjuntos]=useState([]);
 const [busq,setBusq]=useState("");
 const [proc,setProc]=useState(false);
 const [err,setErr]=useState("");
@@ -548,8 +612,8 @@ const [ordenCounter,setOrdenCounter]=useState(1);
 const [sucursal,setSucursal]=useState("");
 
 const diasFinal=diasCustom?parseInt(diasCustom)||7:dias;
-const tieneC=wbS1&&(wbV1a||wbV1b||wbV1c);
-const tieneA=wbS2&&(wbV2a||wbV2b||wbV2c);
+const tieneC=wbS1&&(wbV1a||wbV1b||wbV1c||wbV1d);
+const tieneA=wbS2&&(wbV2a||wbV2b||wbV2c||wbV2d);
 const todosListos=tieneC||tieneA;
 const sucLabel=sucursal==="C"?SUC1:sucursal==="A"?SUC2:"";
 
@@ -561,19 +625,23 @@ setTimeout(()=>{
 try{
 const sC=wbS1?parseStock(wbS1):[];
 const sA=wbS2?parseStock(wbS2):[];
+const diaActual=new Date().getDate();
 const vC5=wbV1a?parseVentas(wbV1a):null;
 const vC30=wbV1b?parseVentas(wbV1b):null;
 const vC51=wbV1c?parseVentas(wbV1c):null;
-const combC=combinarVentas(vC5,vC30,vC51);
+const vCd=wbV1d?parseVentas(wbV1d):null;
+const combC=combinarVentas(vC5,vC30,vC51,vCd,diaActual);
 const vA5=wbV2a?parseVentas(wbV2a):null;
 const vA30=wbV2b?parseVentas(wbV2b):null;
 const vA51=wbV2c?parseVentas(wbV2c):null;
-const combA=combinarVentas(vA5,vA30,vA51);
+const vAd=wbV2d?parseVentas(wbV2d):null;
+const combA=combinarVentas(vA5,vA30,vA51,vAd,diaActual);
 const diasRep=combC.dias||combA.dias||diasFinal;
-const gNorm=agrupar(calcular(sC,[],sA,[],diasRep,false,v,combC.esVentaDiaria?combC.vm:null,combA.esVentaDiaria?combA.vm:null).filter(p=>p.cant>0));
-const gAlert=agrupar(calcular(sC,[],sA,[],diasRep,true,v,combC.esVentaDiaria?combC.vm:null,combA.esVentaDiaria?combA.vm:null).filter(p=>p.esQuiebre));
-const transf=calcularTransferencias(sC,sA);
-setGrupos(gNorm);setAlertas(gAlert);setTransferencias(transf);
+const gNorm=agrupar(calcular(sC,[],sA,[],diasRep,false,v,combC.vm,combA.vm).filter(p=>p.cant>0));
+const gAlert=agrupar(calcular(sC,[],sA,[],diasRep,true,v,combC.vm,combA.vm).filter(p=>p.esQuiebre));
+const transf=calcularTransferencias(sC,sA,combC.vm,combA.vm,diasRep);
+const conj=calcularPedidosConjuntos(sC,sA,combC.vm,combA.vm,diasRep);
+setGrupos(gNorm);setAlertas(gAlert);setTransferencias(transf);setConjuntos(conj);
 setCantsPorProv({});
 // No resetear pedidos realizados - se mantienen con su fecha
 setTab(gAlert.length>0?"alertas":"pedidos");
@@ -590,22 +658,23 @@ try{
 const sC=wbS1?parseStock(wbS1):[];
 const sA=wbS2?parseStock(wbS2):[];
 // Ventas Castex - combinar los que haya
+const diaActual=new Date().getDate();
 const vC5=wbV1a?parseVentas(wbV1a):null;
 const vC30=wbV1b?parseVentas(wbV1b):null;
 const vC51=wbV1c?parseVentas(wbV1c):null;
-const combC=combinarVentas(vC5,vC30,vC51);
-const vC=vC5||vC30||vC51?[]:[];
-// Ventas Siria - combinar los que haya
+const vCd=wbV1d?parseVentas(wbV1d):null;
+const combC=combinarVentas(vC5,vC30,vC51,vCd,diaActual);
 const vA5=wbV2a?parseVentas(wbV2a):null;
 const vA30=wbV2b?parseVentas(wbV2b):null;
 const vA51=wbV2c?parseVentas(wbV2c):null;
-const combA=combinarVentas(vA5,vA30,vA51);
-const vA=[];
+const vAd=wbV2d?parseVentas(wbV2d):null;
+const combA=combinarVentas(vA5,vA30,vA51,vAd,diaActual);
 const diasRep=combC.dias||combA.dias||diasFinal;
-const gNorm=agrupar(calcular(sC,vC,sA,vA,diasRep,false,sucursal,combC.esVentaDiaria?combC.vm:null,combA.esVentaDiaria?combA.vm:null).filter(p=>p.cant>0));
-const gAlert=agrupar(calcular(sC,vC,sA,vA,diasRep,true,sucursal,combC.esVentaDiaria?combC.vm:null,combA.esVentaDiaria?combA.vm:null).filter(p=>p.esQuiebre));
-const transf=calcularTransferencias(sC,sA);
-setGrupos(gNorm);setAlertas(gAlert);setTransferencias(transf);
+const gNorm=agrupar(calcular(sC,[],sA,[],diasRep,false,sucursal,combC.vm,combA.vm).filter(p=>p.cant>0));
+const gAlert=agrupar(calcular(sC,[],sA,[],diasRep,true,sucursal,combC.vm,combA.vm).filter(p=>p.esQuiebre));
+const transf=calcularTransferencias(sC,sA,combC.vm,combA.vm,diasRep);
+const conj=calcularPedidosConjuntos(sC,sA,combC.vm,combA.vm,diasRep);
+setGrupos(gNorm);setAlertas(gAlert);setTransferencias(transf);setConjuntos(conj);
 setTab(gAlert.length>0?"alertas":"pedidos");
 }catch(e){setErr("Error: "+e.message);console.error(e);}
 setProc(false);
@@ -708,6 +777,7 @@ return(
 <div style={{fontSize:9,color:C.creamDim,marginBottom:6,fontWeight:600}}>VENTAS (subí las que tengas):</div>
 <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
 <UploadZone label="Últimos 5 días" icon="📈" onFile={setWbV1a} loaded={!!wbV1a}/>
+<UploadZone label="Mes corriente" icon="📈" onFile={setWbV1d} loaded={!!wbV1d}/>
 <UploadZone label="Mes anterior" icon="📈" onFile={setWbV1b} loaded={!!wbV1b}/>
 <UploadZone label="Ant.+Corriente" icon="📈" onFile={setWbV1c} loaded={!!wbV1c}/>
 </div>
@@ -721,6 +791,7 @@ return(
 <div style={{fontSize:9,color:C.creamDim,marginBottom:6,fontWeight:600}}>VENTAS (subí las que tengas):</div>
 <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
 <UploadZone label="Últimos 5 días" icon="📈" onFile={setWbV2a} loaded={!!wbV2a}/>
+<UploadZone label="Mes corriente" icon="📈" onFile={setWbV2d} loaded={!!wbV2d}/>
 <UploadZone label="Mes anterior" icon="📈" onFile={setWbV2b} loaded={!!wbV2b}/>
 <UploadZone label="Ant.+Corriente" icon="📈" onFile={setWbV2c} loaded={!!wbV2c}/>
 </div>
@@ -766,7 +837,7 @@ style={{width:"100%",background:!todosListos?C.border:C.terracotta,color:"#fff",
 
 {grupos&&(
 <>
-<div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:6,marginBottom:10}}>
+<div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:6,marginBottom:10}}>
 <div onClick={()=>setTab("alertas")} style={{background:tab==="alertas"?"#C0392B22":C.surface,border:"1.5px solid "+(tab==="alertas"?"#C0392B":C.border),borderRadius:12,padding:"10px 8px",cursor:"pointer",textAlign:"center"}}>
 <div style={{fontSize:16,marginBottom:1}}>⚠️</div>
 <div style={{fontSize:16,fontWeight:800,color:tab==="alertas"?C.red:C.cream}}>{alertas?alertas.length:0}</div>
@@ -782,6 +853,11 @@ style={{width:"100%",background:!todosListos?C.border:C.terracotta,color:"#fff",
 <div style={{fontSize:16,fontWeight:800,color:tab==="transferencias"?C.orange:C.cream}}>{transfFiltradas.length}</div>
 <div style={{fontSize:9,color:tab==="transferencias"?C.orange:C.creamDim,fontWeight:700}}>Transferir</div>
 </div>
+<div onClick={()=>setTab("conjunto")} style={{background:tab==="conjunto"?"#27AE6022":C.surface,border:"1.5px solid "+(tab==="conjunto"?"#27AE60":C.border),borderRadius:12,padding:"10px 8px",cursor:"pointer",textAlign:"center"}}>
+<div style={{fontSize:16,marginBottom:1}}>🔗</div>
+<div style={{fontSize:16,fontWeight:800,color:tab==="conjunto"?"#27AE60":C.cream}}>{conjuntos.length}</div>
+<div style={{fontSize:9,color:tab==="conjunto"?"#27AE60":C.creamDim,fontWeight:700}}>Pedido conjunto</div>
+</div>
 </div>
 
 {Object.values(pedidosRealizados).filter(d=>d?.realizado).length>0&&tab!=="transferencias"&&(
@@ -790,7 +866,7 @@ style={{width:"100%",background:!todosListos?C.border:C.terracotta,color:"#fff",
 </div>
 )}
 
-{tab!=="transferencias"&&(
+{tab!=="transferencias"&&tab!=="conjunto"&&(
 <div style={{display:"flex",gap:6,marginBottom:8,flexWrap:"wrap"}}>
 {[["todos","Todos"],["bulto","Bulto"],["link","Web"],["wa","WhatsApp"]].map(([v,lb])=>(
 <button key={v} onClick={()=>setFiltro(v)} style={{background:filtro===v?C.terracotta:C.surface,color:filtro===v?"#fff":C.creamDim,border:"1px solid "+(filtro===v?C.terracotta:C.border),borderRadius:20,padding:"6px 12px",fontSize:10,fontWeight:600,cursor:"pointer"}}>{lb}</button>
@@ -833,6 +909,41 @@ return(
 </>
 )}
 
+{/* Tab Conjunto */}
+{tab==="conjunto"&&(
+<>
+<div style={{background:"#27AE6015",border:"1px solid #27AE6030",borderRadius:10,padding:"10px 14px",marginBottom:10,fontSize:11,color:"#27AE60",fontWeight:600}}>
+Productos donde conviene pedir UN solo bulto y dividirlo entre las dos sucursales
+</div>
+{conjuntos.length===0&&<div style={{textAlign:"center",padding:"30px",color:C.creamDim}}>No hay pedidos conjuntos sugeridos</div>}
+{conjuntos.map((t,i)=>(
+<div key={t.cod+i} style={{background:C.card,borderRadius:12,border:"1.5px solid #27AE60",padding:"12px 14px",marginBottom:8}}>
+<div style={{fontSize:12,fontWeight:700,color:C.dark,marginBottom:4}}>{t.nombre}</div>
+<div style={{fontSize:10,color:C.muted,marginBottom:6}}>{nCorto(t.prov)} · bulto x{t.bulto}</div>
+<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
+<div style={{background:"#F5F0E8",borderRadius:8,padding:"8px 10px"}}>
+<div style={{fontSize:9,color:C.muted,fontWeight:700,textTransform:"uppercase"}}>Castex</div>
+<div style={{fontSize:11,color:C.dark}}>Stock: {t.sRC} · Proy: {t.proyC}</div>
+<div style={{fontSize:13,fontWeight:800,color:C.terracotta}}>Necesita: {t.necesitaC} u.</div>
+<div style={{fontSize:11,fontWeight:700,color:"#27AE60"}}>→ Recibe: {t.distC} u.</div>
+</div>
+<div style={{background:"#F5F0E8",borderRadius:8,padding:"8px 10px"}}>
+<div style={{fontSize:9,color:C.muted,fontWeight:700,textTransform:"uppercase"}}>Rep. Arabe Siria</div>
+<div style={{fontSize:11,color:C.dark}}>Stock: {t.sRA} · Proy: {t.proyA}</div>
+<div style={{fontSize:13,fontWeight:800,color:C.terracotta}}>Necesita: {t.necesitaA} u.</div>
+<div style={{fontSize:11,fontWeight:700,color:"#27AE60"}}>→ Recibe: {t.distA} u.</div>
+</div>
+</div>
+<div style={{background:C.dark,borderRadius:8,padding:"8px 12px",textAlign:"center"}}>
+<span style={{fontSize:11,color:C.gold,fontWeight:700}}>Pedir </span>
+<span style={{fontSize:16,fontWeight:800,color:"#27AE60"}}>{t.bultosTotal} bulto{t.bultosTotal>1?"s":""} ({t.cantTotal} u.)</span>
+<span style={{fontSize:11,color:C.gold,fontWeight:700}}> al proveedor</span>
+</div>
+</div>
+))}
+</>
+)}
+
 {tab==="alertas"&&alertas&&alertas.length===0&&(
 <div style={{background:"#3A5A3C15",border:"1px solid #3A5A3C40",borderRadius:14,padding:"24px",textAlign:"center",marginBottom:10}}>
 <div style={{fontSize:36,marginBottom:8}}>✅</div>
@@ -840,13 +951,13 @@ return(
 </div>
 )}
 
-{tab!=="transferencias"&&pendientes.map((g,i)=>(
+{tab!=="transferencias"&&tab!=="conjunto"&&pendientes.map((g,i)=>(
 <Card key={g.prov} g={g} num={i+1} onCantChange={handleCantChange}
 esAlerta={tab==="alertas"} pedido={false}
 onMarcarPedido={marcarPedido} numOrden={ordenCounter+i} sucLabel={sucLabel}/>
 ))}
 
-{tab!=="transferencias"&&realizados.length>0&&(
+{tab!=="transferencias"&&tab!=="conjunto"&&realizados.length>0&&(
 <>
 <div style={{fontSize:11,fontWeight:700,color:C.green,margin:"12px 0 6px",letterSpacing:1,textTransform:"uppercase"}}>Ya pedidos hoy</div>
 {realizados.map(g=>(
@@ -856,7 +967,7 @@ esAlerta={false} pedido={true} onMarcarPedido={marcarPedido} numOrden={0} sucLab
 </>
 )}
 
-<button onClick={()=>{setGrupos(null);setAlertas(null);setTransferencias([]);setWbS1(null);setWbV1a(null);setWbV1b(null);setWbV1c(null);setWbS2(null);setWbV2a(null);setWbV2b(null);setWbV2c(null);setBusq("");setFiltro("todos");setCantsPorProv({});}}
+<button onClick={()=>{setGrupos(null);setAlertas(null);setTransferencias([]);setConjuntos([]);setWbS1(null);setWbV1a(null);setWbV1b(null);setWbV1c(null);setWbV1d(null);setWbS2(null);setWbV2a(null);setWbV2b(null);setWbV2c(null);setWbV2d(null);setBusq("");setFiltro("todos");setCantsPorProv({});}}
 style={{width:"100%",background:"transparent",color:C.creamDim,border:"1px solid "+C.border,borderRadius:14,padding:12,fontSize:13,fontWeight:600,cursor:"pointer",marginTop:14,marginBottom:32}}>
 Cargar nuevos archivos
 </button>
