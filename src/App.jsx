@@ -75,6 +75,36 @@ const headers=raw[hr];
 return raw.slice(hr+1).filter(r=>r&&r[0]).map(r=>{const o={};headers.forEach((h,i)=>{o[String(h)]=r[i]??"";});return o;});
 }
 
+// Combina multiples exports de ventas ponderando por dias
+function combinarVentas(v5d,v30d,v51d){
+// Construir mapa de ventas ponderado
+// Si tenemos multiples periodos, calculamos venta diaria de cada uno y promediamos
+const maps=[];
+if(v5d){const vm=mkVM(v5d);maps.push({vm,dias:5});}
+if(v30d){const vm=mkVM(v30d);maps.push({vm,dias:30});}
+if(v51d){const vm=mkVM(v51d);maps.push({vm,dias:51});}
+if(maps.length===0)return{vm:{},dias:1};
+// Obtener todos los codigos
+const codigos=new Set(maps.flatMap(m=>Object.keys(m.vm)));
+const vmFinal={};
+let diasTotal=0;
+// Ponderar: mas peso a periodos mas largos
+const pesos=maps.map(m=>m.dias);
+const pesoTotal=pesos.reduce((s,p)=>s+p,0);
+codigos.forEach(cod=>{
+// Venta diaria ponderada
+let ventaDiaria=0;
+maps.forEach(({vm,dias},i)=>{
+const v=vm[cod]||0;
+ventaDiaria+=(v/dias)*(pesos[i]/pesoTotal);
+});
+vmFinal[cod]=ventaDiaria; // guardamos venta DIARIA
+});
+// Dias representativos = promedio ponderado de dias
+const diasRep=Math.round(maps.reduce((s,{dias},i)=>s+dias*(pesos[i]/pesoTotal),0));
+return{vm:vmFinal,dias:diasRep,esVentaDiaria:true};
+}
+
 function mkVM(ventas){
 const vm={};
 ventas.forEach(v=>{
@@ -87,7 +117,7 @@ if(cod)vm[cod]=parseFloat(v[vendKey])||0;
 return vm;
 }
 
-function calcular(stockC,ventasC,stockA,ventasA,diasV,soloQuiebre,sucursal){
+function calcular(stockC,ventasC,stockA,ventasA,diasV,soloQuiebre,sucursal,ventasDiariaC,ventasDiariaA){
 const vmC=mkVM(ventasC);
 const vmA=mkVM(ventasA);
 const mapaC={};
@@ -120,7 +150,18 @@ if(soloQuiebre){if(!esQuiebre||FRECUENCIAS[prov]===0)return;}
 else{if(!debeAparecer(prov,diasV))return;}
 const frecProv=FRECUENCIAS[prov];
 const diasProy=(!soloQuiebre&&frecProv&&frecProv>0)?frecProv+3:diasV+3;
-const proy=diasV>0?Math.round((vend/diasV)*diasProy):0;
+// Calcular venta diaria combinada si hay multiples periodos
+let ventaDiaria;
+if(ventasDiariaC||ventasDiariaA){
+const vdC=ventasDiariaC?ventasDiariaC[cod]||0:diasV>0?vendC/diasV:0;
+const vdA=ventasDiariaA?ventasDiariaA[cod]||0:diasV>0?vendA/diasV:0;
+if(sucursal==="C")ventaDiaria=vdC;
+else if(sucursal==="A")ventaDiaria=vdA;
+else ventaDiaria=vdC+vdA;
+} else {
+ventaDiaria=diasV>0?vend/diasV:0;
+}
+const proy=Math.round(ventaDiaria*diasProy);
 const cant=Math.max(falt,Math.max(0,proy-sR));
 const bulto=getBulto(prov,ean,cod,nombre);
 let cantF=bulto?redondear(Math.round(cant),bulto):Math.round(cant);
@@ -468,10 +509,16 @@ return(
 }
 
 export default function App(){
-const [wbS1,setWbS1]=useState(null);
-const [wbV1,setWbV1]=useState(null);
-const [wbS2,setWbS2]=useState(null);
-const [wbV2,setWbV2]=useState(null);
+const [wbS1,setWbS1]=useState(null); // Stock Castex
+const [wbV1a,setWbV1a]=useState(null); // Ventas Castex 5 dias
+const [wbV1b,setWbV1b]=useState(null); // Ventas Castex mes anterior
+const [wbV1c,setWbV1c]=useState(null); // Ventas Castex mes ant+corriente
+const [wbS2,setWbS2]=useState(null); // Stock Siria
+const [wbV2a,setWbV2a]=useState(null); // Ventas Siria 5 dias
+const [wbV2b,setWbV2b]=useState(null); // Ventas Siria mes anterior
+const [wbV2c,setWbV2c]=useState(null); // Ventas Siria mes ant+corriente
+// Dias correspondientes a cada tipo
+const DIAS_A=5,DIAS_B=30,DIAS_C=51; // 5d, 30d, ~21+30d
 const [grupos,setGrupos]=useState(null);
 const [alertas,setAlertas]=useState(null);
 const [transferencias,setTransferencias]=useState([]);
@@ -501,7 +548,9 @@ const [ordenCounter,setOrdenCounter]=useState(1);
 const [sucursal,setSucursal]=useState("");
 
 const diasFinal=diasCustom?parseInt(diasCustom)||7:dias;
-const todosListos=wbS1&&wbV1&&wbS2&&wbV2;
+const tieneC=wbS1&&(wbV1a||wbV1b||wbV1c);
+const tieneA=wbS2&&(wbV2a||wbV2b||wbV2c);
+const todosListos=tieneC||tieneA;
 const sucLabel=sucursal==="C"?SUC1:sucursal==="A"?SUC2:"";
 
 // Recalcular al cambiar sucursal si ya hay datos cargados
@@ -510,10 +559,19 @@ setSucursal(v);
 if(wbS1&&wbV1&&wbS2&&wbV2){
 setTimeout(()=>{
 try{
-const sC=parseStock(wbS1);const vC=parseVentas(wbV1);
-const sA=parseStock(wbS2);const vA=parseVentas(wbV2);
-const gNorm=agrupar(calcular(sC,vC,sA,vA,diasFinal,false,v).filter(p=>p.cant>0));
-const gAlert=agrupar(calcular(sC,vC,sA,vA,diasFinal,true,v).filter(p=>p.esQuiebre));
+const sC=wbS1?parseStock(wbS1):[];
+const sA=wbS2?parseStock(wbS2):[];
+const vC5=wbV1a?parseVentas(wbV1a):null;
+const vC30=wbV1b?parseVentas(wbV1b):null;
+const vC51=wbV1c?parseVentas(wbV1c):null;
+const combC=combinarVentas(vC5,vC30,vC51);
+const vA5=wbV2a?parseVentas(wbV2a):null;
+const vA30=wbV2b?parseVentas(wbV2b):null;
+const vA51=wbV2c?parseVentas(wbV2c):null;
+const combA=combinarVentas(vA5,vA30,vA51);
+const diasRep=combC.dias||combA.dias||diasFinal;
+const gNorm=agrupar(calcular(sC,[],sA,[],diasRep,false,v,combC.esVentaDiaria?combC.vm:null,combA.esVentaDiaria?combA.vm:null).filter(p=>p.cant>0));
+const gAlert=agrupar(calcular(sC,[],sA,[],diasRep,true,v,combC.esVentaDiaria?combC.vm:null,combA.esVentaDiaria?combA.vm:null).filter(p=>p.esQuiebre));
 const transf=calcularTransferencias(sC,sA);
 setGrupos(gNorm);setAlertas(gAlert);setTransferencias(transf);
 setCantsPorProv({});
@@ -529,10 +587,23 @@ if(!todosListos){setErr("Subi los 4 archivos primero");return;}
 setErr("");setProc(true);setCantsPorProv({});setPedidosRealizados({});
 setTimeout(()=>{
 try{
-const sC=parseStock(wbS1);const vC=parseVentas(wbV1);
-const sA=parseStock(wbS2);const vA=parseVentas(wbV2);
-const gNorm=agrupar(calcular(sC,vC,sA,vA,diasFinal,false,sucursal).filter(p=>p.cant>0));
-const gAlert=agrupar(calcular(sC,vC,sA,vA,diasFinal,true,sucursal).filter(p=>p.esQuiebre));
+const sC=wbS1?parseStock(wbS1):[];
+const sA=wbS2?parseStock(wbS2):[];
+// Ventas Castex - combinar los que haya
+const vC5=wbV1a?parseVentas(wbV1a):null;
+const vC30=wbV1b?parseVentas(wbV1b):null;
+const vC51=wbV1c?parseVentas(wbV1c):null;
+const combC=combinarVentas(vC5,vC30,vC51);
+const vC=vC5||vC30||vC51?[]:[];
+// Ventas Siria - combinar los que haya
+const vA5=wbV2a?parseVentas(wbV2a):null;
+const vA30=wbV2b?parseVentas(wbV2b):null;
+const vA51=wbV2c?parseVentas(wbV2c):null;
+const combA=combinarVentas(vA5,vA30,vA51);
+const vA=[];
+const diasRep=combC.dias||combA.dias||diasFinal;
+const gNorm=agrupar(calcular(sC,vC,sA,vA,diasRep,false,sucursal,combC.esVentaDiaria?combC.vm:null,combA.esVentaDiaria?combA.vm:null).filter(p=>p.cant>0));
+const gAlert=agrupar(calcular(sC,vC,sA,vA,diasRep,true,sucursal,combC.esVentaDiaria?combC.vm:null,combA.esVentaDiaria?combA.vm:null).filter(p=>p.esQuiebre));
 const transf=calcularTransferencias(sC,sA);
 setGrupos(gNorm);setAlertas(gAlert);setTransferencias(transf);
 setTab(gAlert.length>0?"alertas":"pedidos");
@@ -563,9 +634,9 @@ if(sucursal==="C")return t.hacia===SUC1;
 if(sucursal==="A")return t.hacia===SUC2;
 return true;
 });
-const lines=["Producto,Proveedor,Desde,Hacia,Cantidad,Stock Castex,Stock Siria"];
+const lines=["Producto,Desde,Hacia,Cantidad"];
 transfFilt.forEach(t=>{
-lines.push(`"${t.nombre}","${nCorto(t.prov)}","${t.desde}","${t.hacia}",${t.cant},${t.sRC},${t.sRA}`);
+lines.push(`"${t.nombre}","${t.desde}","${t.hacia}",${t.cant}`);
 });
 const blob=new Blob([lines.join("\n")],{type:"text/csv;charset=utf-8;"});
 const url=URL.createObjectURL(blob);
@@ -628,18 +699,30 @@ return(
 <div style={{background:C.surface,borderRadius:20,padding:18,marginBottom:14,border:"1px solid "+C.border}}>
 <div style={{fontSize:20,fontWeight:700,color:C.cream,marginBottom:4}}>Subi los archivos de DUX</div>
 <div style={{fontSize:11,color:C.creamDim,marginBottom:16}}>Stock y ventas de cada sucursal por separado</div>
-<div style={{marginBottom:12}}>
-<div style={{fontSize:10,fontWeight:700,color:C.gold,marginBottom:6,textTransform:"uppercase",letterSpacing:1}}>Sucursal {SUC1}</div>
-<div style={{display:"flex",gap:8}}>
+{/* CASTEX */}
+<div style={{marginBottom:14,background:C.bg,borderRadius:12,padding:12,border:"1px solid "+C.border}}>
+<div style={{fontSize:10,fontWeight:700,color:C.gold,marginBottom:8,textTransform:"uppercase",letterSpacing:1}}>Sucursal {SUC1}</div>
+<div style={{display:"flex",gap:8,marginBottom:8}}>
 <UploadZone label="Stock Castex" icon="📦" onFile={setWbS1} loaded={!!wbS1}/>
-<UploadZone label="Ventas Castex" icon="📈" onFile={setWbV1} loaded={!!wbV1}/>
+</div>
+<div style={{fontSize:9,color:C.creamDim,marginBottom:6,fontWeight:600}}>VENTAS (subí las que tengas):</div>
+<div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+<UploadZone label="Últimos 5 días" icon="📈" onFile={setWbV1a} loaded={!!wbV1a}/>
+<UploadZone label="Mes anterior" icon="📈" onFile={setWbV1b} loaded={!!wbV1b}/>
+<UploadZone label="Ant.+Corriente" icon="📈" onFile={setWbV1c} loaded={!!wbV1c}/>
 </div>
 </div>
-<div style={{marginBottom:16}}>
-<div style={{fontSize:10,fontWeight:700,color:C.gold,marginBottom:6,textTransform:"uppercase",letterSpacing:1}}>Sucursal {SUC2}</div>
-<div style={{display:"flex",gap:8}}>
+{/* SIRIA */}
+<div style={{marginBottom:14,background:C.bg,borderRadius:12,padding:12,border:"1px solid "+C.border}}>
+<div style={{fontSize:10,fontWeight:700,color:C.gold,marginBottom:8,textTransform:"uppercase",letterSpacing:1}}>Sucursal {SUC2}</div>
+<div style={{display:"flex",gap:8,marginBottom:8}}>
 <UploadZone label="Stock Siria" icon="📦" onFile={setWbS2} loaded={!!wbS2}/>
-<UploadZone label="Ventas Siria" icon="📈" onFile={setWbV2} loaded={!!wbV2}/>
+</div>
+<div style={{fontSize:9,color:C.creamDim,marginBottom:6,fontWeight:600}}>VENTAS (subí las que tengas):</div>
+<div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+<UploadZone label="Últimos 5 días" icon="📈" onFile={setWbV2a} loaded={!!wbV2a}/>
+<UploadZone label="Mes anterior" icon="📈" onFile={setWbV2b} loaded={!!wbV2b}/>
+<UploadZone label="Ant.+Corriente" icon="📈" onFile={setWbV2c} loaded={!!wbV2c}/>
 </div>
 </div>
 <div style={{marginBottom:12}}>
@@ -654,7 +737,8 @@ style={{flex:1,background:sucursal===v?C.terracotta:C.surface,border:"2px solid 
 </div>
 </div>
 <div style={{marginBottom:16}}>
-<div style={{fontSize:10,fontWeight:700,color:C.gold,marginBottom:8,textTransform:"uppercase",letterSpacing:1}}>Cuantos dias tienen las ventas?</div>
+<div style={{fontSize:10,fontWeight:700,color:C.gold,marginBottom:4,textTransform:"uppercase",letterSpacing:1}}>Dias extra (opcional - solo si subís un solo archivo de ventas)</div>
+<div style={{fontSize:9,color:C.creamDim,marginBottom:8}}>Si subís múltiples archivos de ventas, los días se calculan automáticamente.</div>
 <div style={{display:"flex",gap:8,marginBottom:10,flexWrap:"wrap"}}>
 {[[7,"7 dias","Semanal"],[15,"15 dias","Quincenal"],[30,"30 dias","Mensual"],[60,"60 dias","Bimestral"]].map(([d,label,sub])=>(
 <div key={d} onClick={()=>{setDias(d);setDiasCustom("");}}
@@ -772,7 +856,7 @@ esAlerta={false} pedido={true} onMarcarPedido={marcarPedido} numOrden={0} sucLab
 </>
 )}
 
-<button onClick={()=>{setGrupos(null);setAlertas(null);setTransferencias([]);setWbS1(null);setWbV1(null);setWbS2(null);setWbV2(null);setBusq("");setFiltro("todos");setCantsPorProv({});setPedidosRealizados({});}}
+<button onClick={()=>{setGrupos(null);setAlertas(null);setTransferencias([]);setWbS1(null);setWbV1a(null);setWbV1b(null);setWbV1c(null);setWbS2(null);setWbV2a(null);setWbV2b(null);setWbV2c(null);setBusq("");setFiltro("todos");setCantsPorProv({});}}
 style={{width:"100%",background:"transparent",color:C.creamDim,border:"1px solid "+C.border,borderRadius:14,padding:12,fontSize:13,fontWeight:600,cursor:"pointer",marginTop:14,marginBottom:32}}>
 Cargar nuevos archivos
 </button>
