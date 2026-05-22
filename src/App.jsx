@@ -199,13 +199,12 @@ function calcularTransferencias(stockC,stockA,vmC,vmA,dias){
     const sRC=parseFloat(pC["Stock Real"])||0;
     const sRA=parseFloat(pA["Stock Real"])||0;
     // Calcular proyeccion por sucursal
-    const frecProv=FRECUENCIAS[prov];
-    const diasProy=(frecProv&&frecProv>0)?frecProv+3:dias+3;
+    // Transferencias siempre proyectadas a 15 dias fijos
+    const DIAS_TRANSF=15;
     const vdC=vmC?vmC[cod]||0:0;
     const vdA=vmA?vmA[cod]||0:0;
-    // Si vmC/vmA son venta diaria, usarlos directo; si no, dividir por dias
-    const proyC=Math.round(vdC*diasProy);
-    const proyA=Math.round(vdA*diasProy);
+    const proyC=Math.round(vdC*DIAS_TRANSF);
+    const proyA=Math.round(vdA*DIAS_TRANSF);
     // Sobrante real: lo que queda despues de cubrir la proyeccion propia
     const sobranteC=Math.max(0,sRC-proyC);
     const sobranteA=Math.max(0,sRA-proyA);
