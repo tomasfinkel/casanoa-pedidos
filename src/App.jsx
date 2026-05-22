@@ -638,12 +638,18 @@ export default function App(){
       const respSuc=await fetch(BASE_URL+"?endpoint=sucursales&idEmpresa="+empresaId,{
         headers:{"Authorization":tkn,"Content-Type":"application/json"}
       });
-      const dataSuc=await respSuc.json();
-      console.log("Sucursales respuesta:", JSON.stringify(dataSuc).substring(0,300));
+      const textSuc=await respSuc.text();
+      console.log("Sucursales raw:", textSuc.substring(0,500));
+      let dataSuc;
+      try{dataSuc=JSON.parse(textSuc);}catch(e){throw new Error("Sucursales no es JSON: "+textSuc.substring(0,200));}
       const sucursales=Array.isArray(dataSuc)?dataSuc:
                        Array.isArray(dataSuc?.items)?dataSuc.items:
                        Array.isArray(dataSuc?.data)?dataSuc.data:
+                       Array.isArray(dataSuc?.sucursales)?dataSuc.sucursales:
                        Object.values(dataSuc||{}).find(v=>Array.isArray(v))||[];
+      if(sucursales.length===0){
+        throw new Error("DUX devolvió: "+textSuc.substring(0,300));
+      }
       localStorage.setItem("dux_sucursales",JSON.stringify(sucursales));
       setDuxSucursales(sucursales);
       setTokenInput("");
