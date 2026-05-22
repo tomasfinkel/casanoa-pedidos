@@ -684,7 +684,7 @@ export default function App(){
       if(!sucC||!sucA)throw new Error("No se encontraron las sucursales Castex y Siria");
 
       // Obtener depositos de cada sucursal
-      const respDep=await fetch(BASE_URL+"?endpoint=depositos&idEmpresa="+duxEmpresaId,{
+      const respDep=await fetch(BASE_URL+"?endpoint=deposito",{
         headers:{"Authorization":duxToken}
       });
       const dataDep=await respDep.json();
@@ -703,7 +703,7 @@ export default function App(){
         let items=[];let offset=0;const limit=50;
         while(true){
           const resp=await fetch(
-            BASE_URL+"?endpoint=items&idDeposito="+idDeposito+"&offset="+offset+"&limit="+limit+"&idEmpresa="+duxEmpresaId,
+            BASE_URL+"?endpoint=items&idDeposito="+idDeposito+"&offset="+offset+"&limit="+limit,
             {headers:{"Authorization":duxToken}}
           );
           const data=await resp.json();
@@ -722,23 +722,33 @@ export default function App(){
       // Buscar depositos por sucursal - intentar varios campos
       let depC=null,depA=null;
       if(depositos.length>0){
+        // Buscar deposito por sucursal - probar varios campos posibles
+        const getDepNombre=d=>String(d.deposito||d.nombre||d.descripcion||d.nombreDeposito||"").toUpperCase();
+        const getDepSuc=d=>d.id_sucursal||d.idSucursal||d.sucursal_id;
         depC=depositos.find(d=>
-          d.idSucursal===sucC.id||d.idSucursal===sucC.idSucursal||
-          String(d.nombreSucursal||d.sucursal||d.nombre||"").toUpperCase().includes("CASTEX")
+          getDepSuc(d)===sucC.id||
+          getDepNombre(d).includes("CASTEX")
         )||depositos[0];
         depA=depositos.find(d=>
-          d.idSucursal===sucA.id||d.idSucursal===sucA.idSucursal||
-          String(d.nombreSucursal||d.sucursal||d.nombre||"").toUpperCase().includes("SIRIA")||
-          String(d.nombreSucursal||d.sucursal||d.nombre||"").toUpperCase().includes("ARABE")
+          getDepSuc(d)===sucA.id||
+          getDepNombre(d).includes("ARABE")||
+          getDepNombre(d).includes("SIRIA")
         )||depositos[1]||depositos[0];
       }
 
       // Si no hay depositos, cargar items sin filtro de deposito
       let itemsC=[],itemsA=[];
       if(depC&&depA&&depC.idDeposito!==depA.idDeposito){
+        const idDepC=depC.id_deposito||depC.idDeposito||depC.id;
+        const idDepA=depA.id_deposito||depA.idDeposito||depA.id;
+        console.log("Deposito Castex:", JSON.stringify(depC));
+        console.log("Deposito Siria:", JSON.stringify(depA));
+        if(idDepC===idDepA){
+          throw new Error("Los depósitos son iguales ("+idDepC+"). Depósitos disponibles: "+JSON.stringify(depositos).substring(0,300));
+        }
         [itemsC,itemsA]=await Promise.all([
-          cargarItems(depC.idDeposito),
-          cargarItems(depA.idDeposito)
+          cargarItems(idDepC),
+          cargarItems(idDepA)
         ]);
       } else {
         // Cargar por sucursal directamente
@@ -746,7 +756,7 @@ export default function App(){
           let items=[];let offset=0;const limit=50;
           while(true){
             const resp=await fetch(
-              BASE_URL+"?endpoint=items&idSucursal="+idSucursal+"&offset="+offset+"&limit="+limit+"&idEmpresa="+duxEmpresaId,
+              BASE_URL+"?endpoint=items&idSucursal="+idSucursal+"&offset="+offset+"&limit="+limit,
               {headers:{"Authorization":duxToken}}
             );
             const data=await resp.json();
