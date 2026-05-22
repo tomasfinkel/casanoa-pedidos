@@ -659,12 +659,17 @@ export default function App(){
     try{
       // Buscar sucursales Castex y Siria
       const sucC=duxSucursales.find(s=>
-        String(s.nombre||s.descripcion||"").toUpperCase().includes("CASTEX")
+        String(s.nombre||s.descripcion||"").toUpperCase().includes("CASTEX")||
+        String(s.nombre||s.descripcion||"").toUpperCase().includes("CASTE")
       );
       const sucA=duxSucursales.find(s=>
         String(s.nombre||s.descripcion||"").toUpperCase().includes("SIRIA")||
         String(s.nombre||s.descripcion||"").toUpperCase().includes("ARABE")
       );
+      if(!sucC||!sucA){
+        // Debug: mostrar sucursales disponibles
+        throw new Error("Sucursales disponibles: "+duxSucursales.map(s=>s.nombre||s.descripcion||JSON.stringify(s)).join(", "));
+      }
       if(!sucC||!sucA)throw new Error("No se encontraron las sucursales Castex y Siria");
 
       // Obtener depositos de cada sucursal
