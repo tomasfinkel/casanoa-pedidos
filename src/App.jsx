@@ -674,7 +674,7 @@ export default function App(){
     try{
       // Buscar sucursales Castex y Siria
       // Buscar en todos los campos posibles
-      const getNombre=s=>String(s.nombre||s.descripcion||s.nombreSucursal||s.name||"").toUpperCase();
+      const getNombre=s=>String(s.sucursal||s.nombre||s.descripcion||s.nombreSucursal||s.name||"").toUpperCase();
       const sucC=duxSucursales.find(s=>getNombre(s).includes("CASTEX"));
       const sucA=duxSucursales.find(s=>getNombre(s).includes("ARABE")||getNombre(s).includes("SIRIA"));
       if(!sucC||!sucA){
@@ -723,15 +723,13 @@ export default function App(){
       let depC=null,depA=null;
       if(depositos.length>0){
         depC=depositos.find(d=>
-          d.idSucursal===sucC.idSucursal||
-          d.idSucursal===sucC.id||
-          String(d.nombreSucursal||d.sucursal||"").toUpperCase().includes("CASTEX")
+          d.idSucursal===sucC.id||d.idSucursal===sucC.idSucursal||
+          String(d.nombreSucursal||d.sucursal||d.nombre||"").toUpperCase().includes("CASTEX")
         )||depositos[0];
         depA=depositos.find(d=>
-          d.idSucursal===sucA.idSucursal||
-          d.idSucursal===sucA.id||
-          String(d.nombreSucursal||d.sucursal||"").toUpperCase().includes("SIRIA")||
-          String(d.nombreSucursal||d.sucursal||"").toUpperCase().includes("ARABE")
+          d.idSucursal===sucA.id||d.idSucursal===sucA.idSucursal||
+          String(d.nombreSucursal||d.sucursal||d.nombre||"").toUpperCase().includes("SIRIA")||
+          String(d.nombreSucursal||d.sucursal||d.nombre||"").toUpperCase().includes("ARABE")
         )||depositos[1]||depositos[0];
       }
 
@@ -761,8 +759,8 @@ export default function App(){
           }
           return items;
         };
-        const idSucC=sucC.idSucursal||sucC.id;
-        const idSucA=sucA.idSucursal||sucA.id;
+        const idSucC=sucC.id||sucC.idSucursal;
+        const idSucA=sucA.id||sucA.idSucursal;
         [itemsC,itemsA]=await Promise.all([
           cargarPorSucursal(idSucC),
           cargarPorSucursal(idSucA)
