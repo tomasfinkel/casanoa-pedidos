@@ -634,21 +634,28 @@ export default function App(){
       setDuxEmpresaId(String(empresaId));
       // Esperar 6 segundos antes de la segunda llamada (rate limit DUX)
       await new Promise(r=>setTimeout(r,6000));
-      // Obtener sucursales
-      const respSuc=await fetch(BASE_URL+"?endpoint=sucursales&idEmpresa="+empresaId,{
-        headers:{"Authorization":tkn,"Content-Type":"application/json"}
-      });
-      const textSuc=await respSuc.text();
-      console.log("Sucursales raw:", textSuc.substring(0,500));
-      let dataSuc;
-      try{dataSuc=JSON.parse(textSuc);}catch(e){throw new Error("Sucursales no es JSON: "+textSuc.substring(0,200));}
-      const sucursales=Array.isArray(dataSuc)?dataSuc:
-                       Array.isArray(dataSuc?.items)?dataSuc.items:
-                       Array.isArray(dataSuc?.data)?dataSuc.data:
-                       Array.isArray(dataSuc?.sucursales)?dataSuc.sucursales:
-                       Object.values(dataSuc||{}).find(v=>Array.isArray(v))||[];
+      // Obtener sucursales - probar con el idEmpresa obtenido
+      const probarSucursales=async(idEmp)=>{
+        const r=await fetch(BASE_URL+"?endpoint=sucursales&idEmpresa="+idEmp,{
+          headers:{"Authorization":tkn,"Content-Type":"application/json"}
+        });
+        const txt=await r.text();
+        try{
+          const d=JSON.parse(txt);
+          const arr=Array.isArray(d)?d:Array.isArray(d?.items)?d.items:Array.isArray(d?.data)?d.data:Array.isArray(d?.sucursales)?d.sucursales:Object.values(d||{}).find(v=>Array.isArray(v))||[];
+          return{arr,txt};
+        }catch{return{arr:[],txt};}
+      };
+      // Probar con idEmpresa obtenido
+      let{arr:sucursales,txt:textSuc}=await probarSucursales(empresaId);
+      // Si devuelve vacio, probar con 3455 (default doc DUX)
+      if(sucursales.length===0&&empresaId!=="3455"){
+        await new Promise(r=>setTimeout(r,6000));
+        const res2=await probarSucursales("3455");
+        if(res2.arr.length>0){sucursales=res2.arr;textSuc=res2.txt;}
+      }
       if(sucursales.length===0){
-        throw new Error("DUX devolvió: "+textSuc.substring(0,300));
+        throw new Error("DUX devolvió sucursales vacías. idEmpresa usado: "+empresaId+". Respuesta: "+textSuc.substring(0,200));
       }
       localStorage.setItem("dux_sucursales",JSON.stringify(sucursales));
       setDuxSucursales(sucursales);
