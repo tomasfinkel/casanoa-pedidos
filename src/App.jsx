@@ -658,17 +658,13 @@ export default function App(){
     setCargandoStockDux(true);
     try{
       // Buscar sucursales Castex y Siria
-      const sucC=duxSucursales.find(s=>
-        String(s.nombre||s.descripcion||"").toUpperCase().includes("CASTEX")||
-        String(s.nombre||s.descripcion||"").toUpperCase().includes("CASTE")
-      );
-      const sucA=duxSucursales.find(s=>
-        String(s.nombre||s.descripcion||"").toUpperCase().includes("SIRIA")||
-        String(s.nombre||s.descripcion||"").toUpperCase().includes("ARABE")
-      );
+      // Buscar en todos los campos posibles
+      const getNombre=s=>String(s.nombre||s.descripcion||s.nombreSucursal||s.name||"").toUpperCase();
+      const sucC=duxSucursales.find(s=>getNombre(s).includes("CASTEX"));
+      const sucA=duxSucursales.find(s=>getNombre(s).includes("ARABE")||getNombre(s).includes("SIRIA"));
       if(!sucC||!sucA){
-        // Debug: mostrar sucursales disponibles
-        throw new Error("Sucursales disponibles: "+duxSucursales.map(s=>s.nombre||s.descripcion||JSON.stringify(s)).join(", "));
+        const nombres=duxSucursales.map(s=>getNombre(s)||JSON.stringify(s)).join(", ");
+        throw new Error("Sucursales en DUX: ["+nombres+"] - No se encontraron CASTEX y ARABE");
       }
       if(!sucC||!sucA)throw new Error("No se encontraron las sucursales Castex y Siria");
 
