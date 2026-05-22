@@ -706,13 +706,22 @@ export default function App(){
             BASE_URL+"?endpoint=items&idDeposito="+idDeposito+"&offset="+offset+"&limit="+limit,
             {headers:{"Authorization":duxToken}}
           );
-          const data=await resp.json();
+          const text=await resp.text();
+          let data;
+          try{data=JSON.parse(text);}catch{console.log("Items no JSON:",text.substring(0,100));break;}
+          if(typeof data==="string"&&data.toLowerCase().includes("alcanz")){
+            console.log("Rate limit en items, esperando...");
+            await new Promise(r=>setTimeout(r,6000));
+            continue;
+          }
           let batch=[];
           if(Array.isArray(data))batch=data;
           else if(Array.isArray(data?.items))batch=data.items;
+          else{console.log("Items formato inesperado:",JSON.stringify(data).substring(0,200));break;}
           items=[...items,...batch];
           if(batch.length<limit)break;
           offset+=limit;
+          await new Promise(r=>setTimeout(r,6000));
         }
         return items;
       };
@@ -722,18 +731,10 @@ export default function App(){
       // Buscar depositos por sucursal - intentar varios campos
       let depC=null,depA=null;
       if(depositos.length>0){
-        // Buscar deposito por sucursal - probar varios campos posibles
-        const getDepNombre=d=>String(d.deposito||d.nombre||d.descripcion||d.nombreDeposito||"").toUpperCase();
-        const getDepSuc=d=>d.id_sucursal||d.idSucursal||d.sucursal_id;
-        depC=depositos.find(d=>
-          getDepSuc(d)===sucC.id||
-          getDepNombre(d).includes("CASTEX")
-        )||depositos[0];
-        depA=depositos.find(d=>
-          getDepSuc(d)===sucA.id||
-          getDepNombre(d).includes("ARABE")||
-          getDepNombre(d).includes("SIRIA")
-        )||depositos[1]||depositos[0];
+        // Buscar deposito por nombre
+        const getDepNombre=d=>String(d.deposito||d.nombre||d.descripcion||"").toUpperCase();
+        depC=depositos.find(d=>getDepNombre(d).includes("CASTEX"))||depositos[0];
+        depA=depositos.find(d=>getDepNombre(d).includes("ARABE")||getDepNombre(d).includes("SIRIA"))||depositos[1];
       }
 
       // Si no hay depositos, cargar items sin filtro de deposito
@@ -741,15 +742,12 @@ export default function App(){
       if(depC&&depA&&depC.idDeposito!==depA.idDeposito){
         const idDepC=depC.id_deposito||depC.idDeposito||depC.id;
         const idDepA=depA.id_deposito||depA.idDeposito||depA.id;
-        console.log("Deposito Castex:", JSON.stringify(depC));
-        console.log("Deposito Siria:", JSON.stringify(depA));
-        if(idDepC===idDepA){
-          throw new Error("Los depósitos son iguales ("+idDepC+"). Depósitos disponibles: "+JSON.stringify(depositos).substring(0,300));
-        }
-        [itemsC,itemsA]=await Promise.all([
-          cargarItems(idDepC),
-          cargarItems(idDepA)
-        ]);
+        console.log("Usando deposito Castex:", idDepC, depC.deposito);
+        console.log("Usando deposito Siria:", idDepA, depA.deposito);
+        // Cargar items secuencialmente con delay para respetar rate limit
+        const itemsC=await cargarItems(idDepC);
+        await new Promise(r=>setTimeout(r,6000));
+        const itemsA=await cargarItems(idDepA);
       } else {
         // Cargar por sucursal directamente
         const cargarPorSucursal=async(idSucursal)=>{
