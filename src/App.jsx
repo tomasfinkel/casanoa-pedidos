@@ -632,6 +632,8 @@ export default function App(){
       const empresaId=empresa.idEmpresa||empresa.id||empresa.codigo||empresa.codigoEmpresa;
       localStorage.setItem("dux_empresa_id",String(empresaId));
       setDuxEmpresaId(String(empresaId));
+      // Esperar 6 segundos antes de la segunda llamada (rate limit DUX)
+      await new Promise(r=>setTimeout(r,6000));
       // Obtener sucursales
       const respSuc=await fetch(BASE_URL+"?endpoint=sucursales&idEmpresa="+empresaId,{
         headers:{"Authorization":tkn,"Content-Type":"application/json"}
@@ -702,6 +704,8 @@ export default function App(){
         return items;
       };
 
+      // Esperar 6 segundos (rate limit DUX)
+      await new Promise(r=>setTimeout(r,6000));
       // Buscar depositos por sucursal - intentar varios campos
       let depC=null,depA=null;
       if(depositos.length>0){
