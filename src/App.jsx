@@ -707,19 +707,20 @@ export default function App(){
             if(text.includes("alcanz")){await new Promise(r=>setTimeout(r,10000));continue;}
             break;
           }
-          const facturas=Array.isArray(data)?data:Array.isArray(data?.items)?data.items:[];
+          const facturas=Array.isArray(data?.results)?data.results:Array.isArray(data)?data:[];
           if(facturas.length===0)break;
-          // Sumar ventas por producto
+          // Sumar ventas por producto - items en campo "detalles"
           facturas.forEach(f=>{
-            const items=f.items||f.detalle||f.renglones||[];
+            const items=f.detalles||[];
             items.forEach(item=>{
-              const cod=String(item.codigoItem||item.codigo||item.idItem||"").trim();
-              const cant=parseFloat(item.cantidad||item.cantidadVendida||0);
+              const cod=String(item.cod_item||item.codigo_item||item.codigoItem||"").trim();
+              const cant=parseFloat(item.ctd||item.cantidad||0);
               if(cod&&cant>0)ventas[cod]=(ventas[cod]||0)+cant;
             });
           });
           total+=facturas.length;
-          if(facturas.length<limit)break;
+          const totalDisp=data?.paging?.total||facturas.length;
+          if(total>=totalDisp||facturas.length<limit)break;
           offset+=limit;
         }
         return ventas;
