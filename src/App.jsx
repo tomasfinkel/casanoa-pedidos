@@ -655,7 +655,7 @@ export default function App(){
         if(res2.arr.length>0){sucursales=res2.arr;textSuc=res2.txt;}
       }
       if(sucursales.length===0){
-        throw new Error("DUX devolvió sucursales vacías. idEmpresa usado: "+empresaId+". Respuesta: "+textSuc.substring(0,200));
+        throw new Error("DUX devolvió sucursales vacías. idEmpresa usado: "+empresaId+". Respuesta: "+String(textSuc||"").substring(0,200));
       }
       localStorage.setItem("dux_sucursales",JSON.stringify(sucursales));
       setDuxSucursales(sucursales);
@@ -768,8 +768,8 @@ export default function App(){
       }
 
       // Convertir formato DUX al formato que espera la app
-      console.log("Items Castex sample:", JSON.stringify(itemsC[0]).substring(0,300));
-      console.log("Items Siria sample:", JSON.stringify(itemsA[0]).substring(0,300));
+      console.log("Items Castex sample:", itemsC[0]?JSON.stringify(itemsC[0]).substring(0,300):"vacio");
+      console.log("Items Siria sample:", itemsA[0]?JSON.stringify(itemsA[0]).substring(0,300):"vacio");
       const convertir=(items)=>items.filter(Boolean).map(item=>{
         const stockReal=parseFloat(item.stock||item.stockActual||item.stockDisponible||item.cantidad||0);
         const stockIdeal=parseFloat(item.stockIdeal||item.stockMaximo||item.cantidadIdeal||0);
