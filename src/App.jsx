@@ -668,6 +668,76 @@ export default function App(){
     setCargandoDux(false);
   };
 
+  const cargarVentasDux=async()=>{
+    if(!duxToken||!duxSucursales)return;
+    setCargandoVentasDux(true);
+    try{
+      // Calcular fechas segun periodo
+      const hoy=new Date();
+      const fmt=d=>d.toISOString().split("T")[0];
+      let fechaDesde,fechaHasta=fmt(hoy);
+      if(duxPeriodo==="5"){
+        const d=new Date(hoy);d.setDate(hoy.getDate()-5);
+        fechaDesde=fmt(d);
+      } else if(duxPeriodo==="30"){
+        const d=new Date(hoy.getFullYear(),hoy.getMonth()-1,1);
+        fechaDesde=fmt(d);
+        fechaHasta=fmt(new Date(hoy.getFullYear(),hoy.getMonth(),0));
+      } else {
+        fechaDesde=fmt(new Date(hoy.getFullYear(),hoy.getMonth(),1));
+      }
+      // IDs de sucursales
+      const getNombre=s=>String(s.sucursal||s.nombre||"").toUpperCase();
+      const sucC=duxSucursales.find(s=>getNombre(s).includes("CASTEX"));
+      const sucA=duxSucursales.find(s=>getNombre(s).includes("ARABE")||getNombre(s).includes("SIRIA"));
+      const idSucC=sucC?.id||sucC?.idSucursal;
+      const idSucA=sucA?.id||sucA?.idSucursal;
+      // Funcion para cargar facturas de una sucursal
+      const cargarFacturas=async(idSucursal,nombreSuc)=>{
+        const ventas={};
+        let offset=0;const limit=50;let total=0;
+        while(true){
+          setMsgCargandoVentas("Cargando "+nombreSuc+"... ("+total+" facturas)");
+          await new Promise(r=>setTimeout(r,6000));
+          const url=BASE_URL+"?endpoint=facturas&fechaDesde="+fechaDesde+"&fechaHasta="+fechaHasta+"&idEmpresa="+duxEmpresaId+"&idSucursal="+idSucursal+"&offset="+offset+"&limit="+limit+"&anuladas=false";
+          const resp=await fetch(url,{headers:{"Authorization":duxToken}});
+          const text=await resp.text();
+          let data;
+          try{data=JSON.parse(text);}catch{
+            if(text.includes("alcanz")){await new Promise(r=>setTimeout(r,10000));continue;}
+            break;
+          }
+          const facturas=Array.isArray(data)?data:Array.isArray(data?.items)?data.items:[];
+          if(facturas.length===0)break;
+          // Sumar ventas por producto
+          facturas.forEach(f=>{
+            const items=f.items||f.detalle||f.renglones||[];
+            items.forEach(item=>{
+              const cod=String(item.codigoItem||item.codigo||item.idItem||"").trim();
+              const cant=parseFloat(item.cantidad||item.cantidadVendida||0);
+              if(cod&&cant>0)ventas[cod]=(ventas[cod]||0)+cant;
+            });
+          });
+          total+=facturas.length;
+          if(facturas.length<limit)break;
+          offset+=limit;
+        }
+        return ventas;
+      };
+      setMsgCargandoVentas("Cargando Castex...");
+      const vC=await cargarFacturas(idSucC,"Castex");
+      setMsgCargandoVentas("Cargando Siria...");
+      const vA=await cargarFacturas(idSucA,"Siria");
+      setVentasCDirecto(vC);
+      setVentasADirecto(vA);
+      alert("✅ Ventas cargadas: "+Object.keys(vC).length+" productos en Castex, "+Object.keys(vA).length+" en Siria");
+    }catch(e){
+      alert("Error cargando ventas: "+e.message);
+    }
+    setCargandoVentasDux(false);
+    setMsgCargandoVentas("Cargando ventas...");
+  };
+
   const cargarStockDuxAuto=async()=>{
     if(!duxToken||!duxSucursales)return;
     setCargandoStockDux(true);
@@ -808,8 +878,13 @@ export default function App(){
     setCargandoStockDux(false);
   };
 
-  const [stockCDirecto,setStockCDirecto]=useState(null); // Stock Castex desde DUX API
-  const [stockADirecto,setStockADirecto]=useState(null); // Stock Siria desde DUX API
+  const [stockCDirecto,setStockCDirecto]=useState(null);
+  const [stockADirecto,setStockADirecto]=useState(null);
+  const [ventasCDirecto,setVentasCDirecto]=useState(null); // {cod: cantVendida}
+  const [ventasADirecto,setVentasADirecto]=useState(null);
+  const [duxPeriodo,setDuxPeriodo]=useState("5");
+  const [cargandoVentasDux,setCargandoVentasDux]=useState(false);
+  const [msgCargandoVentas,setMsgCargandoVentas]=useState("Cargando ventas...");
   const [wbS1,setWbS1]=useState(null);  // Stock Castex (manual)
   const [wbV1a,setWbV1a]=useState(null); // Ventas Castex 5 dias
   const [wbV1b,setWbV1b]=useState(null); // Ventas Castex mes anterior
@@ -852,30 +927,34 @@ export default function App(){
   const [sucursal,setSucursal]=useState("");
 
   const diasFinal=diasCustom?parseInt(diasCustom)||7:dias;
-  const tieneC=(wbS1||stockCDirecto)&&(wbV1a||wbV1b||wbV1c||wbV1d);
-  const tieneA=(wbS2||stockADirecto)&&(wbV2a||wbV2b||wbV2c||wbV2d);
+  const tieneC=(wbS1||stockCDirecto)&&(wbV1a||wbV1b||wbV1c||wbV1d||ventasCDirecto);
+  const tieneA=(wbS2||stockADirecto)&&(wbV2a||wbV2b||wbV2c||wbV2d||ventasADirecto);
   const todosListos=tieneC||tieneA;
   const sucLabel=sucursal==="C"?SUC1:sucursal==="A"?SUC2:"";
 
   // Recalcular al cambiar sucursal si ya hay datos cargados
   const cambiarSucursal=(v)=>{
     setSucursal(v);
-    if(wbS1&&wbV1&&wbS2&&wbV2){
+    if(wbS1&&wbS2){
       setTimeout(()=>{
         try{
-          const sC=wbS1?parseStock(wbS1):[];
-          const sA=wbS2?parseStock(wbS2):[];
+          const sC=stockCDirecto||(wbS1?parseStock(wbS1):[]);
+          const sA=stockADirecto||(wbS2?parseStock(wbS2):[]);
           const diaActual=parseInt(diasCorriente)||new Date().getDate();
+          const diasDux=duxPeriodo==="5"?5:duxPeriodo==="30"?30:diaActual;
+          const mkVmDux=(ventas,dias)=>{if(!ventas||Object.keys(ventas).length===0)return null;const vm={};Object.entries(ventas).forEach(([cod,cant])=>{vm[cod]=cant/dias;});return vm;};
+          const vmDuxC=mkVmDux(ventasCDirecto,diasDux);
+          const vmDuxA=mkVmDux(ventasADirecto,diasDux);
           const vC5=wbV1a?parseVentas(wbV1a):null;
           const vC30=wbV1b?parseVentas(wbV1b):null;
           const vC51=wbV1c?parseVentas(wbV1c):null;
           const vCd=wbV1d?parseVentas(wbV1d):null;
-          const combC=combinarVentas(vC5,vC30,vC51,vCd,diaActual);
+          const combC=vmDuxC?{vm:vmDuxC,dias:diasDux,esVentaDiaria:true}:combinarVentas(vC5,vC30,vC51,vCd,diaActual);
           const vA5=wbV2a?parseVentas(wbV2a):null;
           const vA30=wbV2b?parseVentas(wbV2b):null;
           const vA51=wbV2c?parseVentas(wbV2c):null;
           const vAd=wbV2d?parseVentas(wbV2d):null;
-          const combA=combinarVentas(vA5,vA30,vA51,vAd,diaActual);
+          const combA=vmDuxA?{vm:vmDuxA,dias:diasDux,esVentaDiaria:true}:combinarVentas(vA5,vA30,vA51,vAd,diaActual);
           const diasRep=combC.dias||combA.dias||diasFinal;
           const gNorm=agrupar(calcular(sC,[],sA,[],diasRep,false,v,combC.vm,combA.vm).filter(p=>p.cant>0));
           const gAlert=agrupar(calcular(sC,[],sA,[],diasRep,true,v,combC.vm,combA.vm).filter(p=>p.esQuiebre));
@@ -899,16 +978,28 @@ export default function App(){
         const sA=stockADirecto||(wbS2?parseStock(wbS2):[]);
         // Ventas Castex - combinar los que haya
         const diaActual=parseInt(diasCorriente)||new Date().getDate();
+        // Si hay ventas de DUX, usarlas directamente
+        const diasDux=duxPeriodo==="5"?5:duxPeriodo==="30"?30:diaActual;
+        // Convertir ventas DUX (totales) a ventas diarias para combinarVentas
+        const mkVmDux=(ventas,dias)=>{
+          if(!ventas||Object.keys(ventas).length===0)return null;
+          const vm={};
+          Object.entries(ventas).forEach(([cod,cant])=>{vm[cod]=cant/dias;});
+          return vm;
+        };
+        const vmDuxC=mkVmDux(ventasCDirecto,diasDux);
+        const vmDuxA=mkVmDux(ventasADirecto,diasDux);
         const vC5=wbV1a?parseVentas(wbV1a):null;
         const vC30=wbV1b?parseVentas(wbV1b):null;
         const vC51=wbV1c?parseVentas(wbV1c):null;
         const vCd=wbV1d?parseVentas(wbV1d):null;
-        const combC=combinarVentas(vC5,vC30,vC51,vCd,diaActual);
+        // Si hay ventas DUX, tienen prioridad; si no, usar archivos manuales
+        const combC=vmDuxC?{vm:vmDuxC,dias:diasDux,esVentaDiaria:true}:combinarVentas(vC5,vC30,vC51,vCd,diaActual);
         const vA5=wbV2a?parseVentas(wbV2a):null;
         const vA30=wbV2b?parseVentas(wbV2b):null;
         const vA51=wbV2c?parseVentas(wbV2c):null;
         const vAd=wbV2d?parseVentas(wbV2d):null;
-        const combA=combinarVentas(vA5,vA30,vA51,vAd,diaActual);
+        const combA=vmDuxA?{vm:vmDuxA,dias:diasDux,esVentaDiaria:true}:combinarVentas(vA5,vA30,vA51,vAd,diaActual);
         const diasRep=combC.dias||combA.dias||diasFinal;
         const gNorm=agrupar(calcular(sC,[],sA,[],diasRep,false,sucursal,combC.vm,combA.vm).filter(p=>p.cant>0));
         const gAlert=agrupar(calcular(sC,[],sA,[],diasRep,true,sucursal,combC.vm,combA.vm).filter(p=>p.esQuiebre));
@@ -1026,18 +1117,27 @@ export default function App(){
               </div>
             ):(
               <div style={{background:"#3A5A3C15",borderRadius:12,padding:12,marginBottom:14,border:"1px solid #3A5A3C40"}}>
-                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:6}}>
-                  <div style={{fontSize:11,fontWeight:700,color:C.green}}>✅ DUX conectado ({duxSucursales.length} sucursales)</div>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
+                  <div style={{fontSize:11,fontWeight:700,color:C.green}}>✅ DUX conectado</div>
                   <button onClick={()=>{localStorage.removeItem("dux_token");localStorage.removeItem("dux_empresa_id");localStorage.removeItem("dux_sucursales");setDuxToken("");setDuxSucursales(null);setDuxEmpresaId("");}}
                     style={{background:"transparent",border:"1px solid #3A5A3C40",borderRadius:6,padding:"2px 8px",fontSize:9,color:C.muted,cursor:"pointer"}}>Desconectar</button>
                 </div>
-                <button onClick={cargarStockDuxAuto} disabled={cargandoStockDux}
-                  style={{width:"100%",background:cargandoStockDux?C.border:C.green,color:"#fff",border:"none",borderRadius:10,padding:"10px",fontSize:12,fontWeight:700,cursor:"pointer"}}>
-                  {cargandoStockDux?"Cargando stock...":"📦 Cargar stock automáticamente desde DUX"}
+                <div style={{fontSize:10,fontWeight:700,color:C.gold,marginBottom:6}}>📈 Cargar ventas automáticamente</div>
+                <div style={{display:"flex",gap:6,marginBottom:8}}>
+                  {[["5","Últimos 5 días"],["30","Mes anterior"],["corriente","Mes corriente"]].map(([v,lb])=>(
+                    <div key={v} onClick={()=>setDuxPeriodo(v)}
+                      style={{flex:1,background:duxPeriodo===v?C.terracotta:C.surface,border:"2px solid "+(duxPeriodo===v?C.terracotta:C.border),borderRadius:10,padding:"8px 4px",textAlign:"center",cursor:"pointer"}}>
+                      <div style={{fontSize:10,fontWeight:700,color:duxPeriodo===v?"#fff":C.cream}}>{lb}</div>
+                    </div>
+                  ))}
+                </div>
+                <button onClick={cargarVentasDux} disabled={cargandoVentasDux}
+                  style={{width:"100%",background:cargandoVentasDux?C.border:C.terracotta,color:"#fff",border:"none",borderRadius:10,padding:"10px",fontSize:12,fontWeight:700,cursor:"pointer",marginBottom:6}}>
+                  {cargandoVentasDux?msgCargandoVentas:"📈 Cargar ventas desde DUX"}
                 </button>
-                {(stockCDirecto||stockADirecto)&&(
-                  <div style={{fontSize:10,color:C.green,marginTop:6,textAlign:"center"}}>
-                    ✅ Stock cargado: {stockCDirecto?.length||0} prod. Castex · {stockADirecto?.length||0} prod. Siria
+                {(ventasCDirecto||ventasADirecto)&&(
+                  <div style={{fontSize:10,color:C.green,textAlign:"center"}}>
+                    ✅ Ventas cargadas · {Object.keys(ventasCDirecto||{}).length} prod. Castex · {Object.keys(ventasADirecto||{}).length} prod. Siria
                   </div>
                 )}
               </div>
