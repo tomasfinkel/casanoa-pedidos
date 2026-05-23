@@ -741,6 +741,7 @@ export default function App(){
       const vA=await cargarFacturas(idSucA,"Siria");
       setVentasCDirecto(vC);
       setVentasADirecto(vA);
+      try{localStorage.setItem("ventasC",JSON.stringify(vC));localStorage.setItem("ventasA",JSON.stringify(vA));localStorage.setItem("ventasDias",duxPeriodo);}catch{}
       alert("✅ Ventas cargadas: "+Object.keys(vC).length+" productos en Castex, "+Object.keys(vA).length+" en Siria");
     }catch(e){
       alert("Error cargando ventas: "+e.message);
@@ -889,11 +890,21 @@ export default function App(){
     setCargandoStockDux(false);
   };
 
-  const [stockCDirecto,setStockCDirecto]=useState(null);
-  const [stockADirecto,setStockADirecto]=useState(null);
-  const [ventasCDirecto,setVentasCDirecto]=useState(null); // {cod: cantVendida}
-  const [ventasADirecto,setVentasADirecto]=useState(null);
-  const [duxPeriodo,setDuxPeriodo]=useState("5");
+  const [stockCDirecto,setStockCDirecto]=useState(()=>{
+    try{const d=localStorage.getItem("stockC");return d?JSON.parse(d):null;}catch{return null;}
+  });
+  const [stockADirecto,setStockADirecto]=useState(()=>{
+    try{const d=localStorage.getItem("stockA");return d?JSON.parse(d):null;}catch{return null;}
+  });
+  const [ventasCDirecto,setVentasCDirecto]=useState(()=>{
+    try{const d=localStorage.getItem("ventasC");return d?JSON.parse(d):null;}catch{return null;}
+  });
+  const [ventasADirecto,setVentasADirecto]=useState(()=>{
+    try{const d=localStorage.getItem("ventasA");return d?JSON.parse(d):null;}catch{return null;}
+  });
+  const [duxPeriodo,setDuxPeriodo]=useState(()=>{
+    try{return localStorage.getItem("ventasDias")||"5";}catch{return "5";}
+  });
   const [cargandoVentasDux,setCargandoVentasDux]=useState(false);
   const [msgCargandoVentas,setMsgCargandoVentas]=useState("Cargando ventas...");
   const [wbS1,setWbS1]=useState(null);  // Stock Castex (manual)
@@ -1154,12 +1165,23 @@ export default function App(){
               </div>
             )}
 
+            {(stockCDirecto||stockADirecto||ventasCDirecto||ventasADirecto)&&(
+              <div style={{background:"#3A5A3C15",border:"1px solid #3A5A3C40",borderRadius:10,padding:"10px 14px",marginBottom:10,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                <div style={{fontSize:11,color:C.green,fontWeight:700}}>
+                  ✅ Datos guardados: {stockCDirecto?"Stock Castex ":""}{ stockADirecto?"Stock Siria ":""}{ventasCDirecto?"Ventas":""}
+                </div>
+                <button onClick={()=>{
+                  setStockCDirecto(null);setStockADirecto(null);setVentasCDirecto(null);setVentasADirecto(null);
+                  try{localStorage.removeItem("stockC");localStorage.removeItem("stockA");localStorage.removeItem("ventasC");localStorage.removeItem("ventasA");}catch{}
+                }} style={{background:"transparent",border:"1px solid #3A5A3C40",borderRadius:6,padding:"3px 8px",fontSize:9,color:C.muted,cursor:"pointer"}}>Limpiar</button>
+              </div>
+            )}
             <div style={{fontSize:11,color:C.creamDim,marginBottom:12,textAlign:"center"}}>— o subí los archivos manualmente —</div>
             {/* CASTEX */}
             <div style={{marginBottom:14,background:C.bg,borderRadius:12,padding:12,border:"1px solid "+C.border}}>
               <div style={{fontSize:10,fontWeight:700,color:C.gold,marginBottom:8,textTransform:"uppercase",letterSpacing:1}}>Sucursal {SUC1}</div>
               <div style={{display:"flex",gap:8,marginBottom:8}}>
-                <UploadZone label="Stock Castex" icon="📦" onFile={setWbS1} loaded={!!wbS1} uid="c0"/>
+                <UploadZone label="Stock Castex" icon="📦" onFile={(wb)=>{setWbS1(wb);try{const d=parseStock(wb);localStorage.setItem("stockC",JSON.stringify(d));setStockCDirecto(d);}catch{}}} loaded={!!wbS1||!!stockCDirecto} uid="c0"/>
               </div>
               <div style={{fontSize:9,color:C.creamDim,marginBottom:6,fontWeight:600}}>VENTAS (subí las que tengas):</div>
               <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
@@ -1173,7 +1195,7 @@ export default function App(){
             <div style={{marginBottom:14,background:C.bg,borderRadius:12,padding:12,border:"1px solid "+C.border}}>
               <div style={{fontSize:10,fontWeight:700,color:C.gold,marginBottom:8,textTransform:"uppercase",letterSpacing:1}}>Sucursal {SUC2}</div>
               <div style={{display:"flex",gap:8,marginBottom:8}}>
-                <UploadZone label="Stock Siria" icon="📦" onFile={setWbS2} loaded={!!wbS2} uid="a0"/>
+                <UploadZone label="Stock Siria" icon="📦" onFile={(wb)=>{setWbS2(wb);try{const d=parseStock(wb);localStorage.setItem("stockA",JSON.stringify(d));setStockADirecto(d);}catch{}}} loaded={!!wbS2||!!stockADirecto} uid="a0"/>
               </div>
               <div style={{fontSize:9,color:C.creamDim,marginBottom:6,fontWeight:600}}>VENTAS (subí las que tengas):</div>
               <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
