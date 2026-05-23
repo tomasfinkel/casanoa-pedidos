@@ -244,6 +244,7 @@ function calcularTransferencias(stockC,stockA,vmC,vmA,dias){
   return res.sort((a,b)=>b.cant-a.cant);
 }
 
+const NO_CONJUNTO=new Set(["RAZ&CIA","NATURE FOODIE SRL"]);
 function calcularPedidosConjuntos(stockC,stockA,vmC,vmA,dias){
   const mapaC={};
   stockC.forEach(p=>{mapaC[String(p["Código Producto"]||"").trim()]=p;});
@@ -260,7 +261,8 @@ function calcularPedidosConjuntos(stockC,stockA,vmC,vmA,dias){
     if(!nombre)return;
     const ean=String(pC["Código Barra"]||"").trim();
     const bulto=getBulto(prov,ean,cod,nombre);
-    if(!bulto||bulto<=1)return; // Solo productos con bulto
+    if(!bulto||bulto<=1)return;
+    if(NO_CONJUNTO.has(prov))return; // Excluir proveedores sin pedido conjunto
     const sRC=parseFloat(pC["Stock Real"])||0;
     const sRA=parseFloat(pA["Stock Real"])||0;
     const frecProv=FRECUENCIAS[prov];
