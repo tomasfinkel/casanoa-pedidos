@@ -24,10 +24,14 @@ const BULTOS_COD = {
   "POSTA EXPRESS S.R.L.": {"HEINZ1": 12, "HEINZ3": 6, "HEINZ4": 6, "HEINZ5": 6, "HEINZ6": 6, "HEINZ822": 6, "HEINZJA": 6, "CIR01": 12, "CIR02": 12, "CIR03": 12, "CIR04": 12, "CIR05": 12, "CIR06": 12, "CIR07": 12, "NAVE001": 6, "NAVEIA2": 6, "KRAFT2": 6, "67060": 12, "66104": 6}
 ,
   "RAZ&CIA": {"3429": 54},
+  "LUVIK S.A.": {"22526": 6, "37829": 6, "40122649": 6, "KUH00": 6, "KUH01": 6, "05875109": 15, "5877325": 15, "71255": 15, "MARETTI": 15},
+  "DULIKO SRL": {"AUT1": 24, "AUT02": 24, "286131": 24, "06009": 12, "162044": 12, "162327": 12, "4000728": 12, "62549": 12, "97401": 12, "OSEM01": 12, "NATURALFEEDING01": 12},
   "LEY SECA SOCIEDAD ANONIMA": {"09211": 24, "11136": 24, "11283": 24, "SANPE": 15, "SANPE1": 24, "SANPE2": 24, "SANPE3": 24},
   "NATURE FOODIE SRL": {"10918": 6, "10919": 6, "10920": 6, "10921": 6, "HOLS457": 6, "HOLSOM00": 6, "HOLSOM05": 6, "HOLSOM9": 6, "HOLSOM47": 6, "10922": 6, "10923": 6, "10925": 6, "11208": 6, "HOLSOM06": 6, "HOLSOM07": 6, "HOLSOM08": 6, "HOLSOM10": 6, "HOLSOM11": 6, "HOLSOM12": 6, "HOLSOM13": 6, "HOLSOM14": 6, "HOLSOM16": 6, "HOLSOM18": 6, "HOLSOM19": 6, "HOLSOM": 15, "HOLSOM010": 15, "11687": 12, "11694": 12, "11700": 12, "HOLSOM04": 6}
 };
 const BULTOS_NOMBRE = {
+  "PROTA": {"PROTA": 12},
+  "DIETETICA CIENTIFICA SOCIEDAD ANONIMA COMERCIAL INDUSTRIAL FIN INM": {"YIN YANG": 10},
   "CABRALES SA": {"TWININGS":12,"BARILLA SPAGHETTI":25,"BARILLA SPAGHETTINI":25,"BARILLA TORTIGLIONI":12,"BARILLA PENNE":12,"BARILLA FUSILLI":12,"BARILLA LASAGNE":15,"BARILLA SPAGHETTI INTEGRAL":24}
 };
 const BULTOS_FIJO = {"BIMBO SALMAS":28,"NATURAL PROTEIN KIBAR SRL":100,"WAPI":24};
@@ -245,6 +249,8 @@ function calcularTransferencias(stockC,stockA,vmC,vmA,dias){
 }
 
 const NO_CONJUNTO=new Set(["RAZ&CIA","NATURE FOODIE SRL"]);
+const BULTO_PROV_TOTAL={"NATURE FOODIE SRL":6}; // Bulto total del proveedor, mezcla de sabores
+const MEDIO_BULTO=new Set(["MARQUISSE SA"]); // Pueden pedir medio bulto
 function calcularPedidosConjuntos(stockC,stockA,vmC,vmA,dias){
   const mapaC={};
   stockC.forEach(p=>{mapaC[String(p["Código Producto"]||"").trim()]=p;});
@@ -308,6 +314,40 @@ function agrupar(productos){
     tieneQuiebre:items.some(i=>i.esQuiebre),
     tieneTransf:items.some(i=>i.transferDesde),
   })).sort((a,b)=>b.items.length-a.items.length);
+}
+
+// Ajusta cantidades para proveedores con bulto total o medio bulto
+function ajustarCantidadesProv(grupos){
+  return grupos.map(g=>{
+    // NATURE FOODIE - bulto total de 6 mezclando sabores
+    if(BULTO_PROV_TOTAL[g.prov]){
+      const bultoTotal=BULTO_PROV_TOTAL[g.prov];
+      const totalNecesita=g.items.reduce((s,p)=>s+p.cant,0);
+      if(totalNecesita===0)return g;
+      // Redondear total al multiplo de bultoTotal
+      const totalRedondeado=Math.ceil(totalNecesita/bultoTotal)*bultoTotal;
+      const extra=totalRedondeado-totalNecesita;
+      // Distribuir proporcionalmente
+      const items=[...g.items];
+      // Agregar el extra al producto que mas necesita
+      if(extra>0){
+        const iMax=items.reduce((mi,p,i)=>p.cant>items[mi].cant?i:mi,0);
+        items[iMax]={...items[iMax],cant:items[iMax].cant+extra};
+      }
+      return{...g,items,total:totalRedondeado};
+    }
+    // MARQUISSE - medio bulto permitido
+    if(MEDIO_BULTO.has(g.prov)){
+      const items=g.items.map(p=>{
+        if(!p.bulto||p.bulto<=1)return p;
+        const medioBulto=Math.ceil(p.bulto/2);
+        const cant=Math.ceil(p.cant/medioBulto)*medioBulto;
+        return{...p,cant};
+      });
+      return{...g,items,total:items.reduce((s,p)=>s+p.cant,0)};
+    }
+    return g;
+  });
 }
 
 function mkOrden(g,cants,numOrden,sucLabel){
@@ -710,7 +750,7 @@ export default function App(){
         let offset=0;const limit=50;let total=0;
         while(true){
           setMsgCargandoVentas("Cargando "+nombreSuc+"... ("+total+" facturas)");
-          await new Promise(r=>setTimeout(r,6000));
+          await new Promise(r=>setTimeout(r,3000));
           const url=BASE_URL+"?endpoint=facturas&fechaDesde="+fechaDesde+"&fechaHasta="+fechaHasta+"&idEmpresa="+duxEmpresaId+"&idSucursal="+idSucursal+"&offset="+offset+"&limit="+limit+"&anuladas=false";
           const resp=await fetch(url,{headers:{"Authorization":duxToken}});
           const text=await resp.text();
@@ -739,6 +779,7 @@ export default function App(){
       };
       setMsgCargandoVentas("Cargando Castex...");
       const vC=await cargarFacturas(idSucC,"Castex");
+      await new Promise(r=>setTimeout(r,3000));
       setMsgCargandoVentas("Cargando Siria...");
       const vA=await cargarFacturas(idSucA,"Siria");
       setVentasCDirecto(vC);
@@ -984,7 +1025,7 @@ export default function App(){
           const gAlert=agrupar(calcular(sC,[],sA,[],diasRep,true,v,combC.vm,combA.vm).filter(p=>p.esQuiebre));
           const transf=calcularTransferencias(sC,sA,combC.vm,combA.vm,diasRep);
           const conj=calcularPedidosConjuntos(sC,sA,combC.vm,combA.vm,diasRep);
-          setGrupos(gNorm);setAlertas(gAlert);setTransferencias(transf);setConjuntos(conj);
+          setGrupos(ajustarCantidadesProv(gNorm));setAlertas(gAlert);setTransferencias(transf);setConjuntos(conj);
           setCantsPorProv({});
         // No resetear pedidos realizados - se mantienen con su fecha
           setTab(gAlert.length>0?"alertas":"pedidos");
@@ -1029,7 +1070,7 @@ export default function App(){
         const gAlert=agrupar(calcular(sC,[],sA,[],diasRep,true,sucursal,combC.vm,combA.vm).filter(p=>p.esQuiebre));
         const transf=calcularTransferencias(sC,sA,combC.vm,combA.vm,diasRep);
         const conj=calcularPedidosConjuntos(sC,sA,combC.vm,combA.vm,diasRep);
-        setGrupos(gNorm);setAlertas(gAlert);setTransferencias(transf);setConjuntos(conj);
+        setGrupos(ajustarCantidadesProv(gNorm));setAlertas(gAlert);setTransferencias(transf);setConjuntos(conj);
         setTab(gAlert.length>0?"alertas":"pedidos");
       }catch(e){setErr("Error: "+e.message);console.error(e);}
       setProc(false);
