@@ -177,21 +177,37 @@ function calcular(stockC,ventasC,stockA,ventasA,diasV,soloQuiebre,sucursal,venta
       ventaDiaria=diasV>0?vend/diasV:0;
     }
     const proy=Math.round(ventaDiaria*diasProy);
-    const cant=Math.max(falt,Math.max(0,proy-sR));
+    const cantBruta=Math.max(falt,Math.max(0,proy-sR));
     const bulto=getBulto(prov,ean,cod,nombre);
-    let cantF=bulto?redondear(Math.round(cant),bulto):Math.round(cant);
+    
+    // Calcular sobrante de la otra sucursal para descontarlo del pedido
+    const DIAS_TRANSF=15;
+    let cantTransf=0,transferDesde=null;
+    if(ventasDiariaC&&ventasDiariaA){
+      const vdC=ventasDiariaC[cod]||0;
+      const vdA=ventasDiariaA[cod]||0;
+      const proyC15=Math.round(vdC*DIAS_TRANSF);
+      const proyA15=Math.round(vdA*DIAS_TRANSF);
+      const sobranteC=Math.max(0,sRC-proyC15);
+      const sobranteA=Math.max(0,sRA-proyA15);
+      if(sucursal==="C"&&sobranteA>=MIN_TRANSF&&cantBruta>0){
+        cantTransf=Math.min(sobranteA,cantBruta);
+        if(cantTransf>=MIN_TRANSF)transferDesde=SUC2;
+        else cantTransf=0;
+      } else if(sucursal==="A"&&sobranteC>=MIN_TRANSF&&cantBruta>0){
+        cantTransf=Math.min(sobranteC,cantBruta);
+        if(cantTransf>=MIN_TRANSF)transferDesde=SUC1;
+        else cantTransf=0;
+      }
+    }
+    
+    // Descontar transferencia del pedido al proveedor
+    const cantNeta=Math.max(0,cantBruta-cantTransf);
+    let cantF=bulto?redondear(Math.round(cantNeta),bulto):Math.round(cantNeta);
     if(BULTO_MIN[prov]&&cantF>0&&cantF<BULTO_MIN[prov])cantF=BULTO_MIN[prov];
     if(BULTO_MAX[prov]&&cantF>BULTO_MAX[prov])cantF=BULTO_MAX[prov];
-    if(cantF<=0&&!esQuiebre)return;
-    // Transferencias - minimo MIN_TRANSF
-    let transferDesde=null,cantTransf=0;
-    if(sucursal==="C"&&TRANSF_A_C[cod]>=MIN_TRANSF){transferDesde=SUC2;cantTransf=TRANSF_A_C[cod];}
-    else if(sucursal==="A"&&TRANSF_C_A[cod]>=MIN_TRANSF){transferDesde=SUC1;cantTransf=TRANSF_C_A[cod];}
-    else if(!sucursal){
-      if(TRANSF_C_A[cod]>=MIN_TRANSF){transferDesde=SUC1;cantTransf=TRANSF_C_A[cod];}
-      else if(TRANSF_A_C[cod]>=MIN_TRANSF){transferDesde=SUC2;cantTransf=TRANSF_A_C[cod];}
-    }
-    res.push({cod,ean,nombre,prov,sR,sRC,sRA,falt,vend,vendC,vendA,proy,cant:cantF,bulto,esQuiebre,transferDesde,cantTransf});
+    if(cantF<=0&&cantTransf===0&&!esQuiebre)return;
+    res.push({cod,ean,nombre,prov,sR,sRC,sRA,falt,vend,vendC,vendA,proy,cant:cantF,cantBruta:Math.round(cantBruta),bulto,esQuiebre,transferDesde,cantTransf:Math.round(cantTransf)});
   });
   return res;
 }
@@ -515,7 +531,7 @@ function Card({g,num,onCantChange,esAlerta,pedido,onMarcarPedido,numOrden,sucLab
                     <span style={{color:C.dark,flex:1}}>{p.nombre}</span>
                     <span style={{color:C.terracotta,fontWeight:700,marginLeft:8}}>{getC(p.cod,p.cant)} u.</span>
                   </div>
-                  {p.transferDesde&&<div style={{fontSize:9,color:C.orange,fontWeight:700,marginTop:2}}>⚠️ Podés transferir {p.cantTransf}u. desde {p.transferDesde}</div>}
+                  {p.transferDesde&&<div style={{fontSize:9,color:C.green,fontWeight:700,marginTop:2}}>↔️ Transferir {p.cantTransf}u. desde {p.transferDesde===SUC1?"Castex":"Siria"} → pedir {p.cant}u.</div>}
                 </div>
               ))}
             </div>
@@ -544,7 +560,7 @@ function Card({g,num,onCantChange,esAlerta,pedido,onMarcarPedido,numOrden,sucLab
                         <tr key={p.cod} style={{background:rowBg}}>
                           <td style={{padding:"5px 8px",maxWidth:150,fontSize:10}}>
                             <div style={{color:p.esQuiebre?C.red:C.dark,fontWeight:p.esQuiebre?700:400}}>{p.nombre}</div>
-                            {p.transferDesde&&<div style={{fontSize:9,color:C.orange,fontWeight:700,marginTop:1}}>⚠️ Transferir {p.cantTransf}u. desde {p.transferDesde}</div>}
+                            {p.transferDesde&&<div style={{fontSize:9,color:C.green,fontWeight:700,marginTop:1}}>↔️ Transferir {p.cantTransf}u. desde {p.transferDesde===SUC1?"Castex":"Siria"} → pedir {p.cant}u. al proveedor</div>}
                           </td>
                           <td style={{padding:"5px 4px",textAlign:"center",color:p.sRC===0?C.red:C.dark,fontWeight:p.sRC===0?800:400,fontSize:10}}>{p.sRC}</td>
                           <td style={{padding:"5px 4px",textAlign:"center",color:p.sRA===0?C.red:C.dark,fontWeight:p.sRA===0?800:400,fontSize:10}}>{p.sRA}</td>
