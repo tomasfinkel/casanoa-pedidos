@@ -760,34 +760,25 @@ export default function App(){
     if(!duxToken||!duxSucursales)return;
     setCargandoVentasDux(true);
     try{
-      // Calcular fechas segun periodo
       const hoy=new Date();
       const fmt=d=>d.toISOString().split("T")[0];
-      let fechaDesde,fechaHasta=fmt(hoy);
-      if(duxPeriodo==="5"){
-        const d=new Date(hoy);d.setDate(hoy.getDate()-5);
-        fechaDesde=fmt(d);
-      } else if(duxPeriodo==="30"){
-        const d=new Date(hoy.getFullYear(),hoy.getMonth()-1,1);
-        fechaDesde=fmt(d);
-        fechaHasta=fmt(new Date(hoy.getFullYear(),hoy.getMonth(),0));
-      } else {
-        fechaDesde=fmt(new Date(hoy.getFullYear(),hoy.getMonth(),1));
-      }
+      const diaActualN=hoy.getDate();
+      // Si van menos de 10 dias del mes, usar mes anterior; si no, mes corriente
+      const usarMesAnterior=diaActualN<10;
       // IDs de sucursales
       const getNombre=s=>String(s.sucursal||s.nombre||"").toUpperCase();
       const sucC=duxSucursales.find(s=>getNombre(s).includes("CASTEX"));
       const sucA=duxSucursales.find(s=>getNombre(s).includes("ARABE")||getNombre(s).includes("SIRIA"));
       const idSucC=sucC?.id||sucC?.idSucursal;
       const idSucA=sucA?.id||sucA?.idSucursal;
-      // Funcion para cargar facturas de una sucursal
-      const cargarFacturas=async(idSucursal,nombreSuc)=>{
+      // Funcion para cargar facturas de una sucursal en un rango de fechas
+      const cargarFacturas=async(idSucursal,nombreSuc,desde,hasta)=>{
         const ventas={};
         let offset=0;const limit=50;let total=0;
         while(true){
           setMsgCargandoVentas("Cargando "+nombreSuc+"... ("+total+" facturas)");
           await new Promise(r=>setTimeout(r,3000));
-          const url=BASE_URL+"?endpoint=facturas&fechaDesde="+fechaDesde+"&fechaHasta="+fechaHasta+"&idEmpresa="+duxEmpresaId+"&idSucursal="+idSucursal+"&offset="+offset+"&limit="+limit+"&anuladas=false";
+          const url=BASE_URL+"?endpoint=facturas&fechaDesde="+desde+"&fechaHasta="+hasta+"&idEmpresa="+duxEmpresaId+"&idSucursal="+idSucursal+"&offset="+offset+"&limit="+limit+"&anuladas=false";
           const resp=await fetch(url,{headers:{"Authorization":duxToken}});
           const text=await resp.text();
           let data;
@@ -797,7 +788,6 @@ export default function App(){
           }
           const facturas=Array.isArray(data?.results)?data.results:Array.isArray(data)?data:[];
           if(facturas.length===0)break;
-          // Sumar ventas por producto - items en campo "detalles"
           facturas.forEach(f=>{
             const items=f.detalles||[];
             items.forEach(item=>{
@@ -813,15 +803,62 @@ export default function App(){
         }
         return ventas;
       };
-      setMsgCargandoVentas("Cargando Castex...");
-      const vC=await cargarFacturas(idSucC,"Castex");
+      
+      // Calcular rangos de fechas automáticamente
+      const hace5=new Date(hoy);hace5.setDate(hoy.getDate()-5);
+      const fecha5=fmt(hace5);
+      const fechaHoy=fmt(hoy);
+      
+      let fechaPeriodo1Desde, fechaPeriodo1Hasta, diasPeriodo1;
+      if(usarMesAnterior){
+        // Mes anterior completo
+        const primerMesAnt=new Date(hoy.getFullYear(),hoy.getMonth()-1,1);
+        const ultimoMesAnt=new Date(hoy.getFullYear(),hoy.getMonth(),0);
+        fechaPeriodo1Desde=fmt(primerMesAnt);
+        fechaPeriodo1Hasta=fmt(ultimoMesAnt);
+        diasPeriodo1=ultimoMesAnt.getDate();
+      } else {
+        // Mes corriente
+        const primerMes=new Date(hoy.getFullYear(),hoy.getMonth(),1);
+        fechaPeriodo1Desde=fmt(primerMes);
+        fechaPeriodo1Hasta=fechaHoy;
+        diasPeriodo1=diaActualN;
+      }
+
+      // Cargar período 1 (mes anterior o corriente) - Castex y Siria
+      setMsgCargandoVentas(usarMesAnterior?"Cargando mes anterior Castex...":"Cargando mes corriente Castex...");
+      const vC1=await cargarFacturas(idSucC,"Castex",fechaPeriodo1Desde,fechaPeriodo1Hasta);
       await new Promise(r=>setTimeout(r,3000));
-      setMsgCargandoVentas("Cargando Siria...");
-      const vA=await cargarFacturas(idSucA,"Siria");
+      setMsgCargandoVentas(usarMesAnterior?"Cargando mes anterior Siria...":"Cargando mes corriente Siria...");
+      const vA1=await cargarFacturas(idSucA,"Siria",fechaPeriodo1Desde,fechaPeriodo1Hasta);
+      await new Promise(r=>setTimeout(r,3000));
+
+      // Cargar últimos 5 días - Castex y Siria  
+      setMsgCargandoVentas("Cargando últimos 5 días Castex...");
+      const vC5=await cargarFacturas(idSucC,"Castex",fecha5,fechaHoy);
+      await new Promise(r=>setTimeout(r,3000));
+      setMsgCargandoVentas("Cargando últimos 5 días Siria...");
+      const vA5=await cargarFacturas(idSucA,"Siria",fecha5,fechaHoy);
+
+      // Ponderar: 5 días peso 50%, período largo peso 50%
+      const ponderar=(v5,v1,dias1)=>{
+        const codigos=new Set([...Object.keys(v5),...Object.keys(v1)]);
+        const vFinal={};
+        codigos.forEach(cod=>{
+          const vd5=(v5[cod]||0)/5;
+          const vd1=(v1[cod]||0)/dias1;
+          vFinal[cod]=vd5*0.5+vd1*0.5; // venta diaria ponderada
+        });
+        return vFinal;
+      };
+
+      const vC=ponderar(vC5,vC1,diasPeriodo1);
+      const vA=ponderar(vA5,vA1,diasPeriodo1);
       setVentasCDirecto(vC);
       setVentasADirecto(vA);
-      try{localStorage.setItem("ventasC",JSON.stringify(vC));localStorage.setItem("ventasA",JSON.stringify(vA));localStorage.setItem("ventasDias",duxPeriodo);}catch{}
-      alert("✅ Ventas cargadas: "+Object.keys(vC).length+" productos en Castex, "+Object.keys(vA).length+" en Siria");
+      try{localStorage.setItem("ventasC",JSON.stringify(vC));localStorage.setItem("ventasA",JSON.stringify(vA));localStorage.setItem("ventasDias","ponderado");}catch{}
+      const diasLabel=usarMesAnterior?"mes anterior":"mes corriente";
+      alert("✅ Ventas cargadas (5 días + "+diasLabel+"): "+Object.keys(vC).length+" prod. Castex, "+Object.keys(vA).length+" prod. Siria");
     }catch(e){
       alert("Error cargando ventas: "+e.message);
     }
@@ -1082,14 +1119,9 @@ export default function App(){
         // Si hay ventas de DUX, usarlas directamente
         const diasDux=duxPeriodo==="5"?5:duxPeriodo==="30"?30:diaActual;
         // Convertir ventas DUX (totales) a ventas diarias para combinarVentas
-        const mkVmDux=(ventas,dias)=>{
-          if(!ventas||Object.keys(ventas).length===0)return null;
-          const vm={};
-          Object.entries(ventas).forEach(([cod,cant])=>{vm[cod]=cant/dias;});
-          return vm;
-        };
-        const vmDuxC=mkVmDux(ventasCDirecto,diasDux);
-        const vmDuxA=mkVmDux(ventasADirecto,diasDux);
+        // ventasCDirecto ya son ventas DIARIAS ponderadas
+        const vmDuxC=ventasCDirecto&&Object.keys(ventasCDirecto).length>0?ventasCDirecto:null;
+        const vmDuxA=ventasADirecto&&Object.keys(ventasADirecto).length>0?ventasADirecto:null;
         const vC5=wbV1a?parseVentas(wbV1a):null;
         const vC30=wbV1b?parseVentas(wbV1b):null;
         const vC51=wbV1c?parseVentas(wbV1c):null;
@@ -1264,18 +1296,10 @@ export default function App(){
                   <button onClick={()=>{localStorage.removeItem("dux_token");localStorage.removeItem("dux_empresa_id");localStorage.removeItem("dux_sucursales");setDuxToken("");setDuxSucursales(null);setDuxEmpresaId("");}}
                     style={{background:"transparent",border:"1px solid #3A5A3C40",borderRadius:6,padding:"2px 8px",fontSize:9,color:C.muted,cursor:"pointer"}}>Desconectar</button>
                 </div>
-                <div style={{fontSize:10,fontWeight:700,color:C.gold,marginBottom:6}}>📈 Cargar ventas automáticamente</div>
-                <div style={{display:"flex",gap:6,marginBottom:8}}>
-                  {[["5","Últimos 5 días"],["30","Mes anterior"],["corriente","Mes corriente"]].map(([v,lb])=>(
-                    <div key={v} onClick={()=>setDuxPeriodo(v)}
-                      style={{flex:1,background:duxPeriodo===v?C.terracotta:C.surface,border:"2px solid "+(duxPeriodo===v?C.terracotta:C.border),borderRadius:10,padding:"8px 4px",textAlign:"center",cursor:"pointer"}}>
-                      <div style={{fontSize:10,fontWeight:700,color:duxPeriodo===v?"#fff":C.cream}}>{lb}</div>
-                    </div>
-                  ))}
-                </div>
+                <div style={{fontSize:10,fontWeight:700,color:C.gold,marginBottom:8}}>📈 Ventas automáticas</div>
                 <button onClick={cargarVentasDux} disabled={cargandoVentasDux}
                   style={{width:"100%",background:cargandoVentasDux?C.border:C.terracotta,color:"#fff",border:"none",borderRadius:10,padding:"10px",fontSize:12,fontWeight:700,cursor:"pointer",marginBottom:6}}>
-                  {cargandoVentasDux?msgCargandoVentas:"📈 Cargar ventas desde DUX"}
+                  {cargandoVentasDux?msgCargandoVentas:"📈 Actualizar ventas desde DUX"}
                 </button>
                 {(ventasCDirecto||ventasADirecto)&&(
                   <div style={{fontSize:10,color:C.green,textAlign:"center"}}>
