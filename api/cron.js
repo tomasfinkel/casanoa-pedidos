@@ -143,6 +143,15 @@ export default async function handler(req, res) {
 
   try {
     console.log('Iniciando resumen diario...');
+    
+    // Test: ver qué devuelve el endpoint de items
+    await sleep(5500);
+    const testItems = await duxGet('items?idDeposito=7301&offset=0&limit=5', token);
+    console.log('Test items Castex:', JSON.stringify(testItems).substring(0, 300));
+    
+    await sleep(5500);
+    const testVentas = await duxGet(`facturas?fechaDesde=2026-05-19&fechaHasta=2026-05-24&idEmpresa=${ID_EMPRESA}&idSucursal=${ID_SUC_CASTEX}&offset=0&limit=3&anuladas=false`, token);
+    console.log('Test ventas Castex:', JSON.stringify(testVentas).substring(0, 300));
 
     // Cargar ventas de ambas sucursales
     const [ventasC, ventasA] = await Promise.all([
