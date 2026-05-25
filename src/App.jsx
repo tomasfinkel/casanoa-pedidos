@@ -175,15 +175,6 @@ function calcular(stockC,ventasC,stockA,ventasA,diasV,soloQuiebre,sucursal,venta
     else if(sucursal==="A"){sR=sRA;falt=faltA;vend=vendA;}
     else{sR=sRC+sRA;falt=faltC+faltA;vend=vendC+vendA;}
     const esQuiebre=sR===0||falt>0;
-    if(soloQuiebre){if(!esQuiebre||FRECUENCIAS[prov]===0)return;}
-    else{
-      if(!debeAparecer(prov,diasV))return;
-      // Para no semanales: solo aparecer si dias de cobertura < umbral
-      if(frecProv!==7&&frecProv!==undefined&&frecProv!==0){
-        const diasCobertura=ventaDiaria>0?sR/ventaDiaria:999;
-        if(diasCobertura>=DIAS_COBERTURA_UMBRAL)return;
-      }
-    }
     const frecProv=FRECUENCIAS[prov];
     // Semanales: proyectar frecuencia+4 dias. No semanales: proyectar 15 dias fijos
     const diasProy=frecProv===7?(frecProv+4):DIAS_COBERTURA_UMBRAL;
@@ -228,6 +219,13 @@ function calcular(stockC,ventasC,stockA,ventasA,diasV,soloQuiebre,sucursal,venta
     let cantF=bulto?redondear(Math.round(cantNeta),bulto):Math.round(cantNeta);
     if(BULTO_MIN[prov]&&cantF>0&&cantF<BULTO_MIN[prov])cantF=BULTO_MIN[prov];
     if(BULTO_MAX[prov]&&cantF>BULTO_MAX[prov])cantF=BULTO_MAX[prov];
+    // Para no semanales: solo aparecer si dias de cobertura < umbral
+    if(!soloQuiebre&&frecProv!==7&&frecProv!==undefined&&frecProv!==0){
+      const diasCobertura=ventaDiaria>0?sR/ventaDiaria:999;
+      if(diasCobertura>=DIAS_COBERTURA_UMBRAL&&!esQuiebre)return;
+    }
+    if(soloQuiebre&&(!esQuiebre||FRECUENCIAS[prov]===0))return;
+    if(!soloQuiebre&&!debeAparecer(prov,diasV))return;
     if(cantF<=0&&cantTransf===0&&!esQuiebre)return;
     res.push({cod,ean,nombre,prov,sR,sRC,sRA,falt,vend,vendC,vendA,proy,cant:cantF,cantBruta:Math.round(cantBruta),bulto,esQuiebre,transferDesde,cantTransf:Math.round(cantTransf)});
   });
