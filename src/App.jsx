@@ -37,6 +37,15 @@ const BULTOS_NOMBRE = {
 const BULTOS_FIJO = {"BIMBO SALMAS":28,"NATURAL PROTEIN KIBAR SRL":100,"WAPI":24};
 const BULTO_MIN = {"MUNIRA FOODS S.A.":8};
 const BULTO_MAX = {"PANE FROZEN S.R.L.":5};
+// Mapeo de EAN a proveedor real (para corregir asignaciones incorrectas en DUX)
+const EAN_PROV_OVERRIDE = {
+  "7798343751040":"RAZ&CIA","7798343751057":"RAZ&CIA","7798343750326":"RAZ&CIA",
+  "7798343751088":"RAZ&CIA","7798343751071":"RAZ&CIA","7798343750999":"RAZ&CIA",
+  "7798343751002":"RAZ&CIA","7798343751019":"RAZ&CIA","7798343751026":"RAZ&CIA",
+  "7798343751446":"RAZ&CIA","7798343751422":"RAZ&CIA","7798343751750":"RAZ&CIA",
+  "7798343751651":"RAZ&CIA","7798343751668":"RAZ&CIA","7798343751675":"RAZ&CIA",
+  "7798343751682":"RAZ&CIA","7798343751699":"RAZ&CIA","7798343751736":"RAZ&CIA",
+};
 const WEB_PROVS = new Set(["ALIMENTOS ORIGINALES S.R.L","GREEN & CO S.R.L.","KE PRODUCTO S.R.L.","FRU-SAN S.A.S.","LOS DELL ISOLA S.R.L.","MALIEX S A","SCALA, LUIS MARTIN EUGENIO","LACTEOS LA DELFINA S.A."]);
 const LINKS = {"SILOS S R L":"https://app.quotiza.com/silos-srl/lista-silos?category="};
 const NOMBRES = {
@@ -60,14 +69,13 @@ function getBulto(prov,ean,cod,nombre){
   return null;
 }
 function tieneBultoConf(prov){return!!(BULTOS_EAN[prov]||BULTOS_COD[prov]||BULTOS_NOMBRE[prov]||BULTOS_FIJO[prov]);}
+const DIAS_COBERTURA_UMBRAL=15; // Umbral de cobertura para no semanales
 function debeAparecer(prov,dias){
   const f=FRECUENCIAS[prov];
   if(f===undefined)return true;
   if(f===0)return false;
-  // Solo los semanales respetan la frecuencia para aparecer
-  // El resto aparece cuando el stock no cubre la proyeccion (se maneja en calcular)
-  if(f===7)return f<=dias;
-  return true; // No semanales siempre aparecen si necesitan stock
+  if(f===7)return f<=dias; // Semanales respetan frecuencia
+  return true; // No semanales siempre pasan el filtro (se filtra por cobertura en calcular)
 }
 function frecLabel(d){return d===7?"Semanal":d===15?"Quincenal":d===30?"Mensual":d===60?"Bimestral":"";}
 function nCorto(prov){return NOMBRES[prov]||prov;}
@@ -105,7 +113,12 @@ function combinarVentas(v5d,v30d,v51d,vCorr,diasCorr){
   const vmFinal={};
   let diasTotal=0;
   // Ponderar: mas peso a periodos mas largos
-  const pesos=maps.map(m=>m.dias);
+  // Más peso a períodos recientes: 5 días > mes corriente > mes anterior
+  const pesos=maps.map(m=>{
+    if(m.dias<=5)return 50;   // 5 días: peso 50%
+    if(m.dias<=31)return 30;  // mes corriente: peso 30%
+    return 20;                 // mes anterior: peso 20%
+  });
   const pesoTotal=pesos.reduce((s,p)=>s+p,0);
   codigos.forEach(cod=>{
     // Venta diaria ponderada
@@ -148,7 +161,8 @@ function calcular(stockC,ventasC,stockA,ventasA,diasV,soloQuiebre,sucursal,venta
     if(!p)return;
     const ean=String(p["Código Barra"]||"").trim();
     const nombre=String(p["Producto"]||"").trim();
-    const prov=String(p["Proveedor"]||"SIN PROVEEDOR").trim()||"SIN PROVEEDOR";
+    const provDux=String(p["Proveedor"]||"SIN PROVEEDOR").trim()||"SIN PROVEEDOR";
+    const prov=EAN_PROV_OVERRIDE[ean]||provDux;
     if(!nombre)return;
     const sRC=parseFloat((pC||{})["Stock Real"])||0;
     const sRA=parseFloat((pA||{})["Stock Real"])||0;
@@ -162,9 +176,17 @@ function calcular(stockC,ventasC,stockA,ventasA,diasV,soloQuiebre,sucursal,venta
     else{sR=sRC+sRA;falt=faltC+faltA;vend=vendC+vendA;}
     const esQuiebre=sR===0||falt>0;
     if(soloQuiebre){if(!esQuiebre||FRECUENCIAS[prov]===0)return;}
-    else{if(!debeAparecer(prov,diasV))return;}
+    else{
+      if(!debeAparecer(prov,diasV))return;
+      // Para no semanales: solo aparecer si dias de cobertura < umbral
+      if(frecProv!==7&&frecProv!==undefined&&frecProv!==0){
+        const diasCobertura=ventaDiaria>0?sR/ventaDiaria:999;
+        if(diasCobertura>=DIAS_COBERTURA_UMBRAL)return;
+      }
+    }
     const frecProv=FRECUENCIAS[prov];
-    const diasProy=(!soloQuiebre&&frecProv&&frecProv>0)?frecProv+3:diasV+3;
+    // Semanales: proyectar frecuencia+4 dias. No semanales: proyectar 15 dias fijos
+    const diasProy=frecProv===7?(frecProv+4):DIAS_COBERTURA_UMBRAL;
     // Calcular venta diaria combinada
     let ventaDiaria;
     const vdC=ventasDiariaC?ventasDiariaC[cod]||0:0;
