@@ -54,20 +54,25 @@ async function getStock(idDeposito, token) {
   
   while (true) {
     await sleep(3500);
-    const data = await duxGet(`items?idDeposito=${idDeposito}&offset=${offset}&limit=${limit}`, token);
-    const items = Array.isArray(data) ? data : (data?.items || []);
+    const data = await duxGet(`items?idDeposito=${idDeposito}&idEmpresa=${ID_EMPRESA}&offset=${offset}&limit=${limit}`, token);
+    const items = data?.results || (Array.isArray(data) ? data : []);
     if (items.length === 0) break;
     
     items.forEach(item => {
-      const cod = String(item.codigoItem || item.codigo || '').trim();
-      const s = parseFloat(item.stock || item.stockActual || 0);
-      const prov = item.proveedor || item.nombreProveedor || '';
-      const nombre = item.descripcion || item.nombre || '';
-      if (cod) stock[cod] = { stock: s, proveedor: prov, nombre };
+      const cod = String(item.cod_item || '').trim();
+      if (!cod) return;
+      // Stock del deposito especifico
+      const stockDep = item.stock?.find(s => String(s.id) === String(idDeposito));
+      const s = parseFloat(stockDep?.stock_real || 0);
+      const prov = item.proveedor?.proveedor || '';
+      const nombre = item.item || '';
+      const ean = item.codigos_barra?.[0] || '';
+      stock[cod] = { stock: s, proveedor: prov, nombre, ean };
     });
     
-    if (items.length < limit) break;
+    const total = data?.paging?.total || 0;
     offset += limit;
+    if (offset >= total || items.length < limit) break;
   }
   return stock;
 }
@@ -144,20 +149,7 @@ export default async function handler(req, res) {
   try {
     console.log('Iniciando resumen diario...');
     
-    // Test endpoints
-    await sleep(5500);
-    const testItems = await duxGet(`items?idDeposito=7301&idEmpresa=${ID_EMPRESA}&offset=0&limit=3`, token);
-    console.log('TEST ITEMS:', JSON.stringify(testItems).substring(0, 500));
-    
-    await sleep(5500);
-    const testVentas = await duxGet(`facturas?fechaDesde=2026-05-19&fechaHasta=2026-05-24&idEmpresa=${ID_EMPRESA}&idSucursal=2&offset=0&limit=2&anuladas=false`, token);
-    console.log('TEST VENTAS:', JSON.stringify(testVentas).substring(0, 500));
-    
-    // Retornar test result para debug
-    return res.status(200).json({
-      testItems: testItems,
-      testVentas: testVentas ? {total: testVentas?.paging?.total, primero: testVentas?.results?.[0]?.id} : null
-    });
+
 
     // Cargar ventas de ambas sucursales
     const [ventasC, ventasA] = await Promise.all([
