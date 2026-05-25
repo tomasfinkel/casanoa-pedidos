@@ -24,6 +24,8 @@ const BULTOS_COD = {
   "POSTA EXPRESS S.R.L.": {"HEINZ1": 12, "HEINZ3": 6, "HEINZ4": 6, "HEINZ5": 6, "HEINZ6": 6, "HEINZ822": 6, "HEINZJA": 6, "CIR01": 12, "CIR02": 12, "CIR03": 12, "CIR04": 12, "CIR05": 12, "CIR06": 12, "CIR07": 12, "NAVE001": 6, "NAVEIA2": 6, "KRAFT2": 6, "67060": 12, "66104": 6}
 ,
   "RAZ&CIA": {"3429": 54},
+  "VAMMA S.R.L.": {"01140": 24, "ARM1": 12, "ARM2": 12, "ARM3": 12, "VANIMA10": 12, "VANIMA12": 12, "022796916020": 6, "022796917515": 4, "8429": 4, "OGX03": 4, "OGX04": 4, "OGX1": 4, "OGX2": 4, "OGX4": 4, "OGX5": 6, "074312535451": 12, "2183": 24, "42904": 24, "NATURE3": 24, "1170": 12, "12449": 12, "757037950869": 4, "OXI12": 12, "OXI2": 4, "VANIMA13": 4, "11330": 12, "11331": 12, "ALMONDB": 12, "BLUE2": 12, "BLUE3": 12, "BLUE4": 12, "BLUE06": 12, "BLUE07": 12, "BLUE1": 4, "20604": 12, "20605": 12, "20609": 12, "9201": 12, "9420": 12, "9438": 12, "BOR1": 10, "BOR2": 10, "BOR3": 10, "BOR4": 10, "BOR10": 10, "BOR11": 10, "FEBREZE10": 6, "VANIMA14": 6, "VANIMA15": 6, "JERGE01": 6, "VANIMA9": 6, "VANIMA11": 6},
+  "GALA GOURMET S.A.": {"VERGANI20": 20, "VERGANI21": 20, "VERGANI22": 20, "VERGANI23": 20, "VERGANI24": 12, "VERGANI25": 12, "VERGANI02": 12, "VERGANI10": 12, "VERGANI26": 12, "VERGANI27": 12, "GALA08": 8, "GALA11": 8, "GALA12": 8, "VERGANI28": 20, "VERGANI29": 20, "VERGANI30": 20, "VERGANI31": 20, "GALA07": 8, "GALA09": 12, "GALA03": 12, "BACI01": 12, "BACI02": 12, "BACI03": 12, "PERU01": 12, "PERU02": 12, "PERU03": 12, "BACI04": 12, "GALA04": 12, "GALA05": 12, "GALA06": 12, "BACI05": 10, "BACI06": 10, "GALA02": 10, "BACI25": 10, "BACI07": 6, "BACI08": 6, "8000300298468": 16, "8000300328431": 16, "BACI200": 16, "PERU04": 20, "PERU05": 20, "PERU06": 20, "PERU07": 20, "PERU08": 20, "PERU09": 20, "BACI203": 9},
   "LUVIK S.A.": {"22526": 6, "37829": 6, "40122649": 6, "KUH00": 6, "KUH01": 6, "05875109": 15, "5877325": 15, "71255": 15, "MARETTI": 15},
   "DULIKO SRL": {"AUT1": 24, "AUT02": 24, "286131": 24, "06009": 12, "162044": 12, "162327": 12, "4000728": 12, "62549": 12, "97401": 12, "OSEM01": 12, "NATURALFEEDING01": 12},
   "LEY SECA SOCIEDAD ANONIMA": {"09211": 24, "11136": 24, "11283": 24, "SANPE": 15, "SANPE1": 24, "SANPE2": 24, "SANPE3": 24},
@@ -285,7 +287,7 @@ function calcularTransferencias(stockC,stockA,vmC,vmA,dias){
 }
 
 const NO_CONJUNTO=new Set(["RAZ&CIA","NATURE FOODIE SRL"]);
-const BULTO_PROV_TOTAL={"NATURE FOODIE SRL":6}; // Bulto total del proveedor, mezcla de sabores
+const BULTO_PROV_TOTAL={"NATURE FOODIE SRL":6}; // Vergani y Baci mezclan sabores pero por producto, no global // Bulto total del proveedor, mezcla de sabores
 const MEDIO_BULTO=new Set(["MARQUISSE SA"]); // Pueden pedir medio bulto
 function calcularPedidosConjuntos(stockC,stockA,vmC,vmA,dias){
   const mapaC={};
