@@ -144,14 +144,20 @@ export default async function handler(req, res) {
   try {
     console.log('Iniciando resumen diario...');
     
-    // Test: ver qué devuelve el endpoint de items
+    // Test endpoints
     await sleep(5500);
-    const testItems = await duxGet('items?idDeposito=7301&offset=0&limit=5', token);
-    console.log('Test items Castex:', JSON.stringify(testItems).substring(0, 300));
+    const testItems = await duxGet(`items?idDeposito=7301&idEmpresa=${ID_EMPRESA}&offset=0&limit=3`, token);
+    console.log('TEST ITEMS:', JSON.stringify(testItems).substring(0, 500));
     
     await sleep(5500);
-    const testVentas = await duxGet(`facturas?fechaDesde=2026-05-19&fechaHasta=2026-05-24&idEmpresa=${ID_EMPRESA}&idSucursal=${ID_SUC_CASTEX}&offset=0&limit=3&anuladas=false`, token);
-    console.log('Test ventas Castex:', JSON.stringify(testVentas).substring(0, 300));
+    const testVentas = await duxGet(`facturas?fechaDesde=2026-05-19&fechaHasta=2026-05-24&idEmpresa=${ID_EMPRESA}&idSucursal=2&offset=0&limit=2&anuladas=false`, token);
+    console.log('TEST VENTAS:', JSON.stringify(testVentas).substring(0, 500));
+    
+    // Retornar test result para debug
+    return res.status(200).json({
+      testItems: testItems,
+      testVentas: testVentas ? {total: testVentas?.paging?.total, primero: testVentas?.results?.[0]?.id} : null
+    });
 
     // Cargar ventas de ambas sucursales
     const [ventasC, ventasA] = await Promise.all([
