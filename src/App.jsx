@@ -1116,6 +1116,47 @@ export default function App(){
   };
 
   const handleCantChange=(prov,nc)=>{setCantsPorProv(prev=>({...prev,[prov]:nc}));};
+  const enviarEmailResumen=async()=>{
+    if(!grupos)return;
+    const fecha=new Date().toLocaleDateString("es-AR",{weekday:"long",year:"numeric",month:"long",day:"numeric"});
+    const pedidosHTML=grupos.filter(g=>!pedidosRealizados[g.prov]?.realizado).map(g=>`
+      <div style="margin-bottom:14px;border:1px solid #e0e0e0;border-radius:8px;overflow:hidden">
+        <div style="background:#f8f8f8;padding:9px 14px;font-weight:bold;color:#B85C38;font-size:13px">${g.nombre} (${g.items.length})</div>
+        ${g.items.map(p=>`<div style="padding:6px 14px;font-size:12px;color:#333;border-top:1px solid #f0f0f0;display:flex;justify-content:space-between">
+          <span>${p.nombre}${p.transferDesde?`<br><span style="color:#27AE60;font-size:11px">↔️ Transferir ${p.cantTransf}u desde ${p.transferDesde}</span>`:""}</span>
+          <span style="font-weight:bold">${p.cant}u</span>
+        </div>`).join("")}
+      </div>`).join("");
+    const transfHTML=transfFiltradas.map(t=>`
+      <div style="padding:8px 14px;font-size:12px;border-bottom:1px solid #f0f0f0">
+        <b>${t.nombre}</b> — ${t.desde} → ${t.hacia}: <b style="color:#27AE60">${t.cant}u</b>
+      </div>`).join("");
+    const html=`<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;background:#f5f5f5;padding:20px">
+      <div style="max-width:700px;margin:0 auto;background:white;border-radius:12px;overflow:hidden">
+        <div style="background:#B85C38;color:white;padding:24px">
+          <h1 style="margin:0;font-size:22px">🏪 Casa NOA — Pedidos del día</h1>
+          <p style="margin:4px 0 0;opacity:.8;font-size:13px">${fecha}</p>
+        </div>
+        <div style="padding:20px 24px">
+          <h2 style="font-size:15px;border-bottom:2px solid #f0f0f0;padding-bottom:8px">📋 Pedidos (${grupos.filter(g=>!pedidosRealizados[g.prov]?.realizado).length} proveedores)</h2>
+          ${pedidosHTML||"<p style='color:#888'>No hay pedidos pendientes.</p>"}
+        </div>
+        <div style="padding:0 24px 20px">
+          <h2 style="font-size:15px;border-bottom:2px solid #f0f0f0;padding-bottom:8px">↔️ Transferencias</h2>
+          ${transfHTML||"<p style='color:#888;font-size:13px'>No hay transferencias.</p>"}
+        </div>
+        <div style="background:#1A1410;color:#888;padding:14px 24px;font-size:11px;text-align:center">
+          casanoa-pedidos.vercel.app
+        </div>
+      </div>
+    </body></html>`;
+    try{
+      const r=await fetch("/api/email",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({subject:`📦 Pedidos del día — ${fecha}`,html})});
+      if(r.ok)alert("✅ Email enviado a info@casanoa.com.ar");
+      else alert("Error enviando email");
+    }catch(e){alert("Error: "+e.message);}
+  };
+
   const marcarPedido=(prov,estado)=>{
     setPedidosRealizados(prev=>{
       const nuevo={...prev};
@@ -1468,8 +1509,12 @@ export default function App(){
               </>
             )}
 
+            <button onClick={enviarEmailResumen}
+              style={{width:"100%",background:C.surface,color:C.gold,border:"1px solid "+C.gold,borderRadius:14,padding:12,fontSize:13,fontWeight:600,cursor:"pointer",marginTop:14,marginBottom:8}}>
+              📧 Enviar resumen por email
+            </button>
             <button onClick={()=>{setGrupos(null);setAlertas(null);setTransferencias([]);setConjuntos([]);setWbS1(null);setWbV1a(null);setWbV1b(null);setWbV1c(null);setWbV1d(null);setWbS2(null);setWbV2a(null);setWbV2b(null);setWbV2c(null);setWbV2d(null);setBusq("");setFiltro("todos");setCantsPorProv({});}}
-              style={{width:"100%",background:"transparent",color:C.creamDim,border:"1px solid "+C.border,borderRadius:14,padding:12,fontSize:13,fontWeight:600,cursor:"pointer",marginTop:14,marginBottom:32}}>
+              style={{width:"100%",background:"transparent",color:C.creamDim,border:"1px solid "+C.border,borderRadius:14,padding:12,fontSize:13,fontWeight:600,cursor:"pointer",marginBottom:32}}>
               Cargar nuevos archivos
             </button>
           </>
