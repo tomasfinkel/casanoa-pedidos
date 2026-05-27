@@ -260,14 +260,15 @@ function calcularTransferencias(stockC,stockA,vmC,vmA,dias){
     // Sobrante real: lo que queda despues de cubrir la proyeccion propia
     const sobranteC=Math.max(0,sRC-proyC);
     const sobranteA=Math.max(0,sRA-proyA);
-    const faltanteC=Math.max(0,proyC-sRC);
-    const faltanteA=Math.max(0,proyA-sRA);
+    // Si hay quiebre (stock=0), faltante mínimo = MIN_TRANSF aunque no haya ventas
+    const faltanteC=sRC===0&&vdC===0?MIN_TRANSF:Math.max(0,proyC-sRC);
+    const faltanteA=sRA===0&&vdA===0?MIN_TRANSF:Math.max(0,proyA-sRA);
     // Solo sugerir transferencia si AMBAS sucursales tienen datos de ventas
     // Si una tiene vdC=0 o vdA=0 probablemente no tiene ventas registradas -> ignorar
     if(vdC===0&&vdA===0)return; // Sin datos de ventas, no sugerir
     
     // Castex tiene sobrante real y Siria necesita
-    if(sobranteC>=MIN_TRANSF&&faltanteA>=MIN_TRANSF&&vdA>0){
+    if(sobranteC>=MIN_TRANSF&&faltanteA>=MIN_TRANSF){
       const cant=Math.min(sobranteC,faltanteA);
       const castexDespues=sRC-cant;
       // Verificar que Castex quede con al menos su proyeccion cubierta
@@ -275,7 +276,7 @@ function calcularTransferencias(stockC,stockA,vmC,vmA,dias){
         res.push({cod,nombre,prov,sRC,sRA,proyC,proyA,desde:SUC1,hacia:SUC2,cant:Math.round(cant)});
     }
     // Siria tiene sobrante real y Castex necesita
-    else if(sobranteA>=MIN_TRANSF&&faltanteC>=MIN_TRANSF&&vdC>0){
+    else if(sobranteA>=MIN_TRANSF&&faltanteC>=MIN_TRANSF){
       const cant=Math.min(sobranteA,faltanteC);
       const siriaDespues=sRA-cant;
       // Verificar que Siria quede con al menos su proyeccion cubierta
@@ -326,9 +327,9 @@ function calcularPedidosConjuntos(stockC,stockA,vmC,vmA,dias){
     // Solo sugerir si con un solo bulto se cubre ambas sucursales
     // y si ambas necesitan algo
     // Solo sugerir si ambas tienen datos de ventas
-    if(necesitaC>0&&necesitaA>0&&bultosTotal>=1&&vdC>0&&vdA>0){
+    if((necesitaC>0||necesitaA>0)&&bultosTotal>=1){
       // Distribucion: proporcional a lo que necesita cada una
-      const distC=Math.round(cantTotal*(necesitaC/totalNecesita)/bulto)*bulto||bulto;
+      const distC=totalNecesita>0?Math.round(cantTotal*(necesitaC/totalNecesita)/bulto)*bulto:0;
       const distA=cantTotal-distC;
       if(distA>=0)res.push({
         cod,nombre,prov,bulto,bultosTotal,cantTotal,
