@@ -1087,10 +1087,10 @@ export default function App(){
           const sC=stockCDirecto||(wbS1?parseStock(wbS1):[]);
           const sA=stockADirecto||(wbS2?parseStock(wbS2):[]);
           const diaActual=parseInt(diasCorriente)||new Date().getDate();
-          const diasDux=duxPeriodo==="5"?5:duxPeriodo==="30"?30:diaActual;
-          const mkVmDux=(ventas,dias)=>{if(!ventas||Object.keys(ventas).length===0)return null;const vm={};Object.entries(ventas).forEach(([cod,cant])=>{vm[cod]=cant/dias;});return vm;};
-          const vmDuxC=mkVmDux(ventasCDirecto,diasDux);
-          const vmDuxA=mkVmDux(ventasADirecto,diasDux);
+          // ventasCDirecto son ventas DIARIAS si vienen de DUX (duxPeriodo=ponderado)
+          // Si el usuario cargo Excel manualmente, ventasCDirecto es null
+          const vmDuxC=ventasCDirecto&&Object.keys(ventasCDirecto).length>0?ventasCDirecto:null;
+          const vmDuxA=ventasADirecto&&Object.keys(ventasADirecto).length>0?ventasADirecto:null;
           const vC5=wbV1a?parseVentas(wbV1a):null;
           const vC30=wbV1b?parseVentas(wbV1b):null;
           const vC51=wbV1c?parseVentas(wbV1c):null;
