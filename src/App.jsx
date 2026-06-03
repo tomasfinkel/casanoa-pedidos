@@ -260,9 +260,11 @@ function calcularTransferencias(stockC,stockA,vmC,vmA,dias){
     // Sobrante real: lo que queda despues de cubrir la proyeccion propia
     const sobranteC=Math.max(0,sRC-proyC);
     const sobranteA=Math.max(0,sRA-proyA);
-    // Si hay quiebre (stock=0), faltante mínimo = MIN_TRANSF aunque no haya ventas
-    const faltanteC=sRC===0&&vdC===0?MIN_TRANSF:Math.max(0,proyC-sRC);
-    const faltanteA=sRA===0&&vdA===0?MIN_TRANSF:Math.max(0,proyA-sRA);
+    // Usar faltante del Excel como fallback
+    const faltXlsC=parseFloat(pC["Ctd. Faltante"])||0;
+    const faltXlsA=parseFloat(pA["Ctd. Faltante"])||0;
+    const faltanteC=Math.max(faltXlsC,sRC===0?MIN_TRANSF:Math.max(0,proyC-sRC));
+    const faltanteA=Math.max(faltXlsA,sRA===0?MIN_TRANSF:Math.max(0,proyA-sRA));
     // Solo sugerir transferencia si AMBAS sucursales tienen datos de ventas
     // Si una tiene vdC=0 o vdA=0 probablemente no tiene ventas registradas -> ignorar
     if(vdC===0&&vdA===0)return; // Sin datos de ventas, no sugerir
@@ -316,8 +318,11 @@ function calcularPedidosConjuntos(stockC,stockA,vmC,vmA,dias){
     const vdA=vmA?vmA[cod]||0:0;
     const proyC=Math.round(vdC*diasProy);
     const proyA=Math.round(vdA*diasProy);
-    const necesitaC=Math.max(0,proyC-sRC);
-    const necesitaA=Math.max(0,proyA-sRA);
+    // Usar faltante del Excel como fallback si no hay ventas
+    const faltXlsC=parseFloat(pC["Ctd. Faltante"])||0;
+    const faltXlsA=parseFloat(pA["Ctd. Faltante"])||0;
+    const necesitaC=Math.max(faltXlsC,Math.max(0,proyC-sRC));
+    const necesitaA=Math.max(faltXlsA,Math.max(0,proyA-sRA));
     if(necesitaC<=0&&necesitaA<=0)return;
     const totalNecesita=necesitaC+necesitaA;
     if(totalNecesita<=0)return;
