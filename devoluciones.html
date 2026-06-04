@@ -170,10 +170,7 @@ tr:hover td{background:#faf8f5}
 
 <script>
 var BIN_ID = '6a20e685f5f4af5e29b5b47a';
-var CLOUD_NAME = 'dxk7cvync';
-var CLOUD_API_KEY = '454258782632147';
-var CLOUD_API_SECRET = 'VlsmKY4HRUYfCqCHylbRFJ5M9Nk';
-var CLOUD_UPLOAD_URL = 'https://api.cloudinary.com/v1_1/' + CLOUD_NAME + '/image/upload';
+
 
 
 
@@ -264,25 +261,27 @@ document.getElementById('fFoto').addEventListener('change', function() {
   var file = this.files[0]; if (!file) return;
   fotoStr = file.name;
   document.getElementById('fotoNom').textContent = 'Subiendo foto...';
-  var formData = new FormData();
-  formData.append('file', file);
-  formData.append('upload_preset', 'casanoa_unsigned');
-  formData.append('api_key', CLOUD_API_KEY);
-  fetch('/api/cloudinary', {
-    method: 'POST',
-    body: formData
-  }).then(function(r){ return r.json(); }).then(function(d){
-    if (d.secure_url) {
-      fotoData = d.secure_url;
-      document.getElementById('fotoNom').textContent = 'Foto subida';
-    } else {
-      document.getElementById('fotoNom').textContent = 'Error al subir foto';
+  var fr = new FileReader();
+  fr.onload = function(e) {
+    var base64 = e.target.result;
+    fetch('/api/cloudinary', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ file: base64 })
+    }).then(function(r){ return r.json(); }).then(function(d){
+      if (d.secure_url) {
+        fotoData = d.secure_url;
+        document.getElementById('fotoNom').textContent = 'Foto lista ✓';
+      } else {
+        document.getElementById('fotoNom').textContent = 'Error: ' + (d.error||'fallo');
+        fotoData = null;
+      }
+    }).catch(function(e){
+      document.getElementById('fotoNom').textContent = 'Error al subir';
       fotoData = null;
-    }
-  }).catch(function(){
-    document.getElementById('fotoNom').textContent = 'Error al subir foto';
-    fotoData = null;
-  });
+    });
+  };
+  fr.readAsDataURL(file);
 });
 
 document.getElementById('btnAdd').addEventListener('click', async function() {
