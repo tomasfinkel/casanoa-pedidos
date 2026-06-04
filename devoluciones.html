@@ -170,6 +170,10 @@ tr:hover td{background:#faf8f5}
 
 <script>
 var BIN_ID = '6a20e685f5f4af5e29b5b47a';
+var CLOUD_NAME = 'dxk7cvync';
+var CLOUD_API_KEY = '454258782632147';
+var CLOUD_API_SECRET = 'VlsmKY4HRUYfCqCHylbRFJ5M9Nk';
+var CLOUD_UPLOAD_URL = 'https://api.cloudinary.com/v1_1/' + CLOUD_NAME + '/image/upload';
 
 
 
@@ -215,6 +219,7 @@ async function loadData() {
     var data = await resp.json();
     registros = data.registros || [];
     provNums = data.provNums || {};
+
     setSync('Actualizado ' + new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}), 'ok');
     showErr('');
   } catch(e) {
@@ -232,7 +237,10 @@ async function saveData() {
     var resp = await fetch('/api/devoluciones', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ registros: registros, provNums: provNums })
+      body: JSON.stringify({
+        registros: registros,
+        provNums: provNums
+      })
     });
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
     setSync('Guardado ' + new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}), 'ok');
@@ -255,10 +263,26 @@ function scheduleReload() {
 document.getElementById('fFoto').addEventListener('change', function() {
   var file = this.files[0]; if (!file) return;
   fotoStr = file.name;
-  document.getElementById('fotoNom').textContent = file.name;
-  var fr = new FileReader();
-  fr.onload = function(e) { fotoData = e.target.result; };
-  fr.readAsDataURL(file);
+  document.getElementById('fotoNom').textContent = 'Subiendo foto...';
+  var formData = new FormData();
+  formData.append('file', file);
+  formData.append('upload_preset', 'casanoa_unsigned');
+  formData.append('api_key', CLOUD_API_KEY);
+  fetch('/api/cloudinary', {
+    method: 'POST',
+    body: formData
+  }).then(function(r){ return r.json(); }).then(function(d){
+    if (d.secure_url) {
+      fotoData = d.secure_url;
+      document.getElementById('fotoNom').textContent = 'Foto subida';
+    } else {
+      document.getElementById('fotoNom').textContent = 'Error al subir foto';
+      fotoData = null;
+    }
+  }).catch(function(){
+    document.getElementById('fotoNom').textContent = 'Error al subir foto';
+    fotoData = null;
+  });
 });
 
 document.getElementById('btnAdd').addEventListener('click', async function() {
@@ -280,6 +304,7 @@ document.getElementById('btnAdd').addEventListener('click', async function() {
   };
   
   registros.push(nuevo);
+
   render();
   
   document.getElementById('fSuc').value = '';
@@ -320,6 +345,7 @@ document.getElementById('tbody').addEventListener('click', async function(e) {
   if (del) {
     var id = +del.getAttribute('data-id');
     registros = registros.filter(function(r){ return r.id !== id; });
+
     render();
     await saveData();
     scheduleReload();
@@ -359,7 +385,7 @@ function render() {
       +'<td style="font-size:11px">'+(r.factura||'--')+'</td>'
       +'<td style="font-size:11px">'+vto+'</td>'
       +'<td style="font-size:11px">'+(r.codigo||'--')+'</td>'
-      +'<td style="text-align:center">'+(r.foto?'<img src="'+r.foto+'" class="fp" alt="f" />':'--')+'</td>'
+      +'<td style="text-align:center">'+(r.foto?'<a href="'+r.foto+'" target="_blank"><img src="'+r.foto+'" class="fp" alt="f" /></a>':'--')+'</td>'
       +'<td style="font-size:11px;color:#666">'+esc(r.obs||'--')+'</td>'
       +'<td style="text-align:center"><input type="checkbox" class="chk" data-id="'+r.id+'" '+(r.realizado?'checked':'')+'></td>'
       +'<td style="text-align:center"><button class="bdel" data-id="'+r.id+'">X</button></td>'
