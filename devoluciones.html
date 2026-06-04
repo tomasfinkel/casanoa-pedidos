@@ -341,6 +341,8 @@ document.getElementById('tbody').addEventListener('change', async function(e) {
 document.getElementById('tbody').addEventListener('click', async function(e) {
   var del = e.target.closest('.bdel');
   var wa = e.target.closest('.bwarow');
+  var foto = e.target.closest('[data-action="foto"]');
+  if (foto) { window.open(foto.getAttribute('data-url'), '_blank'); return; }
   if (del) {
     var id = +del.getAttribute('data-id');
     registros = registros.filter(function(r){ return r.id !== id; });
@@ -384,7 +386,7 @@ function render() {
       +'<td style="font-size:11px">'+(r.factura||'--')+'</td>'
       +'<td style="font-size:11px">'+vto+'</td>'
       +'<td style="font-size:11px">'+(r.codigo||'--')+'</td>'
-      +'<td style="text-align:center">'+(r.foto?'<a href="'+r.foto+'" target="_blank"><img src="'+r.foto+'" class="fp" alt="f" /></a>':'--')+'</td>'
+      +'<td style="text-align:center">'+(r.foto?'<img src="'+r.foto+'" class="fp" alt="foto" data-action="foto" data-url="'+r.foto+'" />':'--')+'</td>'
       +'<td style="font-size:11px;color:#666">'+esc(r.obs||'--')+'</td>'
       +'<td style="text-align:center"><input type="checkbox" class="chk" data-id="'+r.id+'" '+(r.realizado?'checked':'')+'></td>'
       +'<td style="text-align:center"><button class="bdel" data-id="'+r.id+'">X</button></td>'
