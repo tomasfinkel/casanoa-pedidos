@@ -177,9 +177,7 @@ tr:hover td{background:#faf8f5}
 </div>
 
 <script>
-var BIN_ID = '6a20e685f5f4af5e29b5b47a';
-var API_KEY = '$2a$10$c4DprYYrd.CCeWO7lTNNd.xICex34hdCPq6xfxR/P1jdNlyQBlPfq';
-var BIN_URL = 'https://api.jsonbin.io/v3/b/' + BIN_ID;
+// datos via proxy /api/devoluciones
 
 var curFil = 'todos';
 var fotoData = null, fotoStr = '';
@@ -229,12 +227,11 @@ async function loadData() {
   if (isSaving) return;
   setSync('Actualizando...', 'loading');
   try {
-    var resp = await fetch(BIN_URL + '/latest', { headers: { 'X-Master-Key': API_KEY } });
+    var resp = await fetch('/api/devoluciones');
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
     var data = await resp.json();
-    var rec = data.record || {};
-    registros = rec.registros || [];
-    provNums = rec.provNums || {};
+    registros = data.registros || [];
+    provNums = data.provNums || {};
     setSync('Actualizado ' + new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}), 'ok');
     showErr('');
   } catch(e) {
@@ -259,9 +256,9 @@ async function saveData() {
       }),
       provNums: provNums
     };
-    var resp = await fetch(BIN_URL, {
+    var resp = await fetch('/api/devoluciones', {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(toSave)
     });
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
