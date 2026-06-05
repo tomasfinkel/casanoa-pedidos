@@ -62,6 +62,10 @@ tr:hover td{background:#faf8f5}
 .contador{font-size:12px;color:#B85C38;font-weight:bold;margin-bottom:8px}
 .err-box{background:#fee;border:1px solid #f44336;border-radius:8px;padding:10px 14px;font-size:12px;color:#c00;margin-bottom:10px;display:none}
 @media(max-width:600px){.g2,.g3{grid-template-columns:1fr}.full{grid-column:1}}
+.foto-modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:9999;align-items:center;justify-content:center;flex-direction:column}
+.foto-modal.open{display:flex}
+.foto-modal img{max-width:95%;max-height:85vh;border-radius:8px;object-fit:contain}
+.foto-modal-close{color:#fff;font-size:16px;margin-top:14px;background:#B85C38;border:none;border-radius:8px;padding:10px 24px;cursor:pointer;font-weight:bold}
 </style>
 </head>
 <body>
@@ -168,8 +172,19 @@ tr:hover td{background:#faf8f5}
   </div>
 </div>
 
+<div class="foto-modal" id="fotoModal">
+  <img id="fotoModalImg" src="" alt="foto" />
+  <button class="foto-modal-close" id="fotoModalClose">Cerrar</button>
+</div>
+
 <script>
 var BIN_ID = '6a20e685f5f4af5e29b5b47a';
+document.getElementById('fotoModalClose').addEventListener('click', function(){
+  document.getElementById('fotoModal').classList.remove('open');
+});
+document.getElementById('fotoModal').addEventListener('click', function(e){
+  if(e.target===this) this.classList.remove('open');
+});
 
 
 
@@ -342,7 +357,12 @@ document.getElementById('tbody').addEventListener('click', async function(e) {
   var del = e.target.closest('.bdel');
   var wa = e.target.closest('.bwarow');
   var foto = e.target.closest('[data-action="foto"]');
-  if (foto) { window.open(foto.getAttribute('data-url'), '_blank'); return; }
+  if (foto) {
+    var url = foto.getAttribute('data-url');
+    document.getElementById('fotoModalImg').src = url;
+    document.getElementById('fotoModal').classList.add('open');
+    return;
+  }
   if (del) {
     var id = +del.getAttribute('data-id');
     registros = registros.filter(function(r){ return r.id !== id; });
