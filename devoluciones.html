@@ -227,17 +227,23 @@ async function loadData() {
   if (isSaving) return;
   setSync('Actualizando...', 'loading');
   try {
+    console.log('LOAD: fetching from /api/devoluciones...');
     var resp = await fetch('/api/devoluciones');
+    console.log('LOAD: response status', resp.status);
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
     var data = await resp.json();
-    // Solo sobreescribir si NO hay cambios locales pendientes
+    console.log('LOAD: data received', JSON.stringify(data).substring(0,200));
     if (!isSaving) {
       registros = data.registros || [];
       provNums = data.provNums || {};
+      console.log('LOAD: registros count', registros.length);
+    } else {
+      console.log('LOAD: skipped overwrite because isSaving=true');
     }
     setSync('Actualizado ' + new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}), 'ok');
     showErr('');
   } catch(e) {
+    console.error('LOAD ERROR:', e.message);
     setSync('Error al conectar', 'err');
     showErr('No se pudo conectar. Error: ' + e.message);
   }
@@ -259,15 +265,18 @@ async function saveData() {
       }),
       provNums: provNums
     };
+    console.log('SAVE: sending', toSave.registros.length, 'registros');
     var resp = await fetch('/api/devoluciones', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(toSave)
     });
-    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    console.log('SAVE: response status', resp.status);
+    var saveResult = await resp.json();
+    console.log('SAVE: result', JSON.stringify(saveResult));
+    if (!resp.ok) throw new Error('HTTP ' + resp.status + ' - ' + JSON.stringify(saveResult));
     setSync('Guardado ' + new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}), 'ok');
     showErr('');
-    // Recargar desde servidor para confirmar que se guardó
     await loadData();
   } catch(e) {
     setSync('Error al guardar', 'err');
