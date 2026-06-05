@@ -230,8 +230,11 @@ async function loadData() {
     var resp = await fetch('/api/devoluciones');
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
     var data = await resp.json();
-    registros = data.registros || [];
-    provNums = data.provNums || {};
+    // Solo sobreescribir si NO hay cambios locales pendientes
+    if (!isSaving) {
+      registros = data.registros || [];
+      provNums = data.provNums || {};
+    }
     setSync('Actualizado ' + new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}), 'ok');
     showErr('');
   } catch(e) {
@@ -264,6 +267,8 @@ async function saveData() {
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
     setSync('Guardado ' + new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}), 'ok');
     showErr('');
+    // Recargar desde servidor para confirmar que se guardó
+    await loadData();
   } catch(e) {
     setSync('Error al guardar', 'err');
     showErr('Error al guardar: ' + e.message);
@@ -272,10 +277,7 @@ async function saveData() {
   setBtnAdd(true);
 }
 
-function scheduleReload() {
-  clearTimeout(reloadTimer);
-  reloadTimer = setTimeout(function() { if (!isSaving) loadData(); }, 30000);
-}
+function scheduleReload() { /* disabled - reload after save instead */ }
 
 // Foto upload
 document.getElementById('fFoto').addEventListener('change', function() {
