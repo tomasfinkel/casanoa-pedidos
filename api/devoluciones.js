@@ -18,12 +18,27 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'PUT') {
+      // Parsear body manualmente - req.body no se parsea automaticamente en Vercel
+      let rawBody = '';
+      for await (const chunk of req) {
+        rawBody += chunk.toString();
+      }
+      let parsedBody;
+      try {
+        parsedBody = JSON.parse(rawBody);
+      } catch(e) {
+        return res.status(400).json({ error: 'Invalid JSON body' });
+      }
+
       const resp = await fetch(BIN_URL, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY },
-        body: JSON.stringify(req.body)
+        body: JSON.stringify(parsedBody)
       });
-      const data = await resp.json();
+      if (!resp.ok) {
+        const errText = await resp.text();
+        return res.status(500).json({ error: 'JSONBin error: ' + errText });
+      }
       return res.status(200).json({ ok: true });
     }
 
