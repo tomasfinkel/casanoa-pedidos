@@ -1,4 +1,4 @@
-const BIN_ID = '6a20e685f5f4af5e29b5b47a';
+const BIN_ID = '6a260985da38895dfe96f88e';
 const API_KEY = '$2a$10$c4DprYYrd.CCeWO7lTNNd.xICex34hdCPq6xfxR/P1jdNlyQBlPfq';
 const BIN_URL = 'https://api.jsonbin.io/v3/b/' + BIN_ID;
 
@@ -18,7 +18,6 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'PUT') {
-      // Parsear body manualmente - req.body no se parsea automaticamente en Vercel
       let rawBody = '';
       for await (const chunk of req) {
         rawBody += chunk.toString();
@@ -29,7 +28,6 @@ export default async function handler(req, res) {
       } catch(e) {
         return res.status(400).json({ error: 'Invalid JSON body' });
       }
-
       const resp = await fetch(BIN_URL, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY },
