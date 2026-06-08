@@ -226,22 +226,22 @@ function abrirFoto(url) {
 // Carga datos
 async function loadData() {
   if (isSaving) return;
+  var mySeq = ++loadSeq;
   setSync('Actualizando...', 'loading');
   try {
     var resp = await fetch('/api/devoluciones');
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
     var data = await resp.json();
+    if (mySeq < loadSeq) return; // respuesta vieja, ignorar
     if (!isSaving) {
       registros = data.registros || [];
       provNums = data.provNums || {};
-      // Auto-limpiar: si hay fotos en base64, borrarlas y guardar version limpia
       var tieneBase64 = registros.some(function(r){ return r.foto && r.foto.indexOf('data:') === 0; });
       if (tieneBase64) {
         registros = registros.map(function(r){
           if (r.foto && r.foto.indexOf('data:') === 0) { var c = Object.assign({}, r); delete c.foto; return c; }
           return r;
         });
-        // Guardar version limpia en background sin bloquear UI
         fetch('/api/devoluciones', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
@@ -252,7 +252,7 @@ async function loadData() {
     setSync('Actualizado ' + new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}), 'ok');
     showErr('');
   } catch(e) {
-    console.error('LOAD ERROR:', e.message);
+    if (mySeq < loadSeq) return;
     setSync('Error al conectar', 'err');
     showErr('No se pudo conectar. Error: ' + e.message);
   }
