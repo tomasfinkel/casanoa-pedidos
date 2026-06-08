@@ -186,6 +186,7 @@ var registros = [];
 var provNums = {};
 var isSaving = false;
 var reloadTimer = null;
+var loadSeq = 0;
 
 var SL = {mig:'Migueletes', sir:'Rep. Arabe Siria', cas:'Castex'};
 var SC = {mig:'suc-mig', sir:'suc-sir', cas:'suc-cas'};
@@ -260,6 +261,7 @@ async function loadData() {
 
 async function saveData() {
   isSaving = true;
+  loadSeq++; // invalidar cualquier loadData en vuelo
   setBtnAdd(false);
   setSync('Guardando...', 'loading');
   try {
