@@ -10,7 +10,19 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    const { file } = req.body; // base64 data URI
+    // Parsear body manualmente
+    let rawBody = '';
+    for await (const chunk of req) {
+      rawBody += chunk.toString();
+    }
+    let parsed;
+    try {
+      parsed = JSON.parse(rawBody);
+    } catch(e) {
+      return res.status(400).json({ error: 'Invalid JSON body' });
+    }
+
+    const file = parsed.file;
     if (!file) return res.status(400).json({ error: 'No file' });
 
     const crypto = await import('crypto');
