@@ -227,18 +227,26 @@ async function loadData() {
   if (isSaving) return;
   setSync('Actualizando...', 'loading');
   try {
-    console.log('LOAD: fetching from /api/devoluciones...');
     var resp = await fetch('/api/devoluciones');
-    console.log('LOAD: response status', resp.status);
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
     var data = await resp.json();
-    console.log('LOAD: data received', JSON.stringify(data).substring(0,200));
     if (!isSaving) {
       registros = data.registros || [];
       provNums = data.provNums || {};
-      console.log('LOAD: registros count', registros.length);
-    } else {
-      console.log('LOAD: skipped overwrite because isSaving=true');
+      // Auto-limpiar: si hay fotos en base64, borrarlas y guardar version limpia
+      var tieneBase64 = registros.some(function(r){ return r.foto && r.foto.indexOf('data:') === 0; });
+      if (tieneBase64) {
+        registros = registros.map(function(r){
+          if (r.foto && r.foto.indexOf('data:') === 0) { var c = Object.assign({}, r); delete c.foto; return c; }
+          return r;
+        });
+        // Guardar version limpia en background sin bloquear UI
+        fetch('/api/devoluciones', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ registros: registros, provNums: provNums })
+        }).catch(function(){});
+      }
     }
     setSync('Actualizado ' + new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}), 'ok');
     showErr('');
@@ -271,13 +279,12 @@ async function saveData() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(toSave)
     });
-    console.log('SAVE: response status', resp.status);
-    var saveResult = await resp.json();
-    console.log('SAVE: result', JSON.stringify(saveResult));
-    if (!resp.ok) throw new Error('HTTP ' + resp.status + ' - ' + JSON.stringify(saveResult));
+    if (!resp.ok) {
+      var errText = await resp.text();
+      throw new Error('HTTP ' + resp.status + ' - ' + errText);
+    }
     setSync('Guardado ' + new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}), 'ok');
     showErr('');
-    await loadData();
   } catch(e) {
     setSync('Error al guardar', 'err');
     showErr('Error al guardar: ' + e.message);
