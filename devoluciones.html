@@ -61,6 +61,7 @@ tr:hover td{background:#faf8f5}
 .foto-modal.open{display:flex}
 .foto-modal img{max-width:95%;max-height:80vh;border-radius:8px;object-fit:contain}
 .foto-modal-close{color:#fff;font-size:15px;margin-top:16px;background:#B85C38;border:none;border-radius:8px;padding:10px 28px;cursor:pointer;font-weight:bold}
+#dbg{background:#1a1410;color:#c9a252;font-size:10px;font-family:monospace;padding:6px 10px;border-radius:8px;margin-bottom:10px;white-space:pre-wrap;max-height:80px;overflow-y:auto}
 @media(max-width:600px){.g3{grid-template-columns:1fr}}
 </style>
 </head>
@@ -82,6 +83,7 @@ tr:hover td{background:#faf8f5}
       <button class="btn btn-wa" id="btnWAAll">WA General</button>
     </div>
   </div>
+  <div id="dbg">debug: iniciando...</div>
   <div class="err-box" id="errBox"></div>
   <div id="panelWAAll" class="panel">
     <div class="panel-title">Resumen general</div>
@@ -97,42 +99,28 @@ tr:hover td{background:#faf8f5}
     <div style="font-size:14px;font-weight:bold;color:#B85C38;margin-bottom:12px">Nuevo registro</div>
     <div class="g3">
       <div><label class="lbl">Sucursal *</label>
-        <select id="fSuc">
-          <option value="">Seleccionar...</option>
-          <option value="mig">Migueletes</option>
-          <option value="sir">Rep. Arabe Siria</option>
-          <option value="cas">Castex</option>
-        </select>
+        <select id="fSuc"><option value="">Seleccionar...</option><option value="mig">Migueletes</option><option value="sir">Rep. Arabe Siria</option><option value="cas">Castex</option></select>
       </div>
-      <div><label class="lbl">Proveedor *</label><input type="text" id="fProv" placeholder="Nombre del proveedor" /></div>
-      <div><label class="lbl">Producto *</label><input type="text" id="fProd" placeholder="Nombre del producto" /></div>
+      <div><label class="lbl">Proveedor *</label><input type="text" id="fProv" placeholder="Proveedor" /></div>
+      <div><label class="lbl">Producto *</label><input type="text" id="fProd" placeholder="Producto" /></div>
     </div>
     <div class="g3">
       <div><label class="lbl">Motivo *</label>
-        <select id="fMot">
-          <option value="">Seleccionar...</option>
-          <option value="dev">Devolucion</option>
-          <option value="falt">Faltante de pedido</option>
-          <option value="venc">Producto vencido</option>
-          <option value="dan">Producto danado</option>
-          <option value="otro">Otro</option>
-        </select>
+        <select id="fMot"><option value="">Seleccionar...</option><option value="dev">Devolucion</option><option value="falt">Faltante de pedido</option><option value="venc">Producto vencido</option><option value="dan">Producto danado</option><option value="otro">Otro</option></select>
       </div>
-      <div><label class="lbl">N de factura</label><input type="text" id="fFact" placeholder="0001-00012345" /></div>
+      <div><label class="lbl">N de factura</label><input type="text" id="fFact" /></div>
       <div><label class="lbl">Cantidad</label><input type="number" id="fCant" min="1" placeholder="1" /></div>
     </div>
     <div class="g3">
       <div><label class="lbl">Fecha vencimiento</label><input type="date" id="fVto" /></div>
       <div><label class="lbl">Fecha reclamo</label><input type="date" id="fFecRec" /></div>
-      <div><label class="lbl">Codigo devolucion</label><input type="text" id="fCod" placeholder="DEV-2026-001" /></div>
+      <div><label class="lbl">Codigo devolucion</label><input type="text" id="fCod" /></div>
     </div>
-    <div class="g3">
-      <div style="grid-column:1/-1">
-        <label class="lbl">Foto</label>
-        <label class="foto-lbl" for="fFoto">+ Adjuntar foto</label>
-        <input type="file" id="fFoto" accept="image/*" style="display:none" />
-        <span id="fotoNom" style="font-size:11px;color:#888;margin-left:8px"></span>
-      </div>
+    <div style="margin-bottom:10px">
+      <label class="lbl">Foto</label>
+      <label class="foto-lbl" for="fFoto">+ Adjuntar foto</label>
+      <input type="file" id="fFoto" accept="image/*" style="display:none" />
+      <span id="fotoNom" style="font-size:11px;color:#888;margin-left:8px"></span>
     </div>
     <div style="margin-bottom:10px"><label class="lbl">Observaciones</label><textarea id="fObs" placeholder="Detalles adicionales..."></textarea></div>
     <button class="btn-add" id="btnAdd">+ Agregar registro</button>
@@ -149,7 +137,7 @@ tr:hover td{background:#faf8f5}
     <table>
       <thead><tr>
         <th>Sucursal</th><th>Proveedor</th><th>Producto</th><th>Motivo</th>
-        <th>Cant</th><th>Factura</th><th>Vto</th><th>F. Reclamo</th><th>Cod dev</th>
+        <th>Cant</th><th>Factura</th><th>Vto</th><th>F.Reclamo</th><th>Cod dev</th>
         <th>Foto</th><th>Observaciones</th><th>Reclamo</th><th>Listo</th><th></th><th>WA</th>
       </tr></thead>
       <tbody id="tbody"></tbody>
@@ -168,376 +156,276 @@ tr:hover td{background:#faf8f5}
   </div>
 </div>
 <script>
-// ── Estado ────────────────────────────────────────────────────
-var registros = [];
-var provNums = {};
-var curFil = 'todos';
-var fotoData = null, fotoStr = '', fotoSubiendo = false;
-var isSaving = false;
-var serverVersion = 0;   // version del servidor (incrementa con cada GET exitoso)
-var localVersion  = 0;   // version local (incrementa con cada save exitoso)
+var BIN='6a260985da38895dfe96f88e';
+var MKEY='$2a$10$c4DprYYrd.CCeWO7lTNNd.xICex34hdCPq6xfxR/P1jdNlyQBlPfq';
+var BURL='https://api.jsonbin.io/v3/b/'+BIN;
 
-var SL = {mig:'Migueletes', sir:'Rep. Arabe Siria', cas:'Castex'};
-var SC = {mig:'suc-mig', sir:'suc-sir', cas:'suc-cas'};
-var ML = {dev:'Devolucion', falt:'Faltante pedido', venc:'Vencido', dan:'Danado', otro:'Otro'};
-var MC = {dev:'bd', falt:'bf', venc:'bd', dan:'bd', otro:'bo'};
+var registros=[],provNums={},curFil='todos';
+var fotoData=null,fotoStr='',fotoSubiendo=false;
+var isSaving=false,savedAt=0,loadedAt=0;
 
-// ── UI helpers ────────────────────────────────────────────────
-function setSync(msg, cls) {
-  var el = document.getElementById('sm');
-  el.textContent = msg;
-  el.className = 'sync ' + (cls||'');
-}
-function showErr(msg) {
-  var el = document.getElementById('errBox');
-  el.textContent = msg;
-  el.style.display = msg ? 'block' : 'none';
-}
-function esc(s) {
-  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-function setBtnAdd(on) {
-  var b = document.getElementById('btnAdd');
-  b.disabled = !on;
-  b.textContent = on ? '+ Agregar registro' : 'Guardando...';
+var SL={mig:'Migueletes',sir:'Rep. Arabe Siria',cas:'Castex'};
+var SC={mig:'suc-mig',sir:'suc-sir',cas:'suc-cas'};
+var ML={dev:'Devolucion',falt:'Faltante pedido',venc:'Vencido',dan:'Danado',otro:'Otro'};
+var MC={dev:'bd',falt:'bf',venc:'bd',dan:'bd',otro:'bo'};
+
+// Debug panel
+var dbgLines=[];
+function dbg(msg){
+  var t=new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  dbgLines.push('['+t+'] '+msg);
+  if(dbgLines.length>8)dbgLines.shift();
+  document.getElementById('dbg').textContent=dbgLines.join('\n');
 }
 
-// ── Modal foto ────────────────────────────────────────────────
-document.getElementById('fotoModalClose').addEventListener('click', function() {
-  document.getElementById('fotoModal').classList.remove('open');
-});
-document.getElementById('fotoModal').addEventListener('click', function(e) {
-  if (e.target === this) this.classList.remove('open');
-});
-function abrirFoto(url) {
-  document.getElementById('fotoModalImg').src = url;
-  document.getElementById('fotoModal').classList.add('open');
-}
+function setSync(msg,cls){var el=document.getElementById('sm');el.textContent=msg;el.className='sync '+(cls||'');}
+function showErr(msg){var el=document.getElementById('errBox');el.textContent=msg;el.style.display=msg?'block':'none';}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function setBtnAdd(on){var b=document.getElementById('btnAdd');b.disabled=!on;b.textContent=on?'+ Agregar registro':'Guardando...';}
 
-// ── localStorage backup ───────────────────────────────────────
-function saveLocal() {
-  try {
-    localStorage.setItem('casanoa_dev', JSON.stringify({registros: registros, provNums: provNums, v: localVersion}));
-  } catch(e) {}
-}
-function loadLocal() {
-  try {
-    var s = localStorage.getItem('casanoa_dev');
-    return s ? JSON.parse(s) : null;
-  } catch(e) { return null; }
-}
+document.getElementById('fotoModalClose').addEventListener('click',function(){document.getElementById('fotoModal').classList.remove('open');});
+document.getElementById('fotoModal').addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
+function abrirFoto(url){document.getElementById('fotoModalImg').src=url;document.getElementById('fotoModal').classList.add('open');}
 
-// ── Render ────────────────────────────────────────────────────
-function render() {
-  var tbody = document.getElementById('tbody');
-  var empty = document.getElementById('emptyMsg');
-  var cont = document.getElementById('contador');
-  var rows = registros.filter(function(r) {
-    if (curFil === 'todos') return true;
-    if (curFil === 'pend') return !r.realizado;
-    return r.sucursal === curFil;
+function render(){
+  dbg('render() registros='+registros.length+' fil='+curFil+' isSaving='+isSaving);
+  var tbody=document.getElementById('tbody');
+  var rows=registros.filter(function(r){
+    if(curFil==='todos')return true;
+    if(curFil==='pend')return !r.realizado;
+    return r.sucursal===curFil;
   });
-  var pend = rows.filter(function(r) { return !r.realizado; }).length;
-  cont.textContent = rows.length + ' registro' + (rows.length !== 1?'s':'') + ' — ' + pend + ' pendiente' + (pend !== 1?'s':'');
-  if (!rows.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
-  empty.style.display = 'none';
-  var html = '';
-  for (var i = 0; i < rows.length; i++) {
-    var r = rows[i];
-    var vto    = r.vto         ? r.vto.split('-').reverse().join('/')         : '--';
-    var fecRec = r.fechaReclamo? r.fechaReclamo.split('-').reverse().join('/') : '--';
-    var fotoCell = r.foto
-      ? '<img src="'+r.foto+'" class="fp" data-url="'+r.foto+'" alt="foto" />'
-      : '--';
-    var recBg = r.reclamoEnviado ? 'background:#E6F1FB' : '';
-    html += '<tr class="'+(r.realizado?'done':'')+'">'
+  var pend=rows.filter(function(r){return !r.realizado;}).length;
+  document.getElementById('contador').textContent=rows.length+' registro'+(rows.length!==1?'s':'')+' — '+pend+' pendiente'+(pend!==1?'s':'');
+  if(!rows.length){tbody.innerHTML='';document.getElementById('emptyMsg').style.display='block';return;}
+  document.getElementById('emptyMsg').style.display='none';
+  var html='';
+  for(var i=0;i<rows.length;i++){
+    var r=rows[i];
+    var vto=r.vto?r.vto.split('-').reverse().join('/'):'--';
+    var fr=r.fechaReclamo?r.fechaReclamo.split('-').reverse().join('/'):'--';
+    var fc=r.foto?'<img src="'+r.foto+'" class="fp" data-url="'+r.foto+'" alt="foto" />':'--';
+    var rb=r.reclamoEnviado?'background:#E6F1FB':'';
+    html+='<tr class="'+(r.realizado?'done':'')+'">'
       +'<td><span class="'+(SC[r.sucursal]||'bo')+'">'+(SL[r.sucursal]||r.sucursal)+'</span></td>'
-      +'<td>'+esc(r.proveedor)+'</td>'
-      +'<td>'+esc(r.producto)+'</td>'
+      +'<td>'+esc(r.proveedor)+'</td><td>'+esc(r.producto)+'</td>'
       +'<td><span class="'+(MC[r.motivo]||'bo')+'">'+(ML[r.motivo]||r.motivo)+'</span></td>'
       +'<td style="text-align:center">'+r.cantidad+'</td>'
       +'<td style="font-size:11px">'+esc(r.factura||'--')+'</td>'
       +'<td style="font-size:11px">'+vto+'</td>'
-      +'<td style="font-size:11px">'+fecRec+'</td>'
+      +'<td style="font-size:11px">'+fr+'</td>'
       +'<td style="font-size:11px">'+esc(r.codigo||'--')+'</td>'
-      +'<td style="text-align:center">'+fotoCell+'</td>'
+      +'<td style="text-align:center">'+fc+'</td>'
       +'<td style="font-size:11px;color:#666">'+esc(r.obs||'--')+'</td>'
-      +'<td style="text-align:center;'+recBg+'"><input type="checkbox" class="chk" data-tipo="reclamo" data-id="'+r.id+'" '+(r.reclamoEnviado?'checked':'')+' /></td>'
-      +'<td style="text-align:center"><input type="checkbox" class="chk" data-tipo="listo" data-id="'+r.id+'" '+(r.realizado?'checked':'')+' /></td>'
+      +'<td style="text-align:center;'+rb+'"><input type="checkbox" class="chk" data-tipo="reclamo" data-id="'+r.id+'" '+(r.reclamoEnviado?'checked':'')+'/></td>'
+      +'<td style="text-align:center"><input type="checkbox" class="chk" data-tipo="listo" data-id="'+r.id+'" '+(r.realizado?'checked':'')+'/></td>'
       +'<td style="text-align:center"><button class="bdel" data-id="'+r.id+'">X</button></td>'
       +'<td style="text-align:center"><button class="bwarow" data-id="'+r.id+'">WA</button></td>'
       +'</tr>';
   }
-  tbody.innerHTML = html;
+  tbody.innerHTML=html;
 }
 
-// ── Network ───────────────────────────────────────────────────
-
-// Aplicar datos del servidor sólo si son más nuevos que los datos locales
-function applyServerData(data) {
-  // Si ya guardamos localmente después de la última carga del servidor, no sobreescribir
-  if (localVersion > serverVersion) return;
-  var newRegs = (data.registros || []).map(function(r) {
-    // limpiar base64 si quedó alguno
-    if (r.foto && r.foto.indexOf('data:') === 0) { var c = Object.assign({},r); delete c.foto; return c; }
-    return r;
-  });
-  registros = newRegs;
-  provNums = data.provNums || {};
-  serverVersion++;
-  render();
-}
-
-async function loadData() {
-  if (isSaving) return;
-  setSync('Actualizando...', 'loading');
-  try {
-    var resp = await fetch('/api/devoluciones');
-    if (!resp.ok) throw new Error('HTTP ' + resp.status);
-    var data = await resp.json();
-    applyServerData(data);
-    setSync('Actualizado '+new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}), 'ok');
-    showErr('');
-  } catch(e) {
-    setSync('Error al conectar', 'err');
-    showErr('No se pudo conectar: ' + e.message);
-  }
-}
-
-async function saveData() {
-  isSaving = true;
-  setBtnAdd(false);
-  setSync('Guardando...', 'loading');
-  // Incrementar versión local ANTES del await para que applyServerData lo detecte
-  localVersion++;
-  saveLocal();
-  try {
-    var toSave = {
-      registros: registros.map(function(r) {
-        if (r.foto && r.foto.indexOf('data:') === 0) { var c = Object.assign({},r); delete c.foto; return c; }
+async function loadData(){
+  if(isSaving){dbg('loadData() bloqueado por isSaving');return;}
+  var t0=Date.now();
+  setSync('Actualizando...','loading');
+  dbg('loadData() GET iniciado');
+  try{
+    var resp=await fetch(BURL+'/latest',{headers:{'X-Master-Key':MKEY}});
+    dbg('loadData() GET resp='+resp.status);
+    if(!resp.ok)throw new Error('HTTP '+resp.status);
+    var data=await resp.json();
+    var serverRegs=(data.record||{}).registros||[];
+    dbg('loadData() servidor tiene '+serverRegs.length+' registros, savedAt='+savedAt+' t0='+t0);
+    // Solo aplicar si no hubo un save DESPUÉS de que enviamos este GET
+    if(t0 < savedAt){
+      dbg('loadData() IGNORADO — hay save más reciente (savedAt='+savedAt+')');
+    } else if(isSaving){
+      dbg('loadData() IGNORADO — save en progreso');
+    } else {
+      registros=serverRegs.map(function(r){
+        if(r.foto&&r.foto.indexOf('data:')===0){var c=Object.assign({},r);delete c.foto;return c;}
         return r;
-      }),
-      provNums: provNums
-    };
-    var resp = await fetch('/api/devoluciones', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(toSave)
-    });
-    if (!resp.ok) {
-      var errText = await resp.text();
-      throw new Error('HTTP ' + resp.status + ' — ' + errText);
+      });
+      provNums=(data.record||{}).provNums||{};
+      loadedAt=Date.now();
+      dbg('loadData() aplicado: registros='+registros.length);
+      render();
     }
-    setSync('Guardado '+new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}), 'ok');
+    setSync('Actualizado '+new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}),'ok');
     showErr('');
-  } catch(e) {
-    setSync('Error al guardar', 'err');
-    showErr('Error al guardar: ' + e.message);
+  }catch(e){
+    dbg('loadData() ERROR: '+e.message);
+    setSync('Error al conectar','err');
+    showErr('No se pudo conectar: '+e.message);
   }
-  isSaving = false;
+}
+
+async function saveData(){
+  isSaving=true;
+  setBtnAdd(false);
+  setSync('Guardando...','loading');
+  var toSave={
+    registros:registros.map(function(r){
+      if(r.foto&&r.foto.indexOf('data:')===0){var c=Object.assign({},r);delete c.foto;return c;}
+      return r;
+    }),
+    provNums:provNums
+  };
+  dbg('saveData() PUT '+toSave.registros.length+' registros');
+  try{
+    var resp=await fetch(BURL,{
+      method:'PUT',
+      headers:{'Content-Type':'application/json','X-Master-Key':MKEY},
+      body:JSON.stringify(toSave)
+    });
+    dbg('saveData() PUT resp='+resp.status);
+    if(!resp.ok){var t=await resp.text();throw new Error('HTTP '+resp.status+' '+t);}
+    savedAt=Date.now();
+    dbg('saveData() OK, savedAt='+savedAt);
+    setSync('Guardado '+new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}),'ok');
+    showErr('');
+  }catch(e){
+    dbg('saveData() ERROR: '+e.message);
+    setSync('Error al guardar','err');
+    showErr('Error al guardar: '+e.message);
+  }
+  isSaving=false;
   setBtnAdd(true);
 }
 
-// ── Foto upload ───────────────────────────────────────────────
-document.getElementById('fFoto').addEventListener('change', function() {
-  var file = this.files[0];
-  if (!file) return;
-  fotoStr = file.name;
-  fotoData = null;
-  fotoSubiendo = true;
-  document.getElementById('fotoNom').textContent = 'Subiendo...';
-  var fr = new FileReader();
-  fr.onload = function(e) {
-    fetch('/api/cloudinary', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({file: e.target.result})
+// Foto
+document.getElementById('fFoto').addEventListener('change',function(){
+  var file=this.files[0];if(!file)return;
+  fotoStr=file.name;fotoData=null;fotoSubiendo=true;
+  document.getElementById('fotoNom').textContent='Subiendo...';
+  dbg('foto: leyendo archivo...');
+  var fr=new FileReader();
+  fr.onload=function(e){
+    dbg('foto: subiendo a Cloudinary...');
+    fetch('/api/cloudinary',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({file:e.target.result})})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      fotoSubiendo=false;
+      if(d.secure_url){fotoData=d.secure_url;document.getElementById('fotoNom').textContent='Foto lista ✓';dbg('foto: OK url='+d.secure_url.substring(0,40)+'...');}
+      else{document.getElementById('fotoNom').textContent='Error al subir foto';dbg('foto: ERROR sin secure_url resp='+JSON.stringify(d));}
     })
-    .then(function(r){ return r.json(); })
-    .then(function(d) {
-      fotoSubiendo = false;
-      if (d.secure_url) {
-        fotoData = d.secure_url;
-        document.getElementById('fotoNom').textContent = 'Foto lista ✓';
-      } else {
-        document.getElementById('fotoNom').textContent = 'Error al subir foto';
-      }
-    })
-    .catch(function() {
-      fotoSubiendo = false;
-      document.getElementById('fotoNom').textContent = 'Error al subir foto';
-    });
+    .catch(function(e){fotoSubiendo=false;document.getElementById('fotoNom').textContent='Error al subir foto';dbg('foto: CATCH '+e.message);});
   };
   fr.readAsDataURL(file);
 });
 
-// ── Agregar registro ──────────────────────────────────────────
-document.getElementById('btnAdd').addEventListener('click', async function() {
-  if (fotoSubiendo) { alert('Esperá que termine de subir la foto...'); return; }
-  var suc = document.getElementById('fSuc').value;
-  var pv  = document.getElementById('fProv').value.trim();
-  var pd  = document.getElementById('fProd').value.trim();
-  var mt  = document.getElementById('fMot').value;
-  if (!suc||!pv||!pd||!mt) { alert('Completá sucursal, proveedor, producto y motivo.'); return; }
+// Agregar
+document.getElementById('btnAdd').addEventListener('click',async function(){
+  if(fotoSubiendo){alert('Esperá que termine de subir la foto...');return;}
+  var suc=document.getElementById('fSuc').value;
+  var pv=document.getElementById('fProv').value.trim();
+  var pd=document.getElementById('fProd').value.trim();
+  var mt=document.getElementById('fMot').value;
+  if(!suc||!pv||!pd||!mt){alert('Completá sucursal, proveedor, producto y motivo.');return;}
   registros.push({
-    id: Date.now(), sucursal: suc, proveedor: pv, producto: pd, motivo: mt,
-    cantidad: document.getElementById('fCant').value||'1',
-    factura: document.getElementById('fFact').value.trim(),
-    vto: document.getElementById('fVto').value,
-    codigo: document.getElementById('fCod').value.trim(),
-    obs: document.getElementById('fObs').value.trim(),
-    foto: fotoData||null,
-    fotoNombre: fotoStr,
-    reclamoEnviado: false, realizado: false,
-    fechaReclamo: document.getElementById('fFecRec').value,
-    fecha: new Date().toLocaleDateString('es-AR')
+    id:Date.now(),sucursal:suc,proveedor:pv,producto:pd,motivo:mt,
+    cantidad:document.getElementById('fCant').value||'1',
+    factura:document.getElementById('fFact').value.trim(),
+    vto:document.getElementById('fVto').value,
+    codigo:document.getElementById('fCod').value.trim(),
+    obs:document.getElementById('fObs').value.trim(),
+    foto:fotoData||null,fotoNombre:fotoStr,
+    reclamoEnviado:false,realizado:false,
+    fechaReclamo:document.getElementById('fFecRec').value,
+    fecha:new Date().toLocaleDateString('es-AR')
   });
+  dbg('btnAdd: push OK, registros='+registros.length);
   render();
-  // Limpiar form
-  ['fSuc','fMot','fProv','fProd','fFact','fCant','fCod','fObs','fVto','fFecRec'].forEach(function(id){
-    var el = document.getElementById(id);
-    if (el) el.value = '';
-  });
-  document.getElementById('fFoto').value = '';
-  document.getElementById('fotoNom').textContent = '';
-  fotoData = null; fotoStr = ''; fotoSubiendo = false;
+  ['fSuc','fMot','fProv','fProd','fFact','fCant','fCod','fObs','fVto','fFecRec'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('fFoto').value='';document.getElementById('fotoNom').textContent='';
+  fotoData=null;fotoStr='';fotoSubiendo=false;
   await saveData();
 });
 
-// ── Filtros ───────────────────────────────────────────────────
-document.getElementById('filtros').addEventListener('click', function(e) {
-  var btn = e.target.closest('.fbtn');
-  if (!btn) return;
-  curFil = btn.getAttribute('data-fil');
-  document.querySelectorAll('.fbtn').forEach(function(b){ b.classList.remove('on'); });
-  btn.classList.add('on');
-  render();
+// Filtros
+document.getElementById('filtros').addEventListener('click',function(e){
+  var btn=e.target.closest('.fbtn');if(!btn)return;
+  curFil=btn.getAttribute('data-fil');
+  document.querySelectorAll('.fbtn').forEach(function(b){b.classList.remove('on');});
+  btn.classList.add('on');render();
 });
 
-// ── Tabla: clicks y checkboxes ────────────────────────────────
-document.getElementById('tbody').addEventListener('click', async function(e) {
-  if (e.target.classList.contains('fp')) {
-    var url = e.target.getAttribute('data-url');
-    if (url) abrirFoto(url);
-    return;
-  }
-  var del = e.target.closest('.bdel');
-  if (del) {
-    var id = +del.getAttribute('data-id');
-    registros = registros.filter(function(r){ return r.id !== id; });
-    render();
-    await saveData();
-    return;
-  }
-  var wa = e.target.closest('.bwarow');
-  if (wa) {
-    var id = +wa.getAttribute('data-id');
-    var rec = registros.find(function(r){ return r.id === id; });
-    if (rec) abrirWAItem(rec);
-  }
+// Tabla clicks
+document.getElementById('tbody').addEventListener('click',async function(e){
+  if(e.target.classList.contains('fp')){var url=e.target.getAttribute('data-url');if(url)abrirFoto(url);return;}
+  var del=e.target.closest('.bdel');
+  if(del){var id=+del.getAttribute('data-id');registros=registros.filter(function(r){return r.id!==id;});render();await saveData();return;}
+  var wa=e.target.closest('.bwarow');
+  if(wa){var id=+wa.getAttribute('data-id');var rec=registros.find(function(r){return r.id===id;});if(rec)abrirWAItem(rec);}
 });
 
-document.getElementById('tbody').addEventListener('change', async function(e) {
-  if (e.target.type !== 'checkbox') return;
-  var id   = +e.target.getAttribute('data-id');
-  var tipo = e.target.getAttribute('data-tipo');
-  for (var i = 0; i < registros.length; i++) {
-    if (registros[i].id === id) {
-      if (tipo === 'reclamo') registros[i].reclamoEnviado = !registros[i].reclamoEnviado;
-      else registros[i].realizado = !registros[i].realizado;
+document.getElementById('tbody').addEventListener('change',async function(e){
+  if(e.target.type!=='checkbox')return;
+  var id=+e.target.getAttribute('data-id');var tipo=e.target.getAttribute('data-tipo');
+  for(var i=0;i<registros.length;i++){
+    if(registros[i].id===id){
+      if(tipo==='reclamo')registros[i].reclamoEnviado=!registros[i].reclamoEnviado;
+      else registros[i].realizado=!registros[i].realizado;
       break;
     }
   }
-  render();
-  await saveData();
+  render();await saveData();
 });
 
-// ── WA ────────────────────────────────────────────────────────
-function abrirWAItem(r) {
-  var msg = 'Casa NOA — '+(ML[r.motivo]||r.motivo)+'\n'+new Date().toLocaleDateString('es-AR')+'\n\n'
-    +'Proveedor: '+r.proveedor+'\nProducto: '+r.producto
-    +'\nCantidad: '+r.cantidad+'\nSucursal: '+(SL[r.sucursal]||r.sucursal);
-  if (r.factura) msg += '\nFactura: '+r.factura;
-  if (r.vto) msg += '\nVto: '+r.vto.split('-').reverse().join('/');
-  if (r.codigo) msg += '\nCod dev: '+r.codigo;
-  if (r.obs) msg += '\nObs: '+r.obs;
-  if (r.foto) msg += '\nFoto: '+r.foto;
-  msg += '\n\nCasa NOA';
-  document.getElementById('prevRow').textContent = msg;
-  document.getElementById('rowTit').textContent = 'Mensaje para: '+r.proveedor;
-  document.getElementById('numRow').value = provNums[r.proveedor.toLowerCase()]||'';
+// WA
+function abrirWAItem(r){
+  var msg='Casa NOA — '+(ML[r.motivo]||r.motivo)+'\n'+new Date().toLocaleDateString('es-AR')+'\n\n'
+    +'Proveedor: '+r.proveedor+'\nProducto: '+r.producto+'\nCantidad: '+r.cantidad+'\nSucursal: '+(SL[r.sucursal]||r.sucursal);
+  if(r.factura)msg+='\nFactura: '+r.factura;
+  if(r.vto)msg+='\nVto: '+r.vto.split('-').reverse().join('/');
+  if(r.codigo)msg+='\nCod dev: '+r.codigo;
+  if(r.obs)msg+='\nObs: '+r.obs;
+  if(r.foto)msg+='\nFoto: '+r.foto;
+  msg+='\n\nCasa NOA';
+  document.getElementById('prevRow').textContent=msg;
+  document.getElementById('rowTit').textContent='Mensaje para: '+r.proveedor;
+  document.getElementById('numRow').value=provNums[r.proveedor.toLowerCase()]||'';
   document.getElementById('panelRow').classList.add('open');
-  window.scrollTo({top: document.getElementById('panelRow').offsetTop-20, behavior:'smooth'});
+  window.scrollTo({top:document.getElementById('panelRow').offsetTop-20,behavior:'smooth'});
 }
-
-document.getElementById('btnWAAll').addEventListener('click', function() {
-  var p = document.getElementById('panelWAAll');
-  if (p.classList.contains('open')) { p.classList.remove('open'); return; }
+document.getElementById('btnWAAll').addEventListener('click',function(){
+  var p=document.getElementById('panelWAAll');
+  if(p.classList.contains('open')){p.classList.remove('open');return;}
   p.classList.add('open');
-  var fecha = new Date().toLocaleDateString('es-AR');
-  var lines = ['Casa NOA — Devoluciones y Faltantes', fecha, ''];
-  ['mig','sir','cas'].forEach(function(s) {
-    var rows = registros.filter(function(r){ return r.sucursal===s && !r.realizado; });
-    if (!rows.length) return;
+  var lines=['Casa NOA — Devoluciones',''];
+  ['mig','sir','cas'].forEach(function(s){
+    var rows=registros.filter(function(r){return r.sucursal===s&&!r.realizado;});
+    if(!rows.length)return;
     lines.push('--- '+SL[s]+' ---');
-    rows.forEach(function(r,i){
-      lines.push((i+1)+'. '+r.proveedor+' — '+r.producto+' ('+ML[r.motivo]+', cant: '+r.cantidad+')');
-      if (r.factura) lines.push('   Factura: '+r.factura);
-      if (r.foto) lines.push('   Foto: '+r.foto);
-    });
+    rows.forEach(function(r,i){lines.push((i+1)+'. '+r.proveedor+' — '+r.producto+' ('+ML[r.motivo]+', cant: '+r.cantidad+')');if(r.foto)lines.push('   Foto: '+r.foto);});
     lines.push('');
   });
-  document.getElementById('prevAll').textContent = lines.join('\n');
+  document.getElementById('prevAll').textContent=lines.join('\n');
 });
-document.getElementById('btnCerAll').addEventListener('click', function(){ document.getElementById('panelWAAll').classList.remove('open'); });
-document.getElementById('btnEnvAll').addEventListener('click', function(){
-  var txt = document.getElementById('prevAll').textContent;
-  var num = document.getElementById('numAll').value.replace(/[^0-9]/g,'');
+document.getElementById('btnCerAll').addEventListener('click',function(){document.getElementById('panelWAAll').classList.remove('open');});
+document.getElementById('btnEnvAll').addEventListener('click',function(){
+  var txt=document.getElementById('prevAll').textContent;
+  var num=document.getElementById('numAll').value.replace(/[^0-9]/g,'');
   window.open((num?'https://wa.me/'+num:'https://wa.me/')+'?text='+encodeURIComponent(txt),'_blank');
 });
-document.getElementById('btnCopyAll').addEventListener('click', function(){
-  navigator.clipboard.writeText(document.getElementById('prevAll').textContent).then(function(){ alert('Copiado.'); });
-});
-document.getElementById('btnEnvRow').addEventListener('click', function(){
-  var txt = document.getElementById('prevRow').textContent;
-  var num = document.getElementById('numRow').value.replace(/[^0-9]/g,'');
+document.getElementById('btnCopyAll').addEventListener('click',function(){navigator.clipboard.writeText(document.getElementById('prevAll').textContent).then(function(){alert('Copiado.');});});
+document.getElementById('btnEnvRow').addEventListener('click',function(){
+  var txt=document.getElementById('prevRow').textContent;
+  var num=document.getElementById('numRow').value.replace(/[^0-9]/g,'');
   window.open((num?'https://wa.me/'+num:'https://wa.me/')+'?text='+encodeURIComponent(txt),'_blank');
 });
-document.getElementById('btnCopyRow').addEventListener('click', function(){
-  navigator.clipboard.writeText(document.getElementById('prevRow').textContent).then(function(){ alert('Copiado.'); });
+document.getElementById('btnCopyRow').addEventListener('click',function(){navigator.clipboard.writeText(document.getElementById('prevRow').textContent).then(function(){alert('Copiado.');});});
+document.getElementById('btnCerRow').addEventListener('click',function(){document.getElementById('panelRow').classList.remove('open');});
+document.getElementById('btnReload').addEventListener('click',function(){loadData();});
+document.getElementById('btnCSV').addEventListener('click',function(){
+  var lines=['Sucursal,Proveedor,Producto,Motivo,Cantidad,Factura,Vto,Cod dev,Observaciones,Reclamo,Listo,Fecha'];
+  registros.forEach(function(r){lines.push([(SL[r.sucursal]||r.sucursal),r.proveedor,r.producto,(ML[r.motivo]||r.motivo),r.cantidad,(r.factura||''),(r.vto||''),(r.codigo||''),'"'+((r.obs||'').replace(/"/g,'""'))+'"',(r.reclamoEnviado?'Si':'No'),(r.realizado?'Si':'No'),r.fecha].join(','));});
+  var blob=new Blob(['\uFEFF'+lines.join('\n')],{type:'text/csv'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='CasaNOA_Devoluciones.csv';a.click();
 });
-document.getElementById('btnCerRow').addEventListener('click', function(){ document.getElementById('panelRow').classList.remove('open'); });
-
-// ── CSV ───────────────────────────────────────────────────────
-document.getElementById('btnReload').addEventListener('click', function(){ loadData(); });
-document.getElementById('btnCSV').addEventListener('click', function() {
-  var lines = ['Sucursal,Proveedor,Producto,Motivo,Cantidad,Factura,Vto,Cod dev,Observaciones,Reclamo,Listo,Fecha'];
-  registros.forEach(function(r){
-    lines.push([(SL[r.sucursal]||r.sucursal),r.proveedor,r.producto,(ML[r.motivo]||r.motivo),
-      r.cantidad,(r.factura||''),(r.vto||''),(r.codigo||''),
-      '"'+((r.obs||'').replace(/"/g,'""'))+'"',
-      (r.reclamoEnviado?'Si':'No'),(r.realizado?'Si':'No'),r.fecha].join(','));
-  });
-  var blob = new Blob(['\uFEFF'+lines.join('\n')],{type:'text/csv'});
-  var a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'CasaNOA_Devoluciones.csv';
-  a.click();
-});
-
-// ── Inicio ────────────────────────────────────────────────────
-// 1. Cargar desde localStorage inmediatamente (sin esperar red)
-var local = loadLocal();
-if (local && local.registros && local.registros.length > 0) {
-  registros = local.registros;
-  provNums  = local.provNums || {};
-  localVersion = local.v || 1;
-  render();
-  setSync('Cargando desde servidor...', 'loading');
-} else {
-  render();
-}
-// 2. Cargar desde servidor (no sobreescribe si hay datos locales más nuevos)
+dbg('inicio');
 loadData();
 </script>
 </body>
