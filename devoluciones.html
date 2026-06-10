@@ -187,9 +187,11 @@ document.getElementById('fotoModalClose').addEventListener('click',function(){do
 document.getElementById('fotoModal').addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
 function abrirFoto(url){document.getElementById('fotoModalImg').src=url;document.getElementById('fotoModal').classList.add('open');}
 
+function _verFoto(id){var url=window._fotoMap&&window._fotoMap[id];if(url)abrirFoto(url);}
 function render(){
   dbg('render() registros='+registros.length+' fil='+curFil+' isSaving='+isSaving);
   var tbody=document.getElementById('tbody');
+  window._fotoMap={};
   var rows=registros.filter(function(r){
     if(curFil==='todos')return true;
     if(curFil==='pend')return !r.realizado;
@@ -204,8 +206,8 @@ function render(){
     var r=rows[i];
     var vto=r.vto?r.vto.split('-').reverse().join('/'):'--';
     var fr=r.fechaReclamo?r.fechaReclamo.split('-').reverse().join('/'):'--';
-    var fc=r.foto?'<img src="'+r.foto+'" class="fp" alt="foto" onclick="abrirFoto(\''+r.foto+'\')" style="cursor:pointer;width:40px;height:40px;object-fit:cover;border-radius:6px;border:2px solid #B85C38" />':'--';
-    var rb=r.reclamoEnviado?'background:#E6F1FB':'';
+    window._fotoMap=window._fotoMap||{}; if(r.foto)window._fotoMap[r.id]=r.foto;
+    var fc=r.foto?'<img src="'+r.foto+'" class="fp" alt="foto" onclick="_verFoto('+r.id+')" style="cursor:pointer;width:40px;height:40px;object-fit:cover;border-radius:6px;border:2px solid #B85C38" />':'--';
     html+='<tr class="'+(r.realizado?'done':'')+'">'
       +'<td><span class="'+(SC[r.sucursal]||'bo')+'">'+(SL[r.sucursal]||r.sucursal)+'</span></td>'
       +'<td>'+esc(r.proveedor)+'</td><td>'+esc(r.producto)+'</td>'
