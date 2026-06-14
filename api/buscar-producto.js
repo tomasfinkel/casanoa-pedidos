@@ -8,7 +8,7 @@ const CACHE_TTL = 12 * 60 * 60 * 1000;
 async function getProductos() {
   if (cache.productos && (Date.now() - cache.ts) < CACHE_TTL) return cache.productos;
   const blobUrl = process.env.PRODUCTOS_BLOB_URL;
-  if (!blobUrl) throw new Error('Falta PRODUCTOS_BLOB_URL en variables de entorno');
+  if (!blobUrl) throw new Error('Falta PRODUCTOS_BLOB_URL');
   const res = await fetch(blobUrl, {
     headers: { Authorization: `Bearer ${process.env.BLOB_READ_WRITE_TOKEN}` }
   });
@@ -34,7 +34,6 @@ async function getPrecioRealtime(codItem) {
   } catch { return null; }
 }
 
-// Normaliza texto: minúsculas, reemplaza guiones por espacio, espacios múltiples
 const norm = t => t.toLowerCase().replace(/[-–—]/g, ' ').replace(/\s+/g, ' ').trim();
 
 export default async function handler(req, res) {
@@ -48,7 +47,7 @@ export default async function handler(req, res) {
     const productos = await getProductos();
     const busqueda = q.trim().toLowerCase();
 
-    // Barcode: precio en tiempo real desde DUX
+    // Barcode: precio en tiempo real
     const porBarcode = productos.filter(p =>
       (p.barcodes || []).some(b => b === busqueda)
     );
@@ -59,16 +58,24 @@ export default async function handler(req, res) {
       return res.json({ resultados: [producto], modo: 'barcode', precioTiempoReal: true });
     }
 
-    // Nombre: búsqueda flexible — cada palabra debe aparecer en el nombre (ignora guiones)
+    // Nombre: búsqueda flexible
     const palabras = norm(busqueda).split(' ').filter(Boolean);
-    const porNombre = productos
+    const matches = productos
       .filter(p => {
         const n = norm(p.nombre);
         return palabras.every(pal => n.includes(pal));
       })
       .slice(0, 10);
 
-    return res.json({ resultados: porNombre, modo: 'nombre', precioTiempoReal: false });
+    // Precio en tiempo real para todos los resultados en paralelo
+    const conPrecios = await Promise.all(
+      matches.map(async p => {
+        const precioLive = await getPrecioRealtime(p.codigo);
+        return { ...p, precio: precioLive !== null ? precioLive : p.precio };
+      })
+    );
+
+    return res.json({ resultados: conPrecios, modo: 'nombre', precioTiempoReal: true });
 
   } catch (err) {
     return res.status(500).json({ error: err.message });
