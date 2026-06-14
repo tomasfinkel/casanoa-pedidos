@@ -8,6 +8,12 @@
   "functions": {
     "api/cron.js": {
       "maxDuration": 300
+    },
+    "api/save-productos.js": {
+      "maxDuration": 30
+    },
+    "api/sync-page.js": {
+      "maxDuration": 15
     }
   }
 }
