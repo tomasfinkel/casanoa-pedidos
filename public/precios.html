@@ -14,13 +14,10 @@
 
     main { width: 100%; max-width: 480px; padding: 1.5rem 1.25rem; flex: 1; }
 
-    #btn-escanear { width: 100%; background: #2c1a0e; color: #e8d5b0; border: none; border-radius: 14px; padding: 1.2rem; font-size: 1.1rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.6rem; margin-bottom: 1rem; }
-    #btn-escanear:active { opacity: 0.8; }
+    .btn-scan { width: 100%; background: #2c1a0e; color: #e8d5b0; border: none; border-radius: 14px; padding: 1.2rem; font-size: 1.1rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.6rem; margin-bottom: 1rem; -webkit-tap-highlight-color: transparent; }
+    .btn-scan:active { opacity: 0.8; }
 
-    #reader-container { display: none; border-radius: 14px; overflow: hidden; margin-bottom: 1rem; position: relative; }
-    #reader-container.activo { display: block; }
-    #reader { width: 100%; }
-    #btn-cerrar { position: absolute; top: 0.75rem; right: 0.75rem; background: rgba(0,0,0,0.6); border: none; color: white; border-radius: 50%; width: 36px; height: 36px; font-size: 1.1rem; cursor: pointer; z-index: 10; }
+    #file-input { display: none; }
 
     .separador { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; color: #a08060; font-size: 0.85rem; }
     .separador::before, .separador::after { content: ''; flex: 1; height: 1px; background: #d4c4a8; }
@@ -32,9 +29,9 @@
     #estado { text-align: center; padding: 0.75rem; font-size: 0.9rem; color: #7a6048; display: none; }
 
     #resultado { display: none; background: white; border-radius: 16px; padding: 1.5rem; box-shadow: 0 2px 16px rgba(44,26,14,0.1); }
-    #resultado .precio { font-size: 2.6rem; font-weight: 700; color: #2c1a0e; line-height: 1; margin-bottom: 0.5rem; }
-    #resultado .nombre { font-size: 1rem; color: #5a3e28; line-height: 1.4; margin-bottom: 0.5rem; }
-    #resultado .codigo { font-size: 0.8rem; color: #b0956f; }
+    .precio { font-size: 2.8rem; font-weight: 700; color: #2c1a0e; line-height: 1; margin-bottom: 0.5rem; }
+    .nombre { font-size: 1rem; color: #5a3e28; line-height: 1.4; margin-bottom: 0.5rem; }
+    .codigo { font-size: 0.8rem; color: #b0956f; }
 
     #lista-resultados { display: none; }
     .item-resultado { background: white; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 0.75rem; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 8px rgba(44,26,14,0.08); cursor: pointer; }
@@ -51,68 +48,54 @@
   <p>Consultá el precio de cualquier producto</p>
 </header>
 <main>
-  <button id="btn-escanear" onclick="iniciarEscaneo()">
+
+  <button class="btn-scan" onclick="document.getElementById('file-input').click()">
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
     Escanear código de barras
   </button>
 
-  <div id="reader-container">
-    <div id="reader"></div>
-    <button id="btn-cerrar" onclick="cerrarEscaneo()">✕</button>
-  </div>
+  <input type="file" id="file-input" accept="image/*" capture="environment">
 
   <div class="separador">o buscá por nombre</div>
 
   <input id="campo-busqueda" type="text" placeholder="Ej: chocolate, yerba, aceite..." autocomplete="off" autocorrect="off" spellcheck="false" oninput="buscarPorNombre(this.value)">
 
   <div id="estado"></div>
+
   <div id="resultado">
     <div class="precio" id="res-precio"></div>
     <div class="nombre" id="res-nombre"></div>
     <div class="codigo" id="res-codigo"></div>
   </div>
+
   <div id="lista-resultados"></div>
+
   <div id="sin-resultado">
     <div class="icono">🔍</div>
     <p>No se encontró el producto.<br>Consultá en caja.</p>
   </div>
+
 </main>
 
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script>
-  let scanner = null;
   let busquedaTimeout = null;
 
-  async function iniciarEscaneo() {
-    const container = document.getElementById('reader-container');
-    container.classList.add('activo');
+  document.getElementById('file-input').addEventListener('change', async function() {
+    const file = this.files[0];
+    if (!file) return;
+    this.value = '';
     limpiarResultados();
-
+    mostrarEstado('Leyendo código...');
     try {
-      scanner = new Html5Qrcode('reader');
-      await scanner.start(
-        { facingMode: 'environment' },
-        { fps: 10, qrbox: { width: 250, height: 120 }, aspectRatio: 1.5 },
-        (barcode) => {
-          cerrarEscaneo();
-          buscarPorBarcode(barcode);
-        },
-        () => {}
-      );
+      const scanner = new Html5Qrcode('dummy-div');
+      const barcode = await scanner.scanFile(file, false);
+      ocultarEstado();
+      buscarPorBarcode(barcode);
     } catch (err) {
-      container.classList.remove('activo');
-      mostrarEstado('No se pudo acceder a la cámara. Usá la búsqueda por nombre.');
+      mostrarEstado('No se pudo leer el código. Intentá sacar la foto más de cerca y con buena luz.');
     }
-  }
-
-  async function cerrarEscaneo() {
-    const container = document.getElementById('reader-container');
-    container.classList.remove('activo');
-    if (scanner) {
-      try { await scanner.stop(); } catch {}
-      scanner = null;
-    }
-  }
+  });
 
   async function buscarPorBarcode(barcode) {
     limpiarResultados();
@@ -151,32 +134,30 @@
     resultados.forEach(p => {
       const div = document.createElement('div');
       div.className = 'item-resultado';
-      div.innerHTML = '<div class="item-nombre">' + p.nombre + '</div><div class="item-precio">' + formatPrecio(p.precio) + '</div>';
+      div.innerHTML = '<div class="item-nombre">' + p.nombre + '</div><div class="item-precio">' + fmt(p.precio) + '</div>';
       div.onclick = () => { lista.style.display = 'none'; mostrarProducto(p); };
       lista.appendChild(div);
     });
   }
 
   function mostrarProducto(p) {
-    const r = document.getElementById('resultado');
-    document.getElementById('res-precio').textContent = formatPrecio(p.precio);
+    document.getElementById('res-precio').textContent = fmt(p.precio);
     document.getElementById('res-nombre').textContent = p.nombre;
     document.getElementById('res-codigo').textContent = p.barcodes?.length ? 'Cód. barra: ' + p.barcodes[0] : 'Cód.: ' + p.codigo;
-    r.style.display = 'block';
+    document.getElementById('resultado').style.display = 'block';
   }
 
-  function formatPrecio(precio) {
-    return (parseFloat(precio) || 0).toLocaleString('es-AR', { style: 'currency', currency: 'ARS', minimumFractionDigits: 0, maximumFractionDigits: 0 });
-  }
-
-  function mostrarEstado(msg) { const e = document.getElementById('estado'); e.textContent = msg; e.style.display = 'block'; }
-  function ocultarEstado() { document.getElementById('estado').style.display = 'none'; }
+  const fmt = p => (parseFloat(p)||0).toLocaleString('es-AR', {style:'currency',currency:'ARS',minimumFractionDigits:0,maximumFractionDigits:0});
+  const mostrarEstado = msg => { const e = document.getElementById('estado'); e.textContent = msg; e.style.display = 'block'; };
+  const ocultarEstado = () => document.getElementById('estado').style.display = 'none';
   function limpiarResultados() {
-    document.getElementById('resultado').style.display = 'none';
-    document.getElementById('lista-resultados').style.display = 'none';
-    document.getElementById('sin-resultado').style.display = 'none';
+    ['resultado','lista-resultados','sin-resultado'].forEach(id => document.getElementById(id).style.display = 'none');
     ocultarEstado();
   }
 </script>
+
+<!-- div oculto necesario para html5-qrcode -->
+<div id="dummy-div" style="display:none"></div>
+
 </body>
 </html>
