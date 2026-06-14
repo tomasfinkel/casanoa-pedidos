@@ -17,7 +17,7 @@ export default async function handler(req, res) {
     });
 
     const blob = await put('productos.json', payload, {
-      access: 'private',
+      access: 'public',
       contentType: 'application/json',
       addRandomSuffix: false,
       token: process.env.BLOB_READ_WRITE_TOKEN
