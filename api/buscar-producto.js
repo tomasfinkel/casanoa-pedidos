@@ -3,7 +3,7 @@ const DUX_BASE = 'https://erp.duxsoftware.com.ar/WSERP/rest/services';
 const ID_LISTA = 17610;
 
 let cache = { productos: null, ts: 0 };
-const CACHE_TTL = 12 * 60 * 60 * 1000; // 12 horas — precios en cache solo para búsqueda por nombre
+const CACHE_TTL = 12 * 60 * 60 * 1000;
 
 async function getProductos() {
   if (cache.productos && (Date.now() - cache.ts) < CACHE_TTL) return cache.productos;
@@ -34,6 +34,9 @@ async function getPrecioRealtime(codItem) {
   } catch { return null; }
 }
 
+// Normaliza texto: minúsculas, reemplaza guiones por espacio, espacios múltiples
+const norm = t => t.toLowerCase().replace(/[-–—]/g, ' ').replace(/\s+/g, ' ').trim();
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   const { q } = req.query;
@@ -56,9 +59,13 @@ export default async function handler(req, res) {
       return res.json({ resultados: [producto], modo: 'barcode', precioTiempoReal: true });
     }
 
-    // Nombre: precio del cache (puede tener horas de diferencia)
+    // Nombre: búsqueda flexible — cada palabra debe aparecer en el nombre (ignora guiones)
+    const palabras = norm(busqueda).split(' ').filter(Boolean);
     const porNombre = productos
-      .filter(p => p.nombre.toLowerCase().includes(busqueda))
+      .filter(p => {
+        const n = norm(p.nombre);
+        return palabras.every(pal => n.includes(pal));
+      })
       .slice(0, 10);
 
     return res.json({ resultados: porNombre, modo: 'nombre', precioTiempoReal: false });
