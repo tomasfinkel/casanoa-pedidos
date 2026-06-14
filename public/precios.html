@@ -120,8 +120,8 @@
       });
 
       await scanner.start(
-        { facingMode: 'environment' },
-        { fps: 15, qrbox: { width: 280, height: 100 } },
+  { facingMode: 'environment' },
+  { fps: 10, qrbox: { width: Math.min(window.innerWidth - 40, 350), height: 150 } },
         async (barcode) => {
           await cerrarScanner();
           buscarPorBarcode(barcode);
