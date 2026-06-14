@@ -6,12 +6,13 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: -apple-system, sans-serif; background: #f5f0eb; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 2rem; }
-    .cartel { background: white; border-radius: 20px; padding: 2.5rem 2rem; text-align: center; max-width: 320px; width: 100%; box-shadow: 0 4px 24px rgba(44,26,14,0.12); }
-    .logo-img { width: 200px; margin: 0 auto 1.5rem; display: block; }
-    #qr { margin: 0 auto 1.5rem; }
-    .instruccion { font-size: 1rem; font-weight: 600; color: #2c1a0e; margin-bottom: 0.5rem; }
+    .cartel { background: white; border-radius: 20px; padding: 2.5rem 2rem; text-align: center; max-width: 320px; width: 100%; box-shadow: 0 4px 24px rgba(44,26,14,0.12); display: flex; flex-direction: column; align-items: center; }
+    .logo-img { width: 200px; margin-bottom: 1.75rem; }
+    #qr { margin-bottom: 1.5rem; }
+    #qr img, #qr canvas { display: block; margin: 0 auto; }
+    .instruccion { font-size: 1rem; font-weight: 600; color: #2c1a0e; margin-bottom: 0.4rem; }
     .sub { font-size: 0.82rem; color: #7a6048; line-height: 1.5; }
-    .imprimir { display: block; margin-top: 2rem; background: #2c1a0e; color: #e8d5b0; border: none; border-radius: 10px; padding: 0.75rem 1.5rem; font-size: 0.9rem; cursor: pointer; width: 100%; }
+    .imprimir { margin-top: 2rem; background: #2c1a0e; color: #e8d5b0; border: none; border-radius: 10px; padding: 0.75rem 1.5rem; font-size: 0.9rem; cursor: pointer; width: 100%; }
     @media print { .imprimir { display: none; } body { background: white; } }
   </style>
 </head>
