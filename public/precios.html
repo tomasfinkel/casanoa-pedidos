@@ -95,7 +95,11 @@
         type: 'LiveStream',
         constraints: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
         target: document.getElementById('interactive'),
-        area: { top: '35%', right: '5%', bottom: '35%', left: '5%' }
+       inputStream: {
+  type: 'LiveStream',
+  constraints: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
+  target: document.getElementById('interactive'),
+},
       },
       decoder: {
         readers: ['ean_reader', 'ean_8_reader', 'code_128_reader', 'upc_reader'],
