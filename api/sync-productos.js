@@ -12,11 +12,33 @@ async function duxGet(path) {
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
 
+  const JSONBIN_KEY = process.env.JSONBIN_KEY;
+
   try {
-    // 1. Buscar "lista nueva" en las listas de precio
+    // PASO 0: si no hay bin configurado, crear uno nuevo automáticamente
+    if (!process.env.PRODUCTOS_BIN_ID) {
+      const crear = await fetch('https://api.jsonbin.io/v3/b', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Master-Key': JSONBIN_KEY,
+          'X-Bin-Name': 'casanoa-productos'
+        },
+        body: JSON.stringify({ productos: [], syncedAt: null })
+      });
+      const data = await crear.json();
+      const nuevoId = data.metadata?.id;
+      return res.json({
+        mensaje: 'Bin creado. Agregá esta variable en Vercel y volvé a correr el sync.',
+        PRODUCTOS_BIN_ID: nuevoId
+      });
+    }
+
+    const BIN_ID = process.env.PRODUCTOS_BIN_ID;
+
+    // PASO 1: buscar "lista nueva"
     const listas = await duxGet('/listaprecioventa');
 
-    // debug=1 devuelve las listas para que podamos ver los nombres exactos
     if (req.query.debug === 'listas') {
       return res.json({ listas });
     }
@@ -28,14 +50,14 @@ export default async function handler(req, res) {
 
     if (!listaNueva) {
       return res.status(404).json({
-        error: 'No se encontró "lista nueva". Revisá los nombres exactos.',
+        error: 'No se encontró "lista nueva".',
         listas
       });
     }
 
     const idListaPrecio = listaNueva.id || listaNueva.idListaPrecio || listaNueva.idLista;
 
-    // 2. Traer todos los productos paginado de a 50
+    // PASO 2: traer todos los productos
     let offset = 0;
     const limit = 50;
     let todos = [];
@@ -45,7 +67,6 @@ export default async function handler(req, res) {
         `/items?idListaPrecio=${idListaPrecio}&habilitado=SI&offset=${offset}&limit=${limit}`
       );
 
-      // debug=1 devuelve el primer bloque crudo para ver los campos
       if (req.query.debug === 'items' && offset === 0) {
         return res.json({ idListaPrecio, muestra: data });
       }
@@ -57,7 +78,7 @@ export default async function handler(req, res) {
       offset += limit;
     }
 
-    // 3. Mapear los campos (ajustar según lo que devuelva debug=items)
+    // PASO 3: mapear campos
     const productos = todos.map(p => ({
       codigo: p.codigoItem || p.codigo || p.id || '',
       nombre: p.descripcion || p.nombre || p.producto || p.detalle || '',
@@ -65,20 +86,7 @@ export default async function handler(req, res) {
       barcode: p.codigoBarra || p.codigoBarras || p.codigoEan || p.ean || p.barcode || ''
     }));
 
-    // 4. Guardar en JSONBin
-    const JSONBIN_KEY = process.env.JSONBIN_KEY;
-    const BIN_ID = process.env.PRODUCTOS_BIN_ID;
-
-    if (!JSONBIN_KEY || !BIN_ID) {
-      // Sin bin configurado, devolver los productos igual (útil para debug)
-      return res.json({
-        ok: true,
-        total: productos.length,
-        advertencia: 'Sin JSONBIN_KEY o PRODUCTOS_BIN_ID configurados. Agregá esas env vars en Vercel.',
-        muestra: productos.slice(0, 3)
-      });
-    }
-
+    // PASO 4: guardar en JSONBin
     const binRes = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
       method: 'PUT',
       headers: {
