@@ -1,6 +1,6 @@
 const DUX_TOKEN = 'X428RuMPK9sh9i03QtiNhHrRfLdR5OoIlM5xWOXQAfmVPwGWcBWic4NmCAVLEDlu';
 const DUX_BASE = 'https://erp.duxsoftware.com.ar/WSERP/rest/services';
-const ID_LISTA = 17610; // LISTA NUEVA activa
+const ID_LISTA = 17610;
 
 async function duxGet(path) {
   const res = await fetch(`${DUX_BASE}${path}`, {
@@ -14,35 +14,36 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
 
   const JSONBIN_KEY = process.env.JSONBIN_KEY;
+  const BIN_ID = process.env.PRODUCTOS_BIN_ID;
 
+  // Crear bin nuevo
+  if (req.query.action === 'crear-bin') {
+    const crear = await fetch('https://api.jsonbin.io/v3/b', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Master-Key': JSONBIN_KEY,
+        'X-Bin-Name': 'casanoa-productos'
+      },
+      body: JSON.stringify({ productos: [] })
+    });
+    const status = crear.status;
+    const data = await crear.json();
+    return res.json({ status, data });
+  }
+
+  if (!BIN_ID) {
+    return res.json({ error: 'Falta PRODUCTOS_BIN_ID. Primero llamá a ?action=crear-bin' });
+  }
+
+  // Ver campos de productos crudos
+  if (req.query.debug === 'items') {
+    const muestra = await duxGet(`/items?idListaPrecio=${ID_LISTA}&habilitado=SI&offset=0&limit=2`);
+    return res.json({ muestra });
+  }
+
+  // Sync completo
   try {
-    // Sin bin: crear uno automáticamente
-    if (!process.env.PRODUCTOS_BIN_ID) {
-      const crear = await fetch('https://api.jsonbin.io/v3/b', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Master-Key': JSONBIN_KEY,
-          'X-Bin-Name': 'casanoa-productos'
-        },
-        body: JSON.stringify({ productos: [], syncedAt: null })
-      });
-      const data = await crear.json();
-      return res.json({
-        mensaje: 'Bin creado. Agregá PRODUCTOS_BIN_ID en Vercel y volvé a correr el sync.',
-        PRODUCTOS_BIN_ID: data.metadata?.id
-      });
-    }
-
-    const BIN_ID = process.env.PRODUCTOS_BIN_ID;
-
-    // debug=items: muestra los primeros 2 productos crudos para ver los campos
-    if (req.query.debug === 'items') {
-      const muestra = await duxGet(`/items?idListaPrecio=${ID_LISTA}&habilitado=SI&offset=0&limit=2`);
-      return res.json({ muestra });
-    }
-
-    // Traer todos los productos paginado
     let offset = 0;
     const limit = 50;
     let todos = [];
@@ -58,7 +59,6 @@ export default async function handler(req, res) {
       offset += limit;
     }
 
-    // Mapear — ajustar una vez que veamos los campos reales con debug=items
     const productos = todos.map(p => ({
       codigo: p.codigoItem || p.codigo_item || p.codigo || p.id || '',
       nombre: p.descripcion || p.nombre || p.producto || p.detalle || '',
@@ -66,7 +66,6 @@ export default async function handler(req, res) {
       barcode: p.codigoBarra || p.codigo_barra || p.codigoBarras || p.ean || p.barcode || ''
     }));
 
-    // Guardar en JSONBin
     const binRes = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
       method: 'PUT',
       headers: {
