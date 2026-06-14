@@ -32,12 +32,12 @@ export default async function handler(req, res) {
     }
 
     const productos = todos.map(p => {
-      const precio = (p.precios || []).find(pr => pr.id === ID_LISTA);
+      const precioObj = (p.precios || []).find(pr => pr.id === ID_LISTA);
       const barcodes = (p.codigos_barra || []).filter(b => b && b !== '0000' && b.length > 4);
       return {
         codigo: p.cod_item || '',
         nombre: p.item || '',
-        precio: precio ? parseFloat(precio.precio) : 0,
+        precio: precioObj ? parseFloat(precioObj.precio) : 0,
         barcodes
       };
     });
@@ -48,13 +48,20 @@ export default async function handler(req, res) {
       productos
     });
 
-    await put('productos.json', payload, {
+    const blob = await put('productos.json', payload, {
       access: 'public',
       contentType: 'application/json',
+      addRandomSuffix: false,
       token: process.env.BLOB_READ_WRITE_TOKEN
     });
 
-    return res.json({ ok: true, total: productos.length, syncedAt: new Date().toISOString() });
+    return res.json({
+      ok: true,
+      total: productos.length,
+      syncedAt: new Date().toISOString(),
+      blobUrl: blob.url,
+      instruccion: 'Guardá blobUrl como PRODUCTOS_BLOB_URL en Vercel si es la primera vez'
+    });
 
   } catch (err) {
     return res.status(500).json({ error: err.message });
