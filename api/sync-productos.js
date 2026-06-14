@@ -1,5 +1,6 @@
 const DUX_TOKEN = 'X428RuMPK9sh9i03QtiNhHrRfLdR5OoIlM5xWOXQAfmVPwGWcBWic4NmCAVLEDlu';
 const DUX_BASE = 'https://erp.duxsoftware.com.ar/WSERP/rest/services';
+const ID_LISTA = 17610; // LISTA NUEVA activa
 
 async function duxGet(path) {
   const res = await fetch(`${DUX_BASE}${path}`, {
@@ -15,7 +16,7 @@ export default async function handler(req, res) {
   const JSONBIN_KEY = process.env.JSONBIN_KEY;
 
   try {
-    // PASO 0: si no hay bin configurado, crear uno nuevo automáticamente
+    // Sin bin: crear uno automáticamente
     if (!process.env.PRODUCTOS_BIN_ID) {
       const crear = await fetch('https://api.jsonbin.io/v3/b', {
         method: 'POST',
@@ -27,50 +28,29 @@ export default async function handler(req, res) {
         body: JSON.stringify({ productos: [], syncedAt: null })
       });
       const data = await crear.json();
-      const nuevoId = data.metadata?.id;
       return res.json({
-        mensaje: 'Bin creado. Agregá esta variable en Vercel y volvé a correr el sync.',
-        PRODUCTOS_BIN_ID: nuevoId
+        mensaje: 'Bin creado. Agregá PRODUCTOS_BIN_ID en Vercel y volvé a correr el sync.',
+        PRODUCTOS_BIN_ID: data.metadata?.id
       });
     }
 
     const BIN_ID = process.env.PRODUCTOS_BIN_ID;
 
-    // PASO 1: buscar "lista nueva"
-    const listas = await duxGet('/listaprecioventa');
-
-    if (req.query.debug === 'listas') {
-      return res.json({ listas });
+    // debug=items: muestra los primeros 2 productos crudos para ver los campos
+    if (req.query.debug === 'items') {
+      const muestra = await duxGet(`/items?idListaPrecio=${ID_LISTA}&habilitado=SI&offset=0&limit=2`);
+      return res.json({ muestra });
     }
 
-    const listaNueva = listas.find(l => {
-      const nombre = (l.nombre || l.descripcion || l.detalle || '').toLowerCase();
-      return nombre.includes('nueva');
-    });
-
-    if (!listaNueva) {
-      return res.status(404).json({
-        error: 'No se encontró "lista nueva".',
-        listas
-      });
-    }
-
-    const idListaPrecio = listaNueva.id || listaNueva.idListaPrecio || listaNueva.idLista;
-
-    // PASO 2: traer todos los productos
+    // Traer todos los productos paginado
     let offset = 0;
     const limit = 50;
     let todos = [];
 
     while (true) {
       const data = await duxGet(
-        `/items?idListaPrecio=${idListaPrecio}&habilitado=SI&offset=${offset}&limit=${limit}`
+        `/items?idListaPrecio=${ID_LISTA}&habilitado=SI&offset=${offset}&limit=${limit}`
       );
-
-      if (req.query.debug === 'items' && offset === 0) {
-        return res.json({ idListaPrecio, muestra: data });
-      }
-
       const items = Array.isArray(data) ? data : (data.items || data.data || data.result || []);
       if (items.length === 0) break;
       todos = todos.concat(items);
@@ -78,15 +58,15 @@ export default async function handler(req, res) {
       offset += limit;
     }
 
-    // PASO 3: mapear campos
+    // Mapear — ajustar una vez que veamos los campos reales con debug=items
     const productos = todos.map(p => ({
-      codigo: p.codigoItem || p.codigo || p.id || '',
+      codigo: p.codigoItem || p.codigo_item || p.codigo || p.id || '',
       nombre: p.descripcion || p.nombre || p.producto || p.detalle || '',
-      precio: p.precio || p.precioVenta || p.importe || p.precioUnitario || 0,
-      barcode: p.codigoBarra || p.codigoBarras || p.codigoEan || p.ean || p.barcode || ''
+      precio: p.precio || p.precio_venta || p.precioVenta || p.importe || 0,
+      barcode: p.codigoBarra || p.codigo_barra || p.codigoBarras || p.ean || p.barcode || ''
     }));
 
-    // PASO 4: guardar en JSONBin
+    // Guardar en JSONBin
     const binRes = await fetch(`https://api.jsonbin.io/v3/b/${BIN_ID}`, {
       method: 'PUT',
       headers: {
