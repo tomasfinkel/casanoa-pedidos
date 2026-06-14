@@ -16,8 +16,14 @@
 
     .btn-scan { width: 100%; background: #2c1a0e; color: #e8d5b0; border: none; border-radius: 14px; padding: 1.2rem; font-size: 1.1rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.6rem; margin-bottom: 1rem; -webkit-tap-highlight-color: transparent; }
     .btn-scan:active { opacity: 0.8; }
+    .btn-scan.cerrar { background: #7a6048; }
 
-    #file-input { display: none; }
+    #reader-wrap { display: none; border-radius: 14px; overflow: hidden; margin-bottom: 1rem; background: #000; position: relative; }
+    #reader-wrap.activo { display: block; }
+    #reader { width: 100%; }
+    #reader video { border-radius: 14px; }
+
+    .hint { text-align: center; font-size: 0.8rem; color: #7a6048; margin-top: -0.5rem; margin-bottom: 1rem; }
 
     .separador { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; color: #a08060; font-size: 0.85rem; }
     .separador::before, .separador::after { content: ''; flex: 1; height: 1px; background: #d4c4a8; }
@@ -49,12 +55,15 @@
 </header>
 <main>
 
-  <button class="btn-scan" onclick="document.getElementById('file-input').click()">
+  <button class="btn-scan" id="btn-scan" onclick="toggleScanner()">
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-    Escanear código de barras
+    <span id="btn-text">Escanear código de barras</span>
   </button>
 
-<input type="file" id="file-input" accept="image/*">
+  <div id="reader-wrap">
+    <div id="reader"></div>
+  </div>
+  <p class="hint" id="hint" style="display:none">Apuntá al código de barras del producto</p>
 
   <div class="separador">o buscá por nombre</div>
 
@@ -67,9 +76,7 @@
     <div class="nombre" id="res-nombre"></div>
     <div class="codigo" id="res-codigo"></div>
   </div>
-
   <div id="lista-resultados"></div>
-
   <div id="sin-resultado">
     <div class="icono">🔍</div>
     <p>No se encontró el producto.<br>Consultá en caja.</p>
@@ -79,23 +86,65 @@
 
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script>
+  let scanner = null;
+  let escaneando = false;
   let busquedaTimeout = null;
 
-  document.getElementById('file-input').addEventListener('change', async function() {
-    const file = this.files[0];
-    if (!file) return;
-    this.value = '';
-    limpiarResultados();
-    mostrarEstado('Leyendo código...');
-    try {
-      const scanner = new Html5Qrcode('dummy-div');
-      const barcode = await scanner.scanFile(file, false);
-      ocultarEstado();
-      buscarPorBarcode(barcode);
-    } catch (err) {
-      mostrarEstado('No se pudo leer el código. Intentá sacar la foto más de cerca y con buena luz.');
+  async function toggleScanner() {
+    if (escaneando) {
+      await cerrarScanner();
+    } else {
+      await abrirScanner();
     }
-  });
+  }
+
+  async function abrirScanner() {
+    limpiarResultados();
+    document.getElementById('reader-wrap').classList.add('activo');
+    document.getElementById('hint').style.display = 'block';
+    document.getElementById('btn-text').textContent = 'Cerrar escáner';
+    document.getElementById('btn-scan').classList.add('cerrar');
+    escaneando = true;
+
+    try {
+      scanner = new Html5Qrcode('reader', {
+        formatsToSupport: [
+          Html5QrcodeSupportedFormats.EAN_13,
+          Html5QrcodeSupportedFormats.EAN_8,
+          Html5QrcodeSupportedFormats.CODE_128,
+          Html5QrcodeSupportedFormats.UPC_A,
+          Html5QrcodeSupportedFormats.UPC_E,
+          Html5QrcodeSupportedFormats.CODE_39
+        ],
+        verbose: false
+      });
+
+      await scanner.start(
+        { facingMode: 'environment' },
+        { fps: 15, qrbox: { width: 280, height: 100 } },
+        async (barcode) => {
+          await cerrarScanner();
+          buscarPorBarcode(barcode);
+        },
+        () => {}
+      );
+    } catch (err) {
+      await cerrarScanner();
+      mostrarEstado('No se pudo acceder a la cámara. Usá la búsqueda por nombre.');
+    }
+  }
+
+  async function cerrarScanner() {
+    escaneando = false;
+    document.getElementById('reader-wrap').classList.remove('activo');
+    document.getElementById('hint').style.display = 'none';
+    document.getElementById('btn-text').textContent = 'Escanear código de barras';
+    document.getElementById('btn-scan').classList.remove('cerrar');
+    if (scanner) {
+      try { await scanner.stop(); scanner.clear(); } catch {}
+      scanner = null;
+    }
+  }
 
   async function buscarPorBarcode(barcode) {
     limpiarResultados();
@@ -123,10 +172,7 @@
 
   function mostrarResultados(resultados) {
     ocultarEstado();
-    if (!resultados || resultados.length === 0) {
-      document.getElementById('sin-resultado').style.display = 'block';
-      return;
-    }
+    if (!resultados || resultados.length === 0) { document.getElementById('sin-resultado').style.display = 'block'; return; }
     if (resultados.length === 1) { mostrarProducto(resultados[0]); return; }
     const lista = document.getElementById('lista-resultados');
     lista.innerHTML = '';
@@ -147,7 +193,7 @@
     document.getElementById('resultado').style.display = 'block';
   }
 
-  const fmt = p => (parseFloat(p)||0).toLocaleString('es-AR', {style:'currency',currency:'ARS',minimumFractionDigits:0,maximumFractionDigits:0});
+  const fmt = p => (parseFloat(p)||0).toLocaleString('es-AR',{style:'currency',currency:'ARS',minimumFractionDigits:0,maximumFractionDigits:0});
   const mostrarEstado = msg => { const e = document.getElementById('estado'); e.textContent = msg; e.style.display = 'block'; };
   const ocultarEstado = () => document.getElementById('estado').style.display = 'none';
   function limpiarResultados() {
@@ -155,9 +201,5 @@
     ocultarEstado();
   }
 </script>
-
-<!-- div oculto necesario para html5-qrcode -->
-<div id="dummy-div" style="display:none"></div>
-
 </body>
 </html>
