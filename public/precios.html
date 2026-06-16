@@ -37,6 +37,9 @@
     .item-precio { font-size: 1.1rem; font-weight: 700; color: #2c1a0e; white-space: nowrap; }
     #sin-resultado { display: none; text-align: center; padding: 2rem 1rem; color: #7a6048; }
     #sin-resultado .icono { font-size: 2.5rem; margin-bottom: 0.5rem; }
+    #review-banner { display: none; margin-top: 1.5rem; text-align: center; padding: 1.25rem 1rem; background: white; border-radius: 14px; box-shadow: 0 2px 12px rgba(44,26,14,0.08); }
+    #review-banner p { font-size: 0.9rem; color: #5a3e28; margin-bottom: 0.75rem; }
+    #review-banner a { display: inline-block; background: #2c1a0e; color: #e8d5b0; text-decoration: none; padding: 0.65rem 1.5rem; border-radius: 10px; font-size: 0.85rem; font-weight: 600; }
   </style>
 </head>
 <body>
@@ -69,6 +72,11 @@
     <div class="icono">🔍</div>
     <p>No se encontró el producto.<br>Consultá en caja.</p>
   </div>
+
+  <div id="review-banner">
+    <p>¿Te gustó tu experiencia?<br>Dejanos tu reseña en Google</p>
+    <a id="review-link" href="#" target="_blank" rel="noopener">⭐ Dejar reseña</a>
+  </div>
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@ericblade/quagga2/dist/quagga.min.js"></script>
@@ -95,11 +103,7 @@
         type: 'LiveStream',
         constraints: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
         target: document.getElementById('interactive'),
-       inputStream: {
-  type: 'LiveStream',
-  constraints: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
-  target: document.getElementById('interactive'),
-},
+        area: { top: '35%', right: '5%', bottom: '35%', left: '5%' }
       },
       decoder: {
         readers: ['ean_reader', 'ean_8_reader', 'code_128_reader', 'upc_reader'],
@@ -179,13 +183,33 @@
     document.getElementById('res-nombre').textContent = p.nombre;
     document.getElementById('res-codigo').textContent = p.barcodes?.length ? 'Cód. barra: ' + p.barcodes[0] : 'Cód.: ' + p.codigo;
     document.getElementById('resultado').style.display = 'block';
+    mostrarReviewBanner();
+  }
+
+  // Links de reseña de Google por sucursal
+  const REVIEW_LINKS = {
+    castex: 'https://maps.app.goo.gl/bsoJipq2VQGWu4rp9',
+    siria: 'https://maps.app.goo.gl/kusaRsH5QjJKBhpk9'
+    // migueletes: pendiente de ficha verificada en Google
+  };
+
+  function mostrarReviewBanner() {
+    const params = new URLSearchParams(window.location.search);
+    const suc = params.get('suc');
+    const banner = document.getElementById('review-banner');
+    if (suc && REVIEW_LINKS[suc]) {
+      document.getElementById('review-link').href = REVIEW_LINKS[suc];
+      banner.style.display = 'block';
+    } else {
+      banner.style.display = 'none';
+    }
   }
 
   const fmt = p => (parseFloat(p)||0).toLocaleString('es-AR',{style:'currency',currency:'ARS',minimumFractionDigits:0,maximumFractionDigits:0});
   const mostrarEstado = msg => { const e = document.getElementById('estado'); e.textContent = msg; e.style.display = 'block'; };
   const ocultarEstado = () => document.getElementById('estado').style.display = 'none';
   function limpiarResultados() {
-    ['resultado','lista-resultados','sin-resultado'].forEach(id => document.getElementById(id).style.display = 'none');
+    ['resultado','lista-resultados','sin-resultado','review-banner'].forEach(id => document.getElementById(id).style.display = 'none');
     ocultarEstado();
   }
 </script>
