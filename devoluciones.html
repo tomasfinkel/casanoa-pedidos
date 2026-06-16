@@ -169,7 +169,6 @@ var SC={mig:'suc-mig',sir:'suc-sir',cas:'suc-cas'};
 var ML={dev:'Devolucion',falt:'Faltante pedido',venc:'Vencido',dan:'Danado',otro:'Otro'};
 var MC={dev:'bd',falt:'bf',venc:'bd',dan:'bd',otro:'bo'};
 
-// Debug panel
 var dbgLines=[];
 function dbg(msg){
   var t=new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
@@ -180,18 +179,21 @@ function dbg(msg){
 
 function setSync(msg,cls){var el=document.getElementById('sm');el.textContent=msg;el.className='sync '+(cls||'');}
 function showErr(msg){var el=document.getElementById('errBox');el.textContent=msg;el.style.display=msg?'block':'none';}
-function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function setBtnAdd(on){var b=document.getElementById('btnAdd');b.disabled=!on;b.textContent=on?'+ Agregar registro':'Guardando...';}
 
 document.getElementById('fotoModalClose').addEventListener('click',function(){document.getElementById('fotoModal').classList.remove('open');});
 document.getElementById('fotoModal').addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
-function abrirFoto(url){document.getElementById('fotoModalImg').src=url;document.getElementById('fotoModal').classList.add('open');}
 
-function _verFoto(id){var url=window._fotoMap&&window._fotoMap[id];if(url)abrirFoto(url);}
+function abrirFoto(url){
+  if(!url){return;}
+  document.getElementById('fotoModalImg').src=url;
+  document.getElementById('fotoModal').classList.add('open');
+}
+
 function render(){
-  dbg('render() registros='+registros.length+' fil='+curFil+' isSaving='+isSaving);
+  dbg('render() registros='+registros.length+' fil='+curFil);
   var tbody=document.getElementById('tbody');
-  window._fotoMap={};
   var rows=registros.filter(function(r){
     if(curFil==='todos')return true;
     if(curFil==='pend')return !r.realizado;
@@ -205,9 +207,13 @@ function render(){
   for(var i=0;i<rows.length;i++){
     var r=rows[i];
     var vto=r.vto?r.vto.split('-').reverse().join('/'):'--';
+    // FIX 1: fecha reclamo — mostrar correctamente
     var fr=r.fechaReclamo?r.fechaReclamo.split('-').reverse().join('/'):'--';
-    window._fotoMap=window._fotoMap||{}; if(r.foto)window._fotoMap[r.id]=r.foto;
-    var fc=r.foto?'<img src="'+r.foto+'" class="fp" alt="foto" onclick="_verFoto('+r.id+')" style="cursor:pointer;width:40px;height:40px;object-fit:cover;border-radius:6px;border:2px solid #B85C38" />':'--';
+    // FIX 2: foto — url embebida directamente en onclick, sin depender de _fotoMap
+    var fc=r.foto
+      ?'<img src="'+esc(r.foto)+'" class="fp" alt="foto" data-url="'+esc(r.foto)+'" />'
+      :'--';
+    // FIX 3: rb eliminado — era variable no declarada que rompía el render
     html+='<tr class="'+(r.realizado?'done':'')+'">'
       +'<td><span class="'+(SC[r.sucursal]||'bo')+'">'+(SL[r.sucursal]||r.sucursal)+'</span></td>'
       +'<td>'+esc(r.proveedor)+'</td><td>'+esc(r.producto)+'</td>'
@@ -215,11 +221,11 @@ function render(){
       +'<td style="text-align:center">'+r.cantidad+'</td>'
       +'<td style="font-size:11px">'+esc(r.factura||'--')+'</td>'
       +'<td style="font-size:11px">'+vto+'</td>'
-      +'<td style="font-size:11px">'+fr+'</td>'
+      +'<td style="font-size:11px;font-weight:bold;color:'+(r.fechaReclamo?'#B85C38':'#aaa')+'">'+fr+'</td>'
       +'<td style="font-size:11px">'+esc(r.codigo||'--')+'</td>'
       +'<td style="text-align:center">'+fc+'</td>'
       +'<td style="font-size:11px;color:#666">'+esc(r.obs||'--')+'</td>'
-      +'<td style="text-align:center;'+rb+'"><input type="checkbox" class="chk" data-tipo="reclamo" data-id="'+r.id+'" '+(r.reclamoEnviado?'checked':'')+'/></td>'
+      +'<td style="text-align:center"><input type="checkbox" class="chk" data-tipo="reclamo" data-id="'+r.id+'" '+(r.reclamoEnviado?'checked':'')+'/></td>'
       +'<td style="text-align:center"><input type="checkbox" class="chk" data-tipo="listo" data-id="'+r.id+'" '+(r.realizado?'checked':'')+'/></td>'
       +'<td style="text-align:center"><button class="bdel" data-id="'+r.id+'">X</button></td>'
       +'<td style="text-align:center"><button class="bwarow" data-id="'+r.id+'">WA</button></td>'
@@ -240,9 +246,8 @@ async function loadData(){
     var data=await resp.json();
     var serverRegs=(data.record||{}).registros||[];
     dbg('loadData() servidor tiene '+serverRegs.length+' registros, savedAt='+savedAt+' t0='+t0);
-    // Solo aplicar si no hubo un save DESPUÉS de que enviamos este GET
     if(t0 < savedAt){
-      dbg('loadData() IGNORADO — hay save más reciente (savedAt='+savedAt+')');
+      dbg('loadData() IGNORADO — hay save más reciente');
     } else if(isSaving){
       dbg('loadData() IGNORADO — save en progreso');
     } else {
@@ -297,7 +302,7 @@ async function saveData(){
   setBtnAdd(true);
 }
 
-// Foto
+// Foto upload
 document.getElementById('fFoto').addEventListener('change',function(){
   var file=this.files[0];if(!file)return;
   fotoStr=file.name;fotoData=null;fotoSubiendo=true;
@@ -310,8 +315,8 @@ document.getElementById('fFoto').addEventListener('change',function(){
     .then(function(r){return r.json();})
     .then(function(d){
       fotoSubiendo=false;
-      if(d.secure_url){fotoData=d.secure_url;document.getElementById('fotoNom').textContent='Foto lista ✓';dbg('foto: OK url='+d.secure_url.substring(0,40)+'...');}
-      else{document.getElementById('fotoNom').textContent='Error al subir foto';dbg('foto: ERROR sin secure_url resp='+JSON.stringify(d));}
+      if(d.secure_url){fotoData=d.secure_url;document.getElementById('fotoNom').textContent='Foto lista ✓';dbg('foto: OK');}
+      else{document.getElementById('fotoNom').textContent='Error al subir foto';dbg('foto: ERROR '+JSON.stringify(d));}
     })
     .catch(function(e){fotoSubiendo=false;document.getElementById('fotoNom').textContent='Error al subir foto';dbg('foto: CATCH '+e.message);});
   };
@@ -354,11 +359,24 @@ document.getElementById('filtros').addEventListener('click',function(e){
   btn.classList.add('on');render();
 });
 
-// Tabla clicks
+// Tabla clicks — FIX: foto abre via data-url en el elemento
 document.getElementById('tbody').addEventListener('click',async function(e){
-  if(e.target.classList.contains('fp'))return;
+  // Abrir foto
+  var fp=e.target.closest('.fp');
+  if(fp){
+    var url=fp.getAttribute('data-url');
+    if(url)abrirFoto(url);
+    return;
+  }
+  // Eliminar — con confirmación para evitar borrados accidentales
   var del=e.target.closest('.bdel');
-  if(del){var id=+del.getAttribute('data-id');registros=registros.filter(function(r){return r.id!==id;});render();await saveData();return;}
+  if(del){
+    if(!confirm('¿Eliminar este registro? Esta acción no se puede deshacer.'))return;
+    var id=+del.getAttribute('data-id');
+    registros=registros.filter(function(r){return r.id!==id;});
+    render();await saveData();return;
+  }
+  // WA por fila
   var wa=e.target.closest('.bwarow');
   if(wa){var id=+wa.getAttribute('data-id');var rec=registros.find(function(r){return r.id===id;});if(rec)abrirWAItem(rec);}
 });
@@ -376,12 +394,12 @@ document.getElementById('tbody').addEventListener('change',async function(e){
   render();await saveData();
 });
 
-// WA
 function abrirWAItem(r){
   var msg='Casa NOA — '+(ML[r.motivo]||r.motivo)+'\n'+new Date().toLocaleDateString('es-AR')+'\n\n'
     +'Proveedor: '+r.proveedor+'\nProducto: '+r.producto+'\nCantidad: '+r.cantidad+'\nSucursal: '+(SL[r.sucursal]||r.sucursal);
   if(r.factura)msg+='\nFactura: '+r.factura;
   if(r.vto)msg+='\nVto: '+r.vto.split('-').reverse().join('/');
+  if(r.fechaReclamo)msg+='\nFecha reclamo: '+r.fechaReclamo.split('-').reverse().join('/');
   if(r.codigo)msg+='\nCod dev: '+r.codigo;
   if(r.obs)msg+='\nObs: '+r.obs;
   if(r.foto)msg+='\nFoto: '+r.foto;
@@ -392,6 +410,7 @@ function abrirWAItem(r){
   document.getElementById('panelRow').classList.add('open');
   window.scrollTo({top:document.getElementById('panelRow').offsetTop-20,behavior:'smooth'});
 }
+
 document.getElementById('btnWAAll').addEventListener('click',function(){
   var p=document.getElementById('panelWAAll');
   if(p.classList.contains('open')){p.classList.remove('open');return;}
@@ -422,8 +441,11 @@ document.getElementById('btnCopyRow').addEventListener('click',function(){naviga
 document.getElementById('btnCerRow').addEventListener('click',function(){document.getElementById('panelRow').classList.remove('open');});
 document.getElementById('btnReload').addEventListener('click',function(){loadData();});
 document.getElementById('btnCSV').addEventListener('click',function(){
-  var lines=['Sucursal,Proveedor,Producto,Motivo,Cantidad,Factura,Vto,Cod dev,Observaciones,Reclamo,Listo,Fecha'];
-  registros.forEach(function(r){lines.push([(SL[r.sucursal]||r.sucursal),r.proveedor,r.producto,(ML[r.motivo]||r.motivo),r.cantidad,(r.factura||''),(r.vto||''),(r.codigo||''),'"'+((r.obs||'').replace(/"/g,'""'))+'"',(r.reclamoEnviado?'Si':'No'),(r.realizado?'Si':'No'),r.fecha].join(','));});
+  var lines=['Sucursal,Proveedor,Producto,Motivo,Cantidad,Factura,Vto,F.Reclamo,Cod dev,Observaciones,Reclamo,Listo,Fecha'];
+  registros.forEach(function(r){
+    var fr=r.fechaReclamo?r.fechaReclamo.split('-').reverse().join('/'):'';
+    lines.push([(SL[r.sucursal]||r.sucursal),r.proveedor,r.producto,(ML[r.motivo]||r.motivo),r.cantidad,(r.factura||''),(r.vto||''),fr,(r.codigo||''),'"'+((r.obs||'').replace(/"/g,'""'))+'"',(r.reclamoEnviado?'Si':'No'),(r.realizado?'Si':'No'),r.fecha].join(','));
+  });
   var blob=new Blob(['\uFEFF'+lines.join('\n')],{type:'text/csv'});
   var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='CasaNOA_Devoluciones.csv';a.click();
 });
