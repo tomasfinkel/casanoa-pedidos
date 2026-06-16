@@ -193,17 +193,18 @@
     // migueletes: pendiente de ficha verificada en Google
   };
 
-  function mostrarReviewBanner() {
+function mostrarReviewBanner() {
     const params = new URLSearchParams(window.location.search);
     const suc = params.get('suc');
     const banner = document.getElementById('review-banner');
     if (suc && REVIEW_LINKS[suc]) {
       document.getElementById('review-link').href = REVIEW_LINKS[suc];
       banner.style.display = 'block';
-    } else {
-      banner.style.display = 'none';
     }
   }
+
+  // Mostrar banner al cargar la página
+  window.addEventListener('load', mostrarReviewBanner);
 
   const fmt = p => (parseFloat(p)||0).toLocaleString('es-AR',{style:'currency',currency:'ARS',minimumFractionDigits:0,maximumFractionDigits:0});
   const mostrarEstado = msg => { const e = document.getElementById('estado'); e.textContent = msg; e.style.display = 'block'; };
