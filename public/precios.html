@@ -98,20 +98,21 @@
     document.getElementById('btn-text').textContent = 'Cerrar escáner';
     document.getElementById('btn-scan').classList.add('cerrar');
 
-    Quagga.init({
-      inputStream: {
-        type: 'LiveStream',
-        constraints: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
-        target: document.getElementById('interactive'),
-        area: { top: '35%', right: '5%', bottom: '35%', left: '5%' }
-      },
-      decoder: {
-        readers: ['ean_reader', 'ean_8_reader', 'code_128_reader', 'upc_reader'],
-        multiple: false
-      },
-      locate: true,
-      numOfWorkers: 0
-    }, function(err) {
+   Quagga.init({
+  inputStream: {
+    type: 'LiveStream',
+    constraints: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } },
+    target: document.getElementById('interactive'),
+    area: { top: '25%', right: '5%', bottom: '25%', left: '5%' }
+  },
+  decoder: {
+    readers: ['ean_reader', 'ean_8_reader', 'code_128_reader', 'upc_reader'],
+    multiple: false
+  },
+  locate: true,
+  numOfWorkers: 0,
+  locator: { patchSize: 'large', halfSample: false }
+}, function(err) {
       if (err) {
         cerrarScanner();
         mostrarEstado('No se pudo acceder a la cámara. Usá la búsqueda por nombre.');
