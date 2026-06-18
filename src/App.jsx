@@ -1103,10 +1103,15 @@ export default function App(){
           const vAd=wbV2d?parseVentas(wbV2d):null;
           const combA=vmDuxA?{vm:vmDuxA,dias:diasDux,esVentaDiaria:true}:combinarVentas(vA5,vA30,vA51,vAd,diaActual);
           const diasRep=combC.dias||combA.dias||diasFinal;
+          const ventasOrigenC=vmDuxC?"localStorage/DUX viejo (NO tus archivos)":(vCd?"Mes corriente (archivo subido)":(vC5||vC30||vC51?"otro archivo subido":"NINGUNO - vacio"));
+          const ventasOrigenA=vmDuxA?"localStorage/DUX viejo (NO tus archivos)":(vAd?"Mes corriente (archivo subido)":(vA5||vA30||vA51?"otro archivo subido":"NINGUNO - vacio"));
+          const conVentaC=combC.vm?Object.values(combC.vm).filter(vv=>vv>0).length:0;
+          const conVentaA=combA.vm?Object.values(combA.vm).filter(vv=>vv>0).length:0;
           const gNorm=agrupar(calcular(sC,[],sA,[],diasRep,false,v,combC.vm,combA.vm).filter(p=>p.cant>0));
           const gAlert=agrupar(calcular(sC,[],sA,[],diasRep,true,v,combC.vm,combA.vm).filter(p=>p.esQuiebre));
           const transf=calcularTransferencias(sC,sA,combC.vm,combA.vm,diasRep);
           const conj=calcularPedidosConjuntos(sC,sA,combC.vm,combA.vm,diasRep);
+          setDiag("DIAGNOSTICO — Ventas Castex: "+ventasOrigenC+" ("+conVentaC+" productos con venta>0) · Ventas Siria: "+ventasOrigenA+" ("+conVentaA+" productos con venta>0) · Dias usados: "+diasRep+" · Stock Castex: "+(sC?sC.length:0)+" prod · Stock Siria: "+(sA?sA.length:0)+" prod · Transferencias calculadas: "+transf.length+" · Conjuntos calculados: "+conj.length);
           setGrupos(ajustarCantidadesProv(gNorm));setAlertas(gAlert);setTransferencias(transf);setConjuntos(conj);
           setCantsPorProv({});
         // No resetear pedidos realizados - se mantienen con su fecha
