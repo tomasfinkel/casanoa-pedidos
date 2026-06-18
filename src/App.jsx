@@ -1322,8 +1322,18 @@ export default function App(){
                   {cargandoVentasDux?msgCargandoVentas:"📈 Actualizar ventas desde DUX"}
                 </button>
                 {(ventasCDirecto||ventasADirecto)&&(
-                  <div style={{fontSize:10,color:C.green,textAlign:"center"}}>
+                  <div style={{fontSize:10,color:C.green,textAlign:"center",marginBottom:6}}>
                     ✅ Ventas cargadas · {Object.keys(ventasCDirecto||{}).length} prod. Castex · {Object.keys(ventasADirecto||{}).length} prod. Siria
+                  </div>
+                )}
+                <div style={{fontSize:10,fontWeight:700,color:C.gold,marginBottom:8,marginTop:4}}>📦 Stock automático</div>
+                <button onClick={cargarStockDuxAuto} disabled={cargandoStockDux}
+                  style={{width:"100%",background:cargandoStockDux?C.border:C.terracotta,color:"#fff",border:"none",borderRadius:10,padding:"10px",fontSize:12,fontWeight:700,cursor:"pointer",marginBottom:6}}>
+                  {cargandoStockDux?"Cargando stock...":"📦 Actualizar stock desde DUX"}
+                </button>
+                {(stockCDirecto||stockADirecto)&&(
+                  <div style={{fontSize:10,color:C.green,textAlign:"center"}}>
+                    ✅ Stock cargado · {(stockCDirecto||[]).length} prod. Castex · {(stockADirecto||[]).length} prod. Siria
                   </div>
                 )}
               </div>
