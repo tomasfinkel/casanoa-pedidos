@@ -951,9 +951,9 @@ export default function App(){
         console.log("Usando deposito Castex:", idDepC, depC.deposito);
         console.log("Usando deposito Siria:", idDepA, depA.deposito);
         // Cargar items secuencialmente con delay para respetar rate limit
-        const itemsC=await cargarItems(idDepC);
+        itemsC=await cargarItems(idDepC);
         await new Promise(r=>setTimeout(r,6000));
-        const itemsA=await cargarItems(idDepA);
+        itemsA=await cargarItems(idDepA);
       } else {
         // Cargar por sucursal directamente
         const cargarPorSucursal=async(idSucursal)=>{
@@ -1049,6 +1049,7 @@ export default function App(){
   const [busq,setBusq]=useState("");
   const [proc,setProc]=useState(false);
   const [err,setErr]=useState("");
+  const [diag,setDiag]=useState("");
   const [filtro,setFiltro]=useState("todos");
   const [dias,setDias]=useState(7);
   const [diasCustom,setDiasCustom]=useState("");
@@ -1142,10 +1143,15 @@ export default function App(){
         const vAd=wbV2d?parseVentas(wbV2d):null;
         const combA=vmDuxA?{vm:vmDuxA,dias:diasDux,esVentaDiaria:true}:combinarVentas(vA5,vA30,vA51,vAd,diaActual);
         const diasRep=combC.dias||combA.dias||diasFinal;
+        const ventasOrigenC=vmDuxC?"localStorage/DUX (NO tus archivos)":(vCd?"Mes corriente (archivo subido)":(vC5||vC30||vC51?"otro archivo subido":"NINGUNO - vacio"));
+        const ventasOrigenA=vmDuxA?"localStorage/DUX (NO tus archivos)":(vAd?"Mes corriente (archivo subido)":(vA5||vA30||vA51?"otro archivo subido":"NINGUNO - vacio"));
+        const conVentaC=combC.vm?Object.values(combC.vm).filter(v=>v>0).length:0;
+        const conVentaA=combA.vm?Object.values(combA.vm).filter(v=>v>0).length:0;
         const gNorm=agrupar(calcular(sC,[],sA,[],diasRep,false,sucursal,combC.vm,combA.vm).filter(p=>p.cant>0));
         const gAlert=agrupar(calcular(sC,[],sA,[],diasRep,true,sucursal,combC.vm,combA.vm).filter(p=>p.esQuiebre));
         const transf=calcularTransferencias(sC,sA,combC.vm,combA.vm,diasRep);
         const conj=calcularPedidosConjuntos(sC,sA,combC.vm,combA.vm,diasRep);
+        setDiag("DIAGNOSTICO — Ventas Castex: "+ventasOrigenC+" ("+conVentaC+" productos con venta>0) · Ventas Siria: "+ventasOrigenA+" ("+conVentaA+" productos con venta>0) · Dias usados: "+diasRep+" · Stock Castex: "+(sC?sC.length:0)+" prod · Stock Siria: "+(sA?sA.length:0)+" prod · Transferencias calculadas: "+transf.length+" · Conjuntos calculados: "+conj.length);
         setGrupos(ajustarCantidadesProv(gNorm));setAlertas(gAlert);setTransferencias(transf);setConjuntos(conj);
         setTab(gAlert.length>0?"alertas":"pedidos");
       }catch(e){setErr("Error: "+e.message);console.error(e);}
@@ -1400,6 +1406,7 @@ export default function App(){
               </div>
             </div>
             {err&&<div style={{background:"#FDECEA",borderRadius:10,padding:"9px 12px",fontSize:12,color:C.terracotta,marginBottom:10}}>{err}</div>}
+            {diag&&<div style={{background:"#FFF8E1",borderRadius:10,padding:"9px 12px",fontSize:11,color:"#7A5C00",marginBottom:10,fontFamily:"monospace",wordBreak:"break-word"}}>{diag}</div>}
             <button onClick={procesar} disabled={!todosListos||proc}
               style={{width:"100%",background:!todosListos?C.border:C.terracotta,color:"#fff",border:"none",borderRadius:14,padding:15,fontSize:15,fontWeight:800,cursor:!todosListos?"not-allowed":"pointer",opacity:!todosListos?0.5:1}}>
               {proc?"Procesando...":"Generar pedidos"}
