@@ -163,6 +163,7 @@ function calcular(stockC,ventasC,stockA,ventasA,diasV,soloQuiebre,sucursal,venta
     if(!p)return;
     const ean=String(p["Código Barra"]||"").trim();
     const nombre=String(p["Producto"]||"").trim();
+    const costo=Math.max(0,parseFloat(p["Costo"])||0);
     const provDux=String(p["Proveedor"]||"SIN PROVEEDOR").trim()||"SIN PROVEEDOR";
     const prov=EAN_PROV_OVERRIDE[ean]||provDux;
     if(!nombre)return;
@@ -196,7 +197,8 @@ function calcular(stockC,ventasC,stockA,ventasA,diasV,soloQuiebre,sucursal,venta
     const bulto=getBulto(prov,ean,cod,nombre);
     
     // Calcular sobrante de la otra sucursal para descontarlo del pedido
-    const DIAS_TRANSF=15;
+    // Transferencias se hacen 2 veces por semana: proyectar a 4 dias fijos
+    const DIAS_TRANSF=4;
     let cantTransf=0,transferDesde=null;
     if(ventasDiariaC&&ventasDiariaA){
       const vdC=ventasDiariaC[cod]||0;
@@ -221,6 +223,8 @@ function calcular(stockC,ventasC,stockA,ventasA,diasV,soloQuiebre,sucursal,venta
     let cantF=bulto?redondear(Math.round(cantNeta),bulto):Math.round(cantNeta);
     if(BULTO_MIN[prov]&&cantF>0&&cantF<BULTO_MIN[prov])cantF=BULTO_MIN[prov];
     if(BULTO_MAX[prov]&&cantF>BULTO_MAX[prov])cantF=BULTO_MAX[prov];
+    // Nunca pedir 1 sola unidad de un producto sin bulto: minimo 2
+    if(!bulto&&cantF===1)cantF=2;
     // Para no semanales: solo aparecer si dias de cobertura < umbral
     if(!soloQuiebre&&frecProv!==7&&frecProv!==undefined&&frecProv!==0){
       const diasCobertura=ventaDiaria>0?sR/ventaDiaria:999;
@@ -229,7 +233,7 @@ function calcular(stockC,ventasC,stockA,ventasA,diasV,soloQuiebre,sucursal,venta
     if(soloQuiebre&&(!esQuiebre||FRECUENCIAS[prov]===0))return;
     if(!soloQuiebre&&!debeAparecer(prov,diasV))return;
     if(cantF<=0&&cantTransf===0&&!esQuiebre)return;
-    res.push({cod,ean,nombre,prov,sR,sRC,sRA,falt,vend,vendC,vendA,proy,cant:cantF,cantBruta:Math.round(cantBruta),bulto,esQuiebre,transferDesde,cantTransf:Math.round(cantTransf)});
+    res.push({cod,ean,nombre,prov,sR,sRC,sRA,falt,vend,vendC,vendA,proy,cant:cantF,cantBruta:Math.round(cantBruta),bulto,esQuiebre,transferDesde,cantTransf:Math.round(cantTransf),costo});
   });
   return res;
 }
@@ -251,8 +255,8 @@ function calcularTransferencias(stockC,stockA,vmC,vmA,dias){
     const sRC=parseFloat(pC["Stock Real"])||0;
     const sRA=parseFloat(pA["Stock Real"])||0;
     // Calcular proyeccion por sucursal
-    // Transferencias siempre proyectadas a 15 dias fijos
-    const DIAS_TRANSF=15;
+    // Transferencias se hacen 2 veces por semana: proyectar a 4 dias fijos
+    const DIAS_TRANSF=4;
     const vdC=vmC?vmC[cod]||0:0;
     const vdA=vmA?vmA[cod]||0:0;
     const proyC=Math.round(vdC*DIAS_TRANSF);
@@ -346,18 +350,23 @@ function calcularPedidosConjuntos(stockC,stockA,vmC,vmA,dias){
   return res.sort((a,b)=>b.cantTotal-a.cantTotal);
 }
 
+const COMPRA_MINIMA = 150000;
 function agrupar(productos){
   const map={};
   productos.forEach(p=>{if(!map[p.prov])map[p.prov]=[];map[p.prov].push(p);});
-  return Object.entries(map).map(([prov,items])=>({
+  return Object.entries(map).map(([prov,items])=>{
+    const totalCosto=items.reduce((s,i)=>s+(i.costo||0)*i.cant,0);
+    return{
     prov,items,nombre:nCorto(prov),
     total:items.reduce((s,i)=>s+i.cant,0),
+    totalCosto,
+    bajoMinimo:totalCosto>0&&totalCosto<COMPRA_MINIMA,
     esLink:!!LINKS[prov],url:LINKS[prov]||null,
     esWeb:WEB_PROVS.has(prov),tieneBulto:tieneBultoConf(prov),
     frecDias:FRECUENCIAS[prov]||null,
     tieneQuiebre:items.some(i=>i.esQuiebre),
     tieneTransf:items.some(i=>i.transferDesde),
-  })).sort((a,b)=>b.items.length-a.items.length);
+  };}).sort((a,b)=>b.items.length-a.items.length);
 }
 
 // Ajusta cantidades para proveedores con bulto total o medio bulto
@@ -528,7 +537,7 @@ function Card({g,num,onCantChange,esAlerta,pedido,onMarcarPedido,numOrden,sucLab
   }
 
   return(
-    <div style={{background:C.card,borderRadius:16,border:"1.5px solid "+(esAlerta?C.red:g.tieneTransf?C.orange:C.borderCard),overflow:"hidden",marginBottom:10}}>
+    <div style={{background:C.card,borderRadius:16,border:"1.5px solid "+(esAlerta?C.red:g.tieneTransf?C.orange:g.bajoMinimo?"#8B6914":C.borderCard),overflow:"hidden",marginBottom:10}}>
       <div onClick={()=>setOpen(!open)} style={{padding:"13px 14px",display:"flex",alignItems:"center",gap:10,cursor:"pointer",background:open?C.cardDark:C.card}}>
         <div style={{background:esAlerta?C.red:C.terracotta,color:"#fff",borderRadius:8,width:26,height:26,display:"flex",alignItems:"center",justifyContent:"center",fontSize:esAlerta?14:11,fontWeight:800,flexShrink:0}}>{esAlerta?"!":num}</div>
         <div style={{flex:1,minWidth:0}}>
@@ -536,6 +545,7 @@ function Card({g,num,onCantChange,esAlerta,pedido,onMarcarPedido,numOrden,sucLab
           <div style={{fontSize:10,color:esAlerta?C.red:g.tieneTransf?C.orange:C.muted,fontWeight:700}}>
             {esAlerta?"QUIEBRE · ":g.tieneTransf?"⚠️ HAY TRANSFERENCIAS · ":""}{g.items.length} prod · {g.total} u.{g.frecDias&&!esAlerta?" · "+frecLabel(g.frecDias):""}
           </div>
+          {g.bajoMinimo&&<div style={{fontSize:10,color:"#8B6914",fontWeight:700,marginTop:2}}>⚠️ Pedido de ${Math.round(g.totalCosto).toLocaleString("es-AR")} — no llega al mínimo de ${COMPRA_MINIMA.toLocaleString("es-AR")}</div>}
         </div>
         <div style={{display:"flex",gap:5,alignItems:"center",flexShrink:0}}>
           <span style={{background:badge.bg,borderRadius:7,padding:"3px 7px",fontSize:9,fontWeight:700,color:badge.color}}>{badge.label}</span>
@@ -864,7 +874,6 @@ export default function App(){
       const vA=ponderar(vA5,vA1,diasPeriodo1);
       setVentasCDirecto(vC);
       setVentasADirecto(vA);
-      try{localStorage.setItem("ventasC",JSON.stringify(vC));localStorage.setItem("ventasA",JSON.stringify(vA));localStorage.setItem("ventasDias","ponderado");}catch{}
       const diasLabel=usarMesAnterior?"mes anterior":"mes corriente";
       alert("✅ Ventas cargadas (5 días + "+diasLabel+"): "+Object.keys(vC).length+" prod. Castex, "+Object.keys(vA).length+" prod. Siria");
     }catch(e){
@@ -1014,18 +1023,10 @@ export default function App(){
     setCargandoStockDux(false);
   };
 
-  const [stockCDirecto,setStockCDirecto]=useState(()=>{
-    try{const d=localStorage.getItem("stockC");return d?JSON.parse(d):null;}catch{return null;}
-  });
-  const [stockADirecto,setStockADirecto]=useState(()=>{
-    try{const d=localStorage.getItem("stockA");return d?JSON.parse(d):null;}catch{return null;}
-  });
-  const [ventasCDirecto,setVentasCDirecto]=useState(()=>{
-    try{const d=localStorage.getItem("ventasC");return d?JSON.parse(d):null;}catch{return null;}
-  });
-  const [ventasADirecto,setVentasADirecto]=useState(()=>{
-    try{const d=localStorage.getItem("ventasA");return d?JSON.parse(d):null;}catch{return null;}
-  });
+  const [stockCDirecto,setStockCDirecto]=useState(null);
+  const [stockADirecto,setStockADirecto]=useState(null);
+  const [ventasCDirecto,setVentasCDirecto]=useState(null);
+  const [ventasADirecto,setVentasADirecto]=useState(null);
   const [duxPeriodo,setDuxPeriodo]=useState(()=>{
     try{return localStorage.getItem("ventasDias")||"5";}catch{return "5";}
   });
@@ -1344,7 +1345,7 @@ export default function App(){
             <div style={{marginBottom:14,background:C.bg,borderRadius:12,padding:12,border:"1px solid "+C.border}}>
               <div style={{fontSize:10,fontWeight:700,color:C.gold,marginBottom:8,textTransform:"uppercase",letterSpacing:1}}>Sucursal {SUC1}</div>
               <div style={{display:"flex",gap:8,marginBottom:8}}>
-                <UploadZone label="Stock Castex" icon="📦" onFile={(wb)=>{setWbS1(wb);try{const d=parseStock(wb);localStorage.setItem("stockC",JSON.stringify(d));setStockCDirecto(d);}catch{}}} loaded={!!wbS1||!!stockCDirecto} uid="c0"/>
+                <UploadZone label="Stock Castex" icon="📦" onFile={(wb)=>{setWbS1(wb);try{const d=parseStock(wb);setStockCDirecto(d);}catch{}}} loaded={!!wbS1||!!stockCDirecto} uid="c0"/>
               </div>
               <div style={{fontSize:9,color:C.creamDim,marginBottom:6,fontWeight:600}}>VENTAS (subí las que tengas):</div>
               <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
@@ -1358,7 +1359,7 @@ export default function App(){
             <div style={{marginBottom:14,background:C.bg,borderRadius:12,padding:12,border:"1px solid "+C.border}}>
               <div style={{fontSize:10,fontWeight:700,color:C.gold,marginBottom:8,textTransform:"uppercase",letterSpacing:1}}>Sucursal {SUC2}</div>
               <div style={{display:"flex",gap:8,marginBottom:8}}>
-                <UploadZone label="Stock Siria" icon="📦" onFile={(wb)=>{setWbS2(wb);try{const d=parseStock(wb);localStorage.setItem("stockA",JSON.stringify(d));setStockADirecto(d);}catch{}}} loaded={!!wbS2||!!stockADirecto} uid="a0"/>
+                <UploadZone label="Stock Siria" icon="📦" onFile={(wb)=>{setWbS2(wb);try{const d=parseStock(wb);setStockADirecto(d);}catch{}}} loaded={!!wbS2||!!stockADirecto} uid="a0"/>
               </div>
               <div style={{fontSize:9,color:C.creamDim,marginBottom:6,fontWeight:600}}>VENTAS (subí las que tengas):</div>
               <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
