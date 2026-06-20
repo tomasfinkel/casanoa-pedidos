@@ -84,6 +84,23 @@
   let escaneando = false;
   let busquedaTimeout = null;
   let ultimoBarcode = null;
+  let scanTimeoutId = null;
+
+  // Valida el digito verificador de codigos EAN-13 / EAN-8 / UPC-A.
+  // Si el codigo leido no es matematicamente consistente, casi seguro
+  // QuaggaJS leyo mal un digito por mala luz/angulo/calidad de camara.
+  function checksumValido(codigo) {
+    if (!/^\d+$/.test(codigo)) return true; // code_128 puede traer letras: no validamos
+    const len = codigo.length;
+    if (len !== 8 && len !== 12 && len !== 13) return true; // formato no-EAN/UPC estandar, dejamos pasar
+    const digits = codigo.split('').map(Number);
+    const check = digits.pop();
+    let suma = 0;
+    // Para EAN-13/UPC-A/EAN-8 el patron de pesos 3-1 se cuenta desde la derecha
+    digits.reverse().forEach((d, i) => { suma += d * (i % 2 === 0 ? 3 : 1); });
+    const calculado = (10 - (suma % 10)) % 10;
+    return calculado === check;
+  }
 
   function toggleScanner() {
     escaneando ? cerrarScanner() : abrirScanner();
@@ -97,6 +114,13 @@
     document.getElementById('hint').style.display = 'block';
     document.getElementById('btn-text').textContent = 'Cerrar escáner';
     document.getElementById('btn-scan').classList.add('cerrar');
+
+    clearTimeout(scanTimeoutId);
+    scanTimeoutId = setTimeout(() => {
+      if (!escaneando) return;
+      cerrarScanner();
+      mostrarEstado('No pudimos leer el código. Probá acercar más el celular o buscá por nombre.');
+    }, 8000);
 
    Quagga.init({
   inputStream: {
@@ -123,8 +147,10 @@
 
     Quagga.onDetected(function(result) {
       const barcode = result.codeResult.code;
+      if (!checksumValido(barcode)) return; // lectura corrupta: seguimos escaneando en silencio
       if (barcode === ultimoBarcode) return;
       ultimoBarcode = barcode;
+      clearTimeout(scanTimeoutId);
       cerrarScanner();
       buscarPorBarcode(barcode);
     });
@@ -132,6 +158,7 @@
 
   function cerrarScanner() {
     escaneando = false;
+    clearTimeout(scanTimeoutId);
     document.getElementById('scanner-wrap').classList.remove('activo');
     document.getElementById('hint').style.display = 'none';
     document.getElementById('btn-text').textContent = 'Escanear código de barras';
