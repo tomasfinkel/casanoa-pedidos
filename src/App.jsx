@@ -4,7 +4,9 @@ import * as XLSX from "xlsx";
 const C = {bg:"#1C1612",card:"#F5F0E8",cardDark:"#EDE6D6",dark:"#1A1410",muted:"#6B6158",terracotta:"#B85C38",gold:"#C9A252",green:"#3A5A3C",border:"#2E2820",borderCard:"#DDD5C0",surface:"#242018",cream:"#F5F0E8",creamDim:"#B8AD96",red:"#C0392B",orange:"#E67E22"};
 const SUC1 = "Castex 3390";
 const SUC2 = "Rep. Arabe Siria 2990";
+const SUC3 = "Migueletes";
 const MIN_TRANSF = 3;
+function labelSuc(s){return s===SUC1?"Castex":s===SUC2?"Siria":s===SUC3?"Migueletes":s;}
 
 const BULTOS_EAN = {
   "CONYNTRA S.A.": {"8001250008503": 12, "8001250008510": 12, "8001250220011": 12, "8001250220028": 12, "8001250115058": 12, "8001250410122": 20, "8001250410412": 12, "8001250145345": 12, "8001250253033": 8, "8001250152015": 8, "8001250152039": 8, "8001250120069": 24, "8001250120076": 24, "8001250120090": 24, "8001250120106": 24, "8001250120113": 24, "8001250120120": 24, "8001250120144": 24, "8001250121707": 24, "8001250120243": 24, "8001250120342": 24, "8001250120410": 24, "8001250120731": 24, "8001250120182": 24, "8001250120052": 24, "8001250120915": 24, "8001250120939": 24, "8001250121264": 12, "8001250121318": 12, "8001250121257": 12, "8001250201010": 12, "8001250201034": 12, "8001250501073": 12, "8001250001085": 12, "8001250009999": 12, "8001250000699": 12, "8001250009852": 12, "8001250039705": 12, "8001250069139": 12, "8001250069146": 12, "8001250069160": 12, "8001250099198": 12, "8001250019769": 12, "8001250009821": 12, "8001250007759": 12, "8001250014078": 12, "8001250014115": 12, "8001250013859": 12, "8001250019745": 12, "8001250019806": 12, "8001250861764": 10, "8001250891778": 10, "8001250160126": 12, "8001250160072": 12, "8001250160416": 12, "8001250160348": 12, "8001250009760": 6, "8002210500105": 12, "8002210500204": 12, "8002210560000": 12, "8002210124202": 8, "8002210135109": 6, "8002210116566": 6, "8002210122499": 12, "8002210128439": 6, "8002210112445": 6, "8002210112704": 6, "8002210132337": 6, "8002210133174": 6, "8002210133211": 6, "8002210133198": 6, "8001876002138": 12, "8001876020019": 6, "8001876020088": 6, "8001876020026": 6, "8001876020033": 12, "8001876000998": 6, "8001876550561": 12, "8001876552442": 12, "8001876550325": 6, "8001876002152": 12, "8001876002169": 12, "8004323110028": 24, "8004323110035": 24, "8004323110042": 24, "8004323110134": 24, "8004323110141": 24, "8004323110158": 24, "8004323110325": 24, "8004323110318": 24, "8004323130378": 24, "8004323110493": 24, "8004323110707": 24, "8004323111605": 20, "8004323111643": 20, "8004323212685": 12, "8004323212708": 12, "8004323312675": 12, "8004323413402": 20, "8001876003036": 12, "8001876003012": 6, "80330370": 6, "80479130": 6, "80330318": 6, "80330349": 6, "8001876060077": 12, "8001876060008": 12, "8001876060015": 12, "8001876060060": 12, "8001876060053": 12, "3083680041713": 12, "3083680004657": 12, "3083680002929": 12, "3083680003841": 12, "3083680002561": 12, "3083680026154": 12, "3083681017656": 12, "3083680001151": 12, "3083680043144": 12, "3083681108019": 12, "3083681003437": 24, "3083681003420": 24, "7891079012208": 30, "7891079012215": 30, "7891079012444": 30, "7891079013939": 30, "7891079012895": 24, "7891079012901": 24, "7891079012918": 24, "7891079013274": 24, "7891079013922": 24, "7891079013946": 24, "7896007810017": 24, "7896007810123": 24, "7896007800001": 24, "7896007811007": 24, "7896007840007": 1, "7896007800124": 24, "7896007800056": 24, "7896007840120": 1, "7896007865130": 12, "7896007833368": 12, "7896007833214": 12, "7896007830763": 24, "7896007811304": 24, "7896007811311": 24, "7896007811403": 24, "7896007865864": 12, "7896007840861": 1, "7896007826476": 12, "8426944001071": 15, "8426944021253": 15, "8426944051502": 15, "8426944000012": 15, "8426944041503": 15, "8426944000081": 17, "8426944610808": 15, "8426944600014": 15, "4102430015305": 24, "41024348": 24, "41024355": 24, "4102430000806": 2, "4100770077120": 24, "4100770005550": 24, "4014964111524": 24, "4014964112514": 24, "4014964117663": 2, "4052197002455": 24, "4102430075095": 24, "4052197001281": 24, "8714800007191": 24, "8714800004114": 24, "8714800014182": 24, "8714800036214": 12, "8711406032602": 24, "8711406000564": 24, "8711406000496": 24, "8711406022207": 24, "8000070038769": 20, "8000070035805": 20, "8000070019911": 20, "8000070010000": 20, "8000070038158": 12, "8000070036166": 12, "8000070012141": 12, "8000070011052": 12, "8000070036321": 12, "8000070053526": 10, "8000070053465": 10, "8000070053564": 10, "8000070053571": 10, "8000070053625": 10, "8000070054271": 10, "8000070053502": 10, "7798348430018": 12, "7798348430056": 12, "7798348430063": 12, "7798348430025": 12, "7798348430032": 12, "7798348430049": 12, "7798348430308": 12, "5056701000530": 12, "5063270100905": 12, "5063270100752": 12, "5063270101353": 12, "5063270101391": 12, "5063270103524": 12, "8720608014064": 12, "8720608014231": 12, "8720608014248": 12, "3045320089332": 6, "3045320089325": 6, "3045320089318": 6, "3045320089677": 6, "3045320096101": 6, "3045320089356": 6, "3045320089301": 6, "3045320089349": 6, "3045320089363": 6, "3178530402988": 12, "3178530402995": 12, "3178530403022": 12, "0016000264601": 12, "0016000289208": 12, "0016000413146": 12, "0016000411265": 12, "0016000407619": 12, "0016000439801": 12, "0016000277076": 12, "0016000278554": 12, "0016000457249": 12, "4000539142567": 14, "8003340095905": 18, "8003340801216": 12, "8003340801674": 8, "8003340098098": 8, "8003340807751": 8, "8003340807775": 8, "8003340096230": 10, "8003340096247": 10, "7610400014649": 12, "7610400068369": 12, "7610400074155": 12, "3046920028004": 20, "3046920028363": 20, "3046920029759": 20, "3046920028370": 20, "3046920029674": 20, "7610400010016": 12, "7610400010023": 12, "7610400014038": 12, "7610400010108": 12, "7610400014571": 12, "7610400013857": 11, "7610400013864": 10, "7610400078559": 15, "8003340803449": 8, "8003340803456": 8, "3046920040150": 8, "NaN": 1, "8003340590684": 1, "4000539680625": 30, "4000539694509": 30, "8003340095400": 18, "8003340095417": 18, "4000539671289": 32, "4000539671180": 16, "4000539689772": 30, "8003340801919": 16, "4000417018007": 12, "4000417025005": 12, "4000417294005": 11, "4000417022004": 12, "4000417702005": 10, "4000417703002": 11, "4000417701008": 10, "4000417700001": 10, "4000417707000": 12, "4000417933003": 12, "4000417118301": 8, "4000417117106": 8, "0046000273426": 12, "0046000273419": 12, "0046000279183": 12, "0046000821214": 24, "0046000413594": 12, "0046000288697": 32, "8410223710280": 24, "8410223710297": 24, "8410223720012": 12, "638564700847": 12, "8410223602493": 12, "8410223607726": 12, "8410223706016": 12, "8410223705774": 6, "8410223608105": 10, "8410223605913": 10, "8410223800424": 24, "8410223800882": 24, "8410223872681": 12, "8410223872995": 16, "8410223872971": 16, "8410223905396": 16, "8410223902821": 12, "8410223873435": 12, "8410223908977": 15, "8410223908984": 15, "8410223908991": 15, "0074570610051": 8, "3415581117288": 8, "0074570274000": 8, "0074570810116": 8, "0074570174003": 8, "0074570024001": 8, "0074570950010": 8, "0074570004003": 8, "3415581187281": 8, "3415587117053": 8, "3415583003053": 8, "3415583012055": 8, "3415583011058": 8, "3415587401053": 24, "3415587403057": 24, "3415587404054": 24, "3415587405051": 24, "7790975000152": 6, "7790975000374": 4, "7790975022345": 6, "7790975194417": 6, "7790975194431": 6, "7790975204468": 6, "7790975198699": 6, "7790975198736": 6, "7790975198750": 6, "7790975198613": 3, "7790975206332": 24, "7790975198774": 6, "7790975199016": 4, "7790975199054": 4, "7790975199139": 1, "7790975198637": 6, "7790975198590": 6, "7790975206219": 24, "7790975198651": 6, "7790975206370": 24, "7790975202150": 4, "7790975198675": 6, "7790975206257": 24, "7790975200941": 6, "7790975200149": 6, "7790975201634": 6, "7790975203584": 6, "7790975202365": 6, "7790975202372": 6, "7790975202389": 6, "7790975206837": 6, "7790975001487": 6, "7790975001494": 6, "7790975195674": 6, "7790975205168": 6, "7790975196770": 6, "7790975001500": 6, "7790975017013": 6, "7790975017020": 6, "7790975017037": 6, "7790975017518": 6, "7790975017495": 6, "7790975204123": 6, "7790975202204": 1, "3185370737316": 1, "3185370000335": 1, "3185370457054": 1, "3049614152337": 1, "3049610004104": 1, "3049614003417": 1, "3245990250203": 1, "5010494560282": 1, "5010494574272": 1, "5010494985498": 1, "5901041003003": 1, "7503023842396": 1, "7503023842433": 1, "7503023844314": 1, "9418408030016": 1, "3666140034007": 1, "3185370772768": 1, "3049614236181": 1, "3049614236808": 1, "3049614229510": 1},
@@ -147,36 +149,42 @@ function mkVM(ventas){
   return vm;
 }
 
-function calcular(stockC,ventasC,stockA,ventasA,diasV,soloQuiebre,sucursal,ventasDiariaC,ventasDiariaA){
+function calcular(stockC,ventasC,stockA,ventasA,diasV,soloQuiebre,sucursal,ventasDiariaC,ventasDiariaA,stockM=[],ventasDiariaM=null){
   const vmC=mkVM(ventasC);
   const vmA=mkVM(ventasA);
   const mapaC={};
   stockC.forEach(p=>{mapaC[String(p["Código Producto"]||"").trim()]=p;});
   const mapaA={};
   stockA.forEach(p=>{mapaA[String(p["Código Producto"]||"").trim()]=p;});
-  const codigos=new Set([...Object.keys(mapaC),...Object.keys(mapaA)]);
+  const mapaM={};
+  (stockM||[]).forEach(p=>{mapaM[String(p["Código Producto"]||"").trim()]=p;});
+  const codigos=new Set([...Object.keys(mapaC),...Object.keys(mapaA),...Object.keys(mapaM)]);
   const res=[];
   codigos.forEach(cod=>{
     const pC=mapaC[cod];
     const pA=mapaA[cod];
-    const p=pC||pA;
+    const pM=mapaM[cod];
+    const p=pC||pA||pM;
     if(!p)return;
     const ean=String(p["Código Barra"]||"").trim();
     const nombre=String(p["Producto"]||"").trim();
-    const costo=Math.max(0,parseFloat(p["Costo"])||0);
     const provDux=String(p["Proveedor"]||"SIN PROVEEDOR").trim()||"SIN PROVEEDOR";
     const prov=EAN_PROV_OVERRIDE[ean]||provDux;
     if(!nombre)return;
     const sRC=parseFloat((pC||{})["Stock Real"])||0;
     const sRA=parseFloat((pA||{})["Stock Real"])||0;
+    const sRM=parseFloat((pM||{})["Stock Real"])||0;
     const faltC=parseFloat((pC||{})["Ctd. Faltante"])||0;
     const faltA=parseFloat((pA||{})["Ctd. Faltante"])||0;
+    const faltM=parseFloat((pM||{})["Ctd. Faltante"])||0;
     const vendC=vmC[cod]||0;
     const vendA=vmA[cod]||0;
+    const vendM=0; // Migueletes no usa este camino legado (ventasM siempre [])
     let sR,falt,vend;
     if(sucursal==="C"){sR=sRC;falt=faltC;vend=vendC;}
     else if(sucursal==="A"){sR=sRA;falt=faltA;vend=vendA;}
-    else{sR=sRC+sRA;falt=faltC+faltA;vend=vendC+vendA;}
+    else if(sucursal==="M"){sR=sRM;falt=faltM;vend=vendM;}
+    else{sR=sRC+sRA+sRM;falt=faltC+faltA+faltM;vend=vendC+vendA+vendM;}
     const esQuiebre=sR===0||falt>0;
     const frecProv=FRECUENCIAS[prov];
     // Semanales: proyectar frecuencia+4 dias. No semanales: proyectar 15 dias fijos
@@ -185,10 +193,12 @@ function calcular(stockC,ventasC,stockA,ventasA,diasV,soloQuiebre,sucursal,venta
     let ventaDiaria;
     const vdC=ventasDiariaC?ventasDiariaC[cod]||0:0;
     const vdA=ventasDiariaA?ventasDiariaA[cod]||0:0;
-    if(ventasDiariaC||ventasDiariaA){
+    const vdM=ventasDiariaM?ventasDiariaM[cod]||0:0;
+    if(ventasDiariaC||ventasDiariaA||ventasDiariaM){
       if(sucursal==="C")ventaDiaria=vdC;
       else if(sucursal==="A")ventaDiaria=vdA;
-      else ventaDiaria=vdC+vdA;
+      else if(sucursal==="M")ventaDiaria=vdM;
+      else ventaDiaria=vdC+vdA+vdM;
     } else {
       ventaDiaria=diasV>0?vend/diasV:0;
     }
@@ -196,24 +206,28 @@ function calcular(stockC,ventasC,stockA,ventasA,diasV,soloQuiebre,sucursal,venta
     const cantBruta=Math.max(falt,Math.max(0,proy-sR));
     const bulto=getBulto(prov,ean,cod,nombre);
     
-    // Calcular sobrante de la otra sucursal para descontarlo del pedido
-    // Transferencias se hacen 2 veces por semana: proyectar a 4 dias fijos
-    const DIAS_TRANSF=4;
+    // Calcular sobrante de las otras sucursales para descontarlo del pedido
+    // Si hay mas de una con sobrante, se elige la de mayor sobrante (igual que calcularTransferencias)
+    const DIAS_TRANSF=15;
+    const MIN_STOCK_RESTANTE_T=1;
     let cantTransf=0,transferDesde=null;
-    if(ventasDiariaC&&ventasDiariaA){
-      const vdC=ventasDiariaC[cod]||0;
-      const vdA=ventasDiariaA[cod]||0;
-      const proyC15=Math.round(vdC*DIAS_TRANSF);
-      const proyA15=Math.round(vdA*DIAS_TRANSF);
-      const sobranteC=Math.max(0,sRC-proyC15);
-      const sobranteA=Math.max(0,sRA-proyA15);
-      if(sucursal==="C"&&sobranteA>=MIN_TRANSF&&cantBruta>0){
-        cantTransf=Math.min(sobranteA,cantBruta);
-        if(cantTransf>=MIN_TRANSF)transferDesde=SUC2;
-        else cantTransf=0;
-      } else if(sucursal==="A"&&sobranteC>=MIN_TRANSF&&cantBruta>0){
-        cantTransf=Math.min(sobranteC,cantBruta);
-        if(cantTransf>=MIN_TRANSF)transferDesde=SUC1;
+    if(sucursal==="C"||sucursal==="A"||sucursal==="M"){
+      const ramas=[
+        {suc:SUC1,sR:sRC,vd:vdC},
+        {suc:SUC2,sR:sRA,vd:vdA},
+        {suc:SUC3,sR:sRM,vd:vdM}
+      ].filter(r=>r.vd>0||r.sR>0); // solo ramas con algun dato cargado
+      const actual=sucursal==="C"?SUC1:sucursal==="A"?SUC2:SUC3;
+      const candidatos=ramas.filter(r=>r.suc!==actual).map(r=>{
+        const proy15=Math.round(r.vd*DIAS_TRANSF);
+        const piso=Math.max(proy15,MIN_STOCK_RESTANTE_T);
+        return {suc:r.suc,sobrante:Math.max(0,r.sR-piso)};
+      }).filter(r=>r.sobrante>=MIN_TRANSF);
+      if(candidatos.length&&cantBruta>0){
+        candidatos.sort((a,b)=>b.sobrante-a.sobrante); // mayor sobrante primero
+        const donante=candidatos[0];
+        cantTransf=Math.min(donante.sobrante,cantBruta);
+        if(cantTransf>=MIN_TRANSF)transferDesde=donante.suc;
         else cantTransf=0;
       }
     }
@@ -223,8 +237,6 @@ function calcular(stockC,ventasC,stockA,ventasA,diasV,soloQuiebre,sucursal,venta
     let cantF=bulto?redondear(Math.round(cantNeta),bulto):Math.round(cantNeta);
     if(BULTO_MIN[prov]&&cantF>0&&cantF<BULTO_MIN[prov])cantF=BULTO_MIN[prov];
     if(BULTO_MAX[prov]&&cantF>BULTO_MAX[prov])cantF=BULTO_MAX[prov];
-    // Nunca pedir 1 sola unidad de un producto sin bulto: minimo 2
-    if(!bulto&&cantF===1)cantF=2;
     // Para no semanales: solo aparecer si dias de cobertura < umbral
     if(!soloQuiebre&&frecProv!==7&&frecProv!==undefined&&frecProv!==0){
       const diasCobertura=ventaDiaria>0?sR/ventaDiaria:999;
@@ -233,62 +245,73 @@ function calcular(stockC,ventasC,stockA,ventasA,diasV,soloQuiebre,sucursal,venta
     if(soloQuiebre&&(!esQuiebre||FRECUENCIAS[prov]===0))return;
     if(!soloQuiebre&&!debeAparecer(prov,diasV))return;
     if(cantF<=0&&cantTransf===0&&!esQuiebre)return;
-    res.push({cod,ean,nombre,prov,sR,sRC,sRA,falt,vend,vendC,vendA,proy,cant:cantF,cantBruta:Math.round(cantBruta),bulto,esQuiebre,transferDesde,cantTransf:Math.round(cantTransf),costo});
+    res.push({cod,ean,nombre,prov,sR,sRC,sRA,sRM,falt,vend,vendC,vendA,proy,cant:cantF,cantBruta:Math.round(cantBruta),bulto,esQuiebre,transferDesde,cantTransf:Math.round(cantTransf)});
   });
   return res;
 }
 
-function calcularTransferencias(stockC,stockA,vmC,vmA,dias){
-  const mapaC={};
-  stockC.forEach(p=>{mapaC[String(p["Código Producto"]||"").trim()]=p;});
-  const mapaA={};
-  stockA.forEach(p=>{mapaA[String(p["Código Producto"]||"").trim()]=p;});
-  const codigos=new Set([...Object.keys(mapaC),...Object.keys(mapaA)]);
+function calcularTransferencias(stockC,stockA,stockM,vmC,vmA,vmM,dias){
+  const mapaC={},mapaA={},mapaM={};
+  (stockC||[]).forEach(p=>{mapaC[String(p["Código Producto"]||"").trim()]=p;});
+  (stockA||[]).forEach(p=>{mapaA[String(p["Código Producto"]||"").trim()]=p;});
+  (stockM||[]).forEach(p=>{mapaM[String(p["Código Producto"]||"").trim()]=p;});
+  const codigos=new Set([...Object.keys(mapaC),...Object.keys(mapaA),...Object.keys(mapaM)]);
   const res=[];
+  const MIN_STOCK_RESTANTE=1; // nunca dejar el origen de la transferencia en 0
+  const CAP_DESTINO=10; // no transferir si el destino ya tiene mas de esta cantidad
+  const DIAS_TRANSF=15;
+  const SUCS=[
+    {suc:SUC1,mapa:mapaC,vm:vmC},
+    {suc:SUC2,mapa:mapaA,vm:vmA},
+    {suc:SUC3,mapa:mapaM,vm:vmM}
+  ].filter(s=>s.mapa&&Object.keys(s.mapa).length>0); // solo sucursales con datos cargados
+  if(SUCS.length<2)return [];
   codigos.forEach(cod=>{
-    const pC=mapaC[cod];
-    const pA=mapaA[cod];
-    if(!pC||!pA)return;
-    const nombre=String(pC["Producto"]||"").trim();
-    const prov=String(pC["Proveedor"]||"").trim();
+    // Reunir datos de cada sucursal que tenga este producto
+    const datos=SUCS.map(s=>{
+      const p=s.mapa[cod];
+      if(!p)return null;
+      const sR=parseFloat(p["Stock Real"])||0;
+      const vd=s.vm?s.vm[cod]||0:0;
+      const proy=Math.round(vd*DIAS_TRANSF);
+      const piso=Math.max(proy,MIN_STOCK_RESTANTE);
+      const sobrante=Math.max(0,sR-piso);
+      const faltXls=parseFloat(p["Ctd. Faltante"])||0;
+      const faltante=Math.max(faltXls,sR===0?MIN_TRANSF:Math.max(0,proy-sR));
+      return {suc:s.suc,p,sR,vd,proy,piso,sobrante,faltante};
+    });
+    const presentes=datos.filter(Boolean);
+    if(presentes.length<2)return; // necesita al menos 2 sucursales con el producto
+    const nombre=String(presentes[0].p["Producto"]||"").trim();
+    const prov=String(presentes[0].p["Proveedor"]||"").trim();
     if(!nombre)return;
-    const sRC=parseFloat(pC["Stock Real"])||0;
-    const sRA=parseFloat(pA["Stock Real"])||0;
-    // Calcular proyeccion por sucursal
-    // Transferencias se hacen 2 veces por semana: proyectar a 4 dias fijos
-    const DIAS_TRANSF=4;
-    const vdC=vmC?vmC[cod]||0:0;
-    const vdA=vmA?vmA[cod]||0:0;
-    const proyC=Math.round(vdC*DIAS_TRANSF);
-    const proyA=Math.round(vdA*DIAS_TRANSF);
-    // Sobrante real: lo que queda despues de cubrir la proyeccion propia
-    const sobranteC=Math.max(0,sRC-proyC);
-    const sobranteA=Math.max(0,sRA-proyA);
-    // Usar faltante del Excel como fallback
-    const faltXlsC=parseFloat(pC["Ctd. Faltante"])||0;
-    const faltXlsA=parseFloat(pA["Ctd. Faltante"])||0;
-    const faltanteC=Math.max(faltXlsC,sRC===0?MIN_TRANSF:Math.max(0,proyC-sRC));
-    const faltanteA=Math.max(faltXlsA,sRA===0?MIN_TRANSF:Math.max(0,proyA-sRA));
-    // Solo sugerir transferencia si AMBAS sucursales tienen datos de ventas
-    // Si una tiene vdC=0 o vdA=0 probablemente no tiene ventas registradas -> ignorar
-    if(vdC===0&&vdA===0)return; // Sin datos de ventas, no sugerir
-    
-    // Castex tiene sobrante real y Siria necesita
-    if(sobranteC>=MIN_TRANSF&&faltanteA>=MIN_TRANSF){
-      const cant=Math.min(sobranteC,faltanteA);
-      const castexDespues=sRC-cant;
-      // Verificar que Castex quede con al menos su proyeccion cubierta
-      if(cant>=MIN_TRANSF&&castexDespues>=proyC)
-        res.push({cod,nombre,prov,sRC,sRA,proyC,proyA,desde:SUC1,hacia:SUC2,cant:Math.round(cant)});
-    }
-    // Siria tiene sobrante real y Castex necesita
-    else if(sobranteA>=MIN_TRANSF&&faltanteC>=MIN_TRANSF){
-      const cant=Math.min(sobranteA,faltanteC);
-      const siriaDespues=sRA-cant;
-      // Verificar que Siria quede con al menos su proyeccion cubierta
-      if(cant>=MIN_TRANSF&&siriaDespues>=proyA)
-        res.push({cod,nombre,prov,sRC,sRA,proyC,proyA,desde:SUC2,hacia:SUC1,cant:Math.round(cant)});
-    }
+    // Sin datos de venta en ninguna sucursal -> no sugerir
+    if(presentes.every(d=>d.vd===0))return;
+
+    // Para cada sucursal que necesita, buscar el mejor donante (mayor sobrante) entre las demas
+    presentes.forEach(receptor=>{
+      if(receptor.faltante<MIN_TRANSF)return;
+      if(receptor.sR>CAP_DESTINO)return; // ya tiene de mas, no seguir empujando stock ahi
+      const candidatos=presentes.filter(d=>d.suc!==receptor.suc&&d.sobrante>=MIN_TRANSF);
+      if(!candidatos.length)return;
+      // Tie-break: el de mayor sobrante
+      candidatos.sort((a,b)=>b.sobrante-a.sobrante);
+      const donante=candidatos[0];
+      const cant=Math.min(donante.sobrante,receptor.faltante);
+      const donanteDespues=donante.sR-cant;
+      if(cant>=MIN_TRANSF&&donanteDespues>=donante.piso){
+        res.push({
+          cod,nombre,prov,
+          sRC:mapaC[cod]?parseFloat(mapaC[cod]["Stock Real"])||0:null,
+          sRA:mapaA[cod]?parseFloat(mapaA[cod]["Stock Real"])||0:null,
+          sRM:mapaM[cod]?parseFloat(mapaM[cod]["Stock Real"])||0:null,
+          proyC:mapaC[cod]?(presentes.find(d=>d.suc===SUC1)||{}).proy||0:null,
+          proyA:mapaA[cod]?(presentes.find(d=>d.suc===SUC2)||{}).proy||0:null,
+          proyM:mapaM[cod]?(presentes.find(d=>d.suc===SUC3)||{}).proy||0:null,
+          desde:donante.suc,hacia:receptor.suc,cant:Math.round(cant)
+        });
+      }
+    });
   });
   return res.sort((a,b)=>b.cant-a.cant);
 }
@@ -296,77 +319,82 @@ function calcularTransferencias(stockC,stockA,vmC,vmA,dias){
 const NO_CONJUNTO=new Set(["RAZ&CIA","NATURE FOODIE SRL"]);
 const BULTO_PROV_TOTAL={"NATURE FOODIE SRL":6}; // Vergani y Baci mezclan sabores pero por producto, no global // Bulto total del proveedor, mezcla de sabores
 const MEDIO_BULTO=new Set(["MARQUISSE SA"]); // Pueden pedir medio bulto
-function calcularPedidosConjuntos(stockC,stockA,vmC,vmA,dias){
-  const mapaC={};
-  stockC.forEach(p=>{mapaC[String(p["Código Producto"]||"").trim()]=p;});
-  const mapaA={};
-  stockA.forEach(p=>{mapaA[String(p["Código Producto"]||"").trim()]=p;});
-  const codigos=new Set([...Object.keys(mapaC),...Object.keys(mapaA)]);
+function calcularPedidosConjuntos(stockC,stockA,stockM,vmC,vmA,vmM,dias){
+  const mapaC={},mapaA={},mapaM={};
+  (stockC||[]).forEach(p=>{mapaC[String(p["Código Producto"]||"").trim()]=p;});
+  (stockA||[]).forEach(p=>{mapaA[String(p["Código Producto"]||"").trim()]=p;});
+  (stockM||[]).forEach(p=>{mapaM[String(p["Código Producto"]||"").trim()]=p;});
+  const codigos=new Set([...Object.keys(mapaC),...Object.keys(mapaA),...Object.keys(mapaM)]);
   const res=[];
+  const SUCS=[
+    {suc:SUC1,mapa:mapaC,vm:vmC},
+    {suc:SUC2,mapa:mapaA,vm:vmA},
+    {suc:SUC3,mapa:mapaM,vm:vmM}
+  ].filter(s=>s.mapa&&Object.keys(s.mapa).length>0);
   codigos.forEach(cod=>{
-    const pC=mapaC[cod];
-    const pA=mapaA[cod];
-    if(!pC||!pA)return;
-    const nombre=String(pC["Producto"]||"").trim();
-    const prov=String(pC["Proveedor"]||"").trim();
+    const datos=SUCS.map(s=>s.mapa[cod]?{suc:s.suc,p:s.mapa[cod],vm:s.vm}:null).filter(Boolean);
+    if(datos.length<2)return; // requiere el producto en al menos 2 sucursales con datos
+    const base=datos[0].p;
+    const nombre=String(base["Producto"]||"").trim();
+    const prov=String(base["Proveedor"]||"").trim();
     if(!nombre)return;
-    const ean=String(pC["Código Barra"]||"").trim();
+    const ean=String(base["Código Barra"]||"").trim();
     const bulto=getBulto(prov,ean,cod,nombre);
     if(!bulto||bulto<=1)return;
     if(NO_CONJUNTO.has(prov))return; // Excluir proveedores sin pedido conjunto
-    const sRC=parseFloat(pC["Stock Real"])||0;
-    const sRA=parseFloat(pA["Stock Real"])||0;
     const frecProv=FRECUENCIAS[prov];
     const diasProy=(frecProv&&frecProv>0)?frecProv+3:dias+3;
-    const vdC=vmC?vmC[cod]||0:0;
-    const vdA=vmA?vmA[cod]||0:0;
-    const proyC=Math.round(vdC*diasProy);
-    const proyA=Math.round(vdA*diasProy);
-    // Usar faltante del Excel como fallback si no hay ventas
-    const faltXlsC=parseFloat(pC["Ctd. Faltante"])||0;
-    const faltXlsA=parseFloat(pA["Ctd. Faltante"])||0;
-    const necesitaC=Math.max(faltXlsC,Math.max(0,proyC-sRC));
-    const necesitaA=Math.max(faltXlsA,Math.max(0,proyA-sRA));
-    if(necesitaC<=0&&necesitaA<=0)return;
-    const totalNecesita=necesitaC+necesitaA;
+    let totalNecesita=0;
+    const porSuc={};
+    datos.forEach(d=>{
+      const sR=parseFloat(d.p["Stock Real"])||0;
+      const vd=d.vm?d.vm[cod]||0:0;
+      const proy=Math.round(vd*diasProy);
+      const faltXls=parseFloat(d.p["Ctd. Faltante"])||0;
+      const necesita=Math.max(faltXls,Math.max(0,proy-sR));
+      porSuc[d.suc]={sR,proy,necesita};
+      totalNecesita+=necesita;
+    });
     if(totalNecesita<=0)return;
     // Ver cuantos bultos conviene pedir en total
     const bultosTotal=Math.ceil(totalNecesita/bulto);
     const cantTotal=bultosTotal*bulto;
-    // Solo sugerir si con un solo bulto se cubre ambas sucursales
-    // y si ambas necesitan algo
-    // Solo sugerir si ambas tienen datos de ventas
-    if((necesitaC>0||necesitaA>0)&&bultosTotal>=1){
-      // Distribucion: proporcional a lo que necesita cada una
-      const distC=totalNecesita>0?Math.round(cantTotal*(necesitaC/totalNecesita)/bulto)*bulto:0;
-      const distA=cantTotal-distC;
-      if(distA>=0)res.push({
-        cod,nombre,prov,bulto,bultosTotal,cantTotal,
-        sRC,sRA,proyC,proyA,necesitaC,necesitaA,
-        distC:Math.round(distC),distA:Math.round(distA)
-      });
-    }
+    // Distribucion proporcional a lo que necesita cada sucursal; la ultima se lleva el resto para que sume exacto
+    const sucsList=Object.keys(porSuc);
+    const dist={};
+    let asignado=0;
+    sucsList.forEach((s,i)=>{
+      if(i<sucsList.length-1){
+        const d=Math.round(cantTotal*(porSuc[s].necesita/totalNecesita)/bulto)*bulto;
+        dist[s]=d;asignado+=d;
+      } else {
+        dist[s]=cantTotal-asignado;
+      }
+    });
+    if(Object.values(dist).some(d=>d<0))return; // distribucion invalida, no sugerir
+    res.push({
+      cod,nombre,prov,bulto,bultosTotal,cantTotal,
+      sRC:porSuc[SUC1]?porSuc[SUC1].sR:null,sRA:porSuc[SUC2]?porSuc[SUC2].sR:null,sRM:porSuc[SUC3]?porSuc[SUC3].sR:null,
+      proyC:porSuc[SUC1]?porSuc[SUC1].proy:null,proyA:porSuc[SUC2]?porSuc[SUC2].proy:null,proyM:porSuc[SUC3]?porSuc[SUC3].proy:null,
+      necesitaC:porSuc[SUC1]?porSuc[SUC1].necesita:null,necesitaA:porSuc[SUC2]?porSuc[SUC2].necesita:null,necesitaM:porSuc[SUC3]?porSuc[SUC3].necesita:null,
+      distC:porSuc[SUC1]?dist[SUC1]:null,distA:porSuc[SUC2]?dist[SUC2]:null,distM:porSuc[SUC3]?dist[SUC3]:null
+    });
   });
   return res.sort((a,b)=>b.cantTotal-a.cantTotal);
 }
 
-const COMPRA_MINIMA = 150000;
 function agrupar(productos){
   const map={};
   productos.forEach(p=>{if(!map[p.prov])map[p.prov]=[];map[p.prov].push(p);});
-  return Object.entries(map).map(([prov,items])=>{
-    const totalCosto=items.reduce((s,i)=>s+(i.costo||0)*i.cant,0);
-    return{
+  return Object.entries(map).map(([prov,items])=>({
     prov,items,nombre:nCorto(prov),
     total:items.reduce((s,i)=>s+i.cant,0),
-    totalCosto,
-    bajoMinimo:totalCosto>0&&totalCosto<COMPRA_MINIMA,
     esLink:!!LINKS[prov],url:LINKS[prov]||null,
     esWeb:WEB_PROVS.has(prov),tieneBulto:tieneBultoConf(prov),
     frecDias:FRECUENCIAS[prov]||null,
     tieneQuiebre:items.some(i=>i.esQuiebre),
     tieneTransf:items.some(i=>i.transferDesde),
-  };}).sort((a,b)=>b.items.length-a.items.length);
+  })).sort((a,b)=>b.items.length-a.items.length);
 }
 
 // Ajusta cantidades para proveedores con bulto total o medio bulto
@@ -537,7 +565,7 @@ function Card({g,num,onCantChange,esAlerta,pedido,onMarcarPedido,numOrden,sucLab
   }
 
   return(
-    <div style={{background:C.card,borderRadius:16,border:"1.5px solid "+(esAlerta?C.red:g.tieneTransf?C.orange:g.bajoMinimo?"#8B6914":C.borderCard),overflow:"hidden",marginBottom:10}}>
+    <div style={{background:C.card,borderRadius:16,border:"1.5px solid "+(esAlerta?C.red:g.tieneTransf?C.orange:C.borderCard),overflow:"hidden",marginBottom:10}}>
       <div onClick={()=>setOpen(!open)} style={{padding:"13px 14px",display:"flex",alignItems:"center",gap:10,cursor:"pointer",background:open?C.cardDark:C.card}}>
         <div style={{background:esAlerta?C.red:C.terracotta,color:"#fff",borderRadius:8,width:26,height:26,display:"flex",alignItems:"center",justifyContent:"center",fontSize:esAlerta?14:11,fontWeight:800,flexShrink:0}}>{esAlerta?"!":num}</div>
         <div style={{flex:1,minWidth:0}}>
@@ -545,7 +573,6 @@ function Card({g,num,onCantChange,esAlerta,pedido,onMarcarPedido,numOrden,sucLab
           <div style={{fontSize:10,color:esAlerta?C.red:g.tieneTransf?C.orange:C.muted,fontWeight:700}}>
             {esAlerta?"QUIEBRE · ":g.tieneTransf?"⚠️ HAY TRANSFERENCIAS · ":""}{g.items.length} prod · {g.total} u.{g.frecDias&&!esAlerta?" · "+frecLabel(g.frecDias):""}
           </div>
-          {g.bajoMinimo&&<div style={{fontSize:10,color:"#8B6914",fontWeight:700,marginTop:2}}>⚠️ Pedido de ${Math.round(g.totalCosto).toLocaleString("es-AR")} — no llega al mínimo de ${COMPRA_MINIMA.toLocaleString("es-AR")}</div>}
         </div>
         <div style={{display:"flex",gap:5,alignItems:"center",flexShrink:0}}>
           <span style={{background:badge.bg,borderRadius:7,padding:"3px 7px",fontSize:9,fontWeight:700,color:badge.color}}>{badge.label}</span>
@@ -874,6 +901,7 @@ export default function App(){
       const vA=ponderar(vA5,vA1,diasPeriodo1);
       setVentasCDirecto(vC);
       setVentasADirecto(vA);
+      try{localStorage.setItem("ventasC",JSON.stringify(vC));localStorage.setItem("ventasA",JSON.stringify(vA));localStorage.setItem("ventasDias","ponderado");}catch{}
       const diasLabel=usarMesAnterior?"mes anterior":"mes corriente";
       alert("✅ Ventas cargadas (5 días + "+diasLabel+"): "+Object.keys(vC).length+" prod. Castex, "+Object.keys(vA).length+" prod. Siria");
     }catch(e){
@@ -960,9 +988,9 @@ export default function App(){
         console.log("Usando deposito Castex:", idDepC, depC.deposito);
         console.log("Usando deposito Siria:", idDepA, depA.deposito);
         // Cargar items secuencialmente con delay para respetar rate limit
-        itemsC=await cargarItems(idDepC);
+        const itemsC=await cargarItems(idDepC);
         await new Promise(r=>setTimeout(r,6000));
-        itemsA=await cargarItems(idDepA);
+        const itemsA=await cargarItems(idDepA);
       } else {
         // Cargar por sucursal directamente
         const cargarPorSucursal=async(idSucursal)=>{
@@ -1023,10 +1051,18 @@ export default function App(){
     setCargandoStockDux(false);
   };
 
-  const [stockCDirecto,setStockCDirecto]=useState(null);
-  const [stockADirecto,setStockADirecto]=useState(null);
-  const [ventasCDirecto,setVentasCDirecto]=useState(null);
-  const [ventasADirecto,setVentasADirecto]=useState(null);
+  const [stockCDirecto,setStockCDirecto]=useState(()=>{
+    try{const d=localStorage.getItem("stockC");return d?JSON.parse(d):null;}catch{return null;}
+  });
+  const [stockADirecto,setStockADirecto]=useState(()=>{
+    try{const d=localStorage.getItem("stockA");return d?JSON.parse(d):null;}catch{return null;}
+  });
+  const [ventasCDirecto,setVentasCDirecto]=useState(()=>{
+    try{const d=localStorage.getItem("ventasC");return d?JSON.parse(d):null;}catch{return null;}
+  });
+  const [ventasADirecto,setVentasADirecto]=useState(()=>{
+    try{const d=localStorage.getItem("ventasA");return d?JSON.parse(d):null;}catch{return null;}
+  });
   const [duxPeriodo,setDuxPeriodo]=useState(()=>{
     try{return localStorage.getItem("ventasDias")||"5";}catch{return "5";}
   });
@@ -1042,6 +1078,14 @@ export default function App(){
   const [wbV2b,setWbV2b]=useState(null); // Ventas Siria mes anterior
   const [wbV2c,setWbV2c]=useState(null); // Ventas Siria mes ant+corriente
   const [wbV2d,setWbV2d]=useState(null); // Ventas Siria mes corriente
+  const [wbS3,setWbS3]=useState(null);  // Stock Migueletes (manual)
+  const [wbV3a,setWbV3a]=useState(null); // Ventas Migueletes 5 dias
+  const [wbV3b,setWbV3b]=useState(null); // Ventas Migueletes mes anterior
+  const [wbV3c,setWbV3c]=useState(null); // Ventas Migueletes mes ant+corriente
+  const [wbV3d,setWbV3d]=useState(null); // Ventas Migueletes mes corriente
+  const [stockMDirecto,setStockMDirecto]=useState(()=>{
+    try{const d=localStorage.getItem("stockM");return d?JSON.parse(d):null;}catch{return null;}
+  });
   const DIAS_A=5,DIAS_B=30,DIAS_C=51,DIAS_D=new Date().getDate();
   const [grupos,setGrupos]=useState(null);
   const [alertas,setAlertas]=useState(null);
@@ -1050,7 +1094,6 @@ export default function App(){
   const [busq,setBusq]=useState("");
   const [proc,setProc]=useState(false);
   const [err,setErr]=useState("");
-  const [diag,setDiag]=useState("");
   const [filtro,setFiltro]=useState("todos");
   const [dias,setDias]=useState(7);
   const [diasCustom,setDiasCustom]=useState("");
@@ -1077,8 +1120,9 @@ export default function App(){
   const diasFinal=diasCustom?parseInt(diasCustom)||7:dias;
   const tieneC=(wbS1||stockCDirecto)&&(wbV1a||wbV1b||wbV1c||wbV1d||ventasCDirecto);
   const tieneA=(wbS2||stockADirecto)&&(wbV2a||wbV2b||wbV2c||wbV2d||ventasADirecto);
-  const todosListos=tieneC||tieneA;
-  const sucLabel=sucursal==="C"?SUC1:sucursal==="A"?SUC2:"";
+  const tieneM=(wbS3||stockMDirecto)&&(wbV3a||wbV3b||wbV3c||wbV3d);
+  const todosListos=tieneC||tieneA||tieneM;
+  const sucLabel=sucursal==="C"?SUC1:sucursal==="A"?SUC2:sucursal==="M"?SUC3:"";
 
   // Recalcular al cambiar sucursal si ya hay datos cargados
   const cambiarSucursal=(v)=>{
@@ -1088,6 +1132,7 @@ export default function App(){
         try{
           const sC=stockCDirecto||(wbS1?parseStock(wbS1):[]);
           const sA=stockADirecto||(wbS2?parseStock(wbS2):[]);
+          const sM=stockMDirecto||(wbS3?parseStock(wbS3):[]);
           const diaActual=parseInt(diasCorriente)||new Date().getDate();
           // ventasCDirecto son ventas DIARIAS si vienen de DUX (duxPeriodo=ponderado)
           // Si el usuario cargo Excel manualmente, ventasCDirecto es null
@@ -1103,16 +1148,17 @@ export default function App(){
           const vA51=wbV2c?parseVentas(wbV2c):null;
           const vAd=wbV2d?parseVentas(wbV2d):null;
           const combA=vmDuxA?{vm:vmDuxA,dias:diasDux,esVentaDiaria:true}:combinarVentas(vA5,vA30,vA51,vAd,diaActual);
+          // Migueletes: siempre manual, sin DUX
+          const vM5=wbV3a?parseVentas(wbV3a):null;
+          const vM30=wbV3b?parseVentas(wbV3b):null;
+          const vM51=wbV3c?parseVentas(wbV3c):null;
+          const vMd=wbV3d?parseVentas(wbV3d):null;
+          const combM=combinarVentas(vM5,vM30,vM51,vMd,diaActual);
           const diasRep=combC.dias||combA.dias||diasFinal;
-          const ventasOrigenC=vmDuxC?"localStorage/DUX viejo (NO tus archivos)":(vCd?"Mes corriente (archivo subido)":(vC5||vC30||vC51?"otro archivo subido":"NINGUNO - vacio"));
-          const ventasOrigenA=vmDuxA?"localStorage/DUX viejo (NO tus archivos)":(vAd?"Mes corriente (archivo subido)":(vA5||vA30||vA51?"otro archivo subido":"NINGUNO - vacio"));
-          const conVentaC=combC.vm?Object.values(combC.vm).filter(vv=>vv>0).length:0;
-          const conVentaA=combA.vm?Object.values(combA.vm).filter(vv=>vv>0).length:0;
-          const gNorm=agrupar(calcular(sC,[],sA,[],diasRep,false,v,combC.vm,combA.vm).filter(p=>p.cant>0));
-          const gAlert=agrupar(calcular(sC,[],sA,[],diasRep,true,v,combC.vm,combA.vm).filter(p=>p.esQuiebre));
-          const transf=calcularTransferencias(sC,sA,combC.vm,combA.vm,diasRep);
-          const conj=calcularPedidosConjuntos(sC,sA,combC.vm,combA.vm,diasRep);
-          setDiag("DIAGNOSTICO — Ventas Castex: "+ventasOrigenC+" ("+conVentaC+" productos con venta>0) · Ventas Siria: "+ventasOrigenA+" ("+conVentaA+" productos con venta>0) · Dias usados: "+diasRep+" · Stock Castex: "+(sC?sC.length:0)+" prod · Stock Siria: "+(sA?sA.length:0)+" prod · Transferencias calculadas: "+transf.length+" · Conjuntos calculados: "+conj.length);
+          const gNorm=agrupar(calcular(sC,[],sA,[],diasRep,false,v,combC.vm,combA.vm,sM,combM.vm).filter(p=>p.cant>0));
+          const gAlert=agrupar(calcular(sC,[],sA,[],diasRep,true,v,combC.vm,combA.vm,sM,combM.vm).filter(p=>p.esQuiebre));
+          const transf=calcularTransferencias(sC,sA,sM,combC.vm,combA.vm,combM.vm,diasRep);
+          const conj=calcularPedidosConjuntos(sC,sA,sM,combC.vm,combA.vm,combM.vm,diasRep);
           setGrupos(ajustarCantidadesProv(gNorm));setAlertas(gAlert);setTransferencias(transf);setConjuntos(conj);
           setCantsPorProv({});
         // No resetear pedidos realizados - se mantienen con su fecha
@@ -1129,6 +1175,7 @@ export default function App(){
       try{
         const sC=stockCDirecto||(wbS1?parseStock(wbS1):[]);
         const sA=stockADirecto||(wbS2?parseStock(wbS2):[]);
+        const sM=stockMDirecto||(wbS3?parseStock(wbS3):[]);
         // Ventas Castex - combinar los que haya
         const diaActual=parseInt(diasCorriente)||new Date().getDate();
         // Si hay ventas de DUX, usarlas directamente
@@ -1148,16 +1195,17 @@ export default function App(){
         const vA51=wbV2c?parseVentas(wbV2c):null;
         const vAd=wbV2d?parseVentas(wbV2d):null;
         const combA=vmDuxA?{vm:vmDuxA,dias:diasDux,esVentaDiaria:true}:combinarVentas(vA5,vA30,vA51,vAd,diaActual);
+        // Migueletes: siempre manual, sin DUX
+        const vM5=wbV3a?parseVentas(wbV3a):null;
+        const vM30=wbV3b?parseVentas(wbV3b):null;
+        const vM51=wbV3c?parseVentas(wbV3c):null;
+        const vMd=wbV3d?parseVentas(wbV3d):null;
+        const combM=combinarVentas(vM5,vM30,vM51,vMd,diaActual);
         const diasRep=combC.dias||combA.dias||diasFinal;
-        const ventasOrigenC=vmDuxC?"localStorage/DUX (NO tus archivos)":(vCd?"Mes corriente (archivo subido)":(vC5||vC30||vC51?"otro archivo subido":"NINGUNO - vacio"));
-        const ventasOrigenA=vmDuxA?"localStorage/DUX (NO tus archivos)":(vAd?"Mes corriente (archivo subido)":(vA5||vA30||vA51?"otro archivo subido":"NINGUNO - vacio"));
-        const conVentaC=combC.vm?Object.values(combC.vm).filter(v=>v>0).length:0;
-        const conVentaA=combA.vm?Object.values(combA.vm).filter(v=>v>0).length:0;
-        const gNorm=agrupar(calcular(sC,[],sA,[],diasRep,false,sucursal,combC.vm,combA.vm).filter(p=>p.cant>0));
-        const gAlert=agrupar(calcular(sC,[],sA,[],diasRep,true,sucursal,combC.vm,combA.vm).filter(p=>p.esQuiebre));
-        const transf=calcularTransferencias(sC,sA,combC.vm,combA.vm,diasRep);
-        const conj=calcularPedidosConjuntos(sC,sA,combC.vm,combA.vm,diasRep);
-        setDiag("DIAGNOSTICO — Ventas Castex: "+ventasOrigenC+" ("+conVentaC+" productos con venta>0) · Ventas Siria: "+ventasOrigenA+" ("+conVentaA+" productos con venta>0) · Dias usados: "+diasRep+" · Stock Castex: "+(sC?sC.length:0)+" prod · Stock Siria: "+(sA?sA.length:0)+" prod · Transferencias calculadas: "+transf.length+" · Conjuntos calculados: "+conj.length);
+        const gNorm=agrupar(calcular(sC,[],sA,[],diasRep,false,sucursal,combC.vm,combA.vm,sM,combM.vm).filter(p=>p.cant>0));
+        const gAlert=agrupar(calcular(sC,[],sA,[],diasRep,true,sucursal,combC.vm,combA.vm,sM,combM.vm).filter(p=>p.esQuiebre));
+        const transf=calcularTransferencias(sC,sA,sM,combC.vm,combA.vm,combM.vm,diasRep);
+        const conj=calcularPedidosConjuntos(sC,sA,sM,combC.vm,combA.vm,combM.vm,diasRep);
         setGrupos(ajustarCantidadesProv(gNorm));setAlertas(gAlert);setTransferencias(transf);setConjuntos(conj);
         setTab(gAlert.length>0?"alertas":"pedidos");
       }catch(e){setErr("Error: "+e.message);console.error(e);}
@@ -1322,31 +1370,21 @@ export default function App(){
                   {cargandoVentasDux?msgCargandoVentas:"📈 Actualizar ventas desde DUX"}
                 </button>
                 {(ventasCDirecto||ventasADirecto)&&(
-                  <div style={{fontSize:10,color:C.green,textAlign:"center",marginBottom:6}}>
-                    ✅ Ventas cargadas · {Object.keys(ventasCDirecto||{}).length} prod. Castex · {Object.keys(ventasADirecto||{}).length} prod. Siria
-                  </div>
-                )}
-                <div style={{fontSize:10,fontWeight:700,color:C.gold,marginBottom:8,marginTop:4}}>📦 Stock automático</div>
-                <button onClick={cargarStockDuxAuto} disabled={cargandoStockDux}
-                  style={{width:"100%",background:cargandoStockDux?C.border:C.terracotta,color:"#fff",border:"none",borderRadius:10,padding:"10px",fontSize:12,fontWeight:700,cursor:"pointer",marginBottom:6}}>
-                  {cargandoStockDux?"Cargando stock...":"📦 Actualizar stock desde DUX"}
-                </button>
-                {(stockCDirecto||stockADirecto)&&(
                   <div style={{fontSize:10,color:C.green,textAlign:"center"}}>
-                    ✅ Stock cargado · {(stockCDirecto||[]).length} prod. Castex · {(stockADirecto||[]).length} prod. Siria
+                    ✅ Ventas cargadas · {Object.keys(ventasCDirecto||{}).length} prod. Castex · {Object.keys(ventasADirecto||{}).length} prod. Siria
                   </div>
                 )}
               </div>
             )}
 
-            {(stockCDirecto||stockADirecto||ventasCDirecto||ventasADirecto)&&(
+            {(stockCDirecto||stockADirecto||stockMDirecto||ventasCDirecto||ventasADirecto)&&(
               <div style={{background:"#3A5A3C15",border:"1px solid #3A5A3C40",borderRadius:10,padding:"10px 14px",marginBottom:10,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                 <div style={{fontSize:11,color:C.green,fontWeight:700}}>
-                  ✅ Datos guardados: {stockCDirecto?"Stock Castex ":""}{ stockADirecto?"Stock Siria ":""}{ventasCDirecto?"Ventas":""}
+                  ✅ Datos guardados: {stockCDirecto?"Stock Castex ":""}{ stockADirecto?"Stock Siria ":""}{ stockMDirecto?"Stock Migueletes ":""}{ventasCDirecto?"Ventas":""}
                 </div>
                 <button onClick={()=>{
-                  setStockCDirecto(null);setStockADirecto(null);setVentasCDirecto(null);setVentasADirecto(null);
-                  try{localStorage.removeItem("stockC");localStorage.removeItem("stockA");localStorage.removeItem("ventasC");localStorage.removeItem("ventasA");}catch{}
+                  setStockCDirecto(null);setStockADirecto(null);setStockMDirecto(null);setVentasCDirecto(null);setVentasADirecto(null);
+                  try{localStorage.removeItem("stockC");localStorage.removeItem("stockA");localStorage.removeItem("stockM");localStorage.removeItem("ventasC");localStorage.removeItem("ventasA");}catch{}
                 }} style={{background:"transparent",border:"1px solid #3A5A3C40",borderRadius:6,padding:"3px 8px",fontSize:9,color:C.muted,cursor:"pointer"}}>Limpiar</button>
               </div>
             )}
@@ -1355,7 +1393,7 @@ export default function App(){
             <div style={{marginBottom:14,background:C.bg,borderRadius:12,padding:12,border:"1px solid "+C.border}}>
               <div style={{fontSize:10,fontWeight:700,color:C.gold,marginBottom:8,textTransform:"uppercase",letterSpacing:1}}>Sucursal {SUC1}</div>
               <div style={{display:"flex",gap:8,marginBottom:8}}>
-                <UploadZone label="Stock Castex" icon="📦" onFile={(wb)=>{setWbS1(wb);try{const d=parseStock(wb);setStockCDirecto(d);}catch{}}} loaded={!!wbS1||!!stockCDirecto} uid="c0"/>
+                <UploadZone label="Stock Castex" icon="📦" onFile={(wb)=>{setWbS1(wb);try{const d=parseStock(wb);localStorage.setItem("stockC",JSON.stringify(d));setStockCDirecto(d);}catch{}}} loaded={!!wbS1||!!stockCDirecto} uid="c0"/>
               </div>
               <div style={{fontSize:9,color:C.creamDim,marginBottom:6,fontWeight:600}}>VENTAS (subí las que tengas):</div>
               <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
@@ -1369,7 +1407,7 @@ export default function App(){
             <div style={{marginBottom:14,background:C.bg,borderRadius:12,padding:12,border:"1px solid "+C.border}}>
               <div style={{fontSize:10,fontWeight:700,color:C.gold,marginBottom:8,textTransform:"uppercase",letterSpacing:1}}>Sucursal {SUC2}</div>
               <div style={{display:"flex",gap:8,marginBottom:8}}>
-                <UploadZone label="Stock Siria" icon="📦" onFile={(wb)=>{setWbS2(wb);try{const d=parseStock(wb);setStockADirecto(d);}catch{}}} loaded={!!wbS2||!!stockADirecto} uid="a0"/>
+                <UploadZone label="Stock Siria" icon="📦" onFile={(wb)=>{setWbS2(wb);try{const d=parseStock(wb);localStorage.setItem("stockA",JSON.stringify(d));setStockADirecto(d);}catch{}}} loaded={!!wbS2||!!stockADirecto} uid="a0"/>
               </div>
               <div style={{fontSize:9,color:C.creamDim,marginBottom:6,fontWeight:600}}>VENTAS (subí las que tengas):</div>
               <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
@@ -1377,6 +1415,20 @@ export default function App(){
                 <UploadZone label="Mes corriente" icon="📈" onFile={setWbV2d} loaded={!!wbV2d} uid="a2"/>
                 <UploadZone label="Mes anterior" icon="📈" onFile={setWbV2b} loaded={!!wbV2b} uid="a3"/>
                 <UploadZone label="Ant.+Corriente" icon="📈" onFile={setWbV2c} loaded={!!wbV2c} uid="a4"/>
+              </div>
+            </div>
+            {/* MIGUELETES */}
+            <div style={{marginBottom:14,background:C.bg,borderRadius:12,padding:12,border:"1px solid "+C.border}}>
+              <div style={{fontSize:10,fontWeight:700,color:C.gold,marginBottom:8,textTransform:"uppercase",letterSpacing:1}}>Sucursal {SUC3}</div>
+              <div style={{display:"flex",gap:8,marginBottom:8}}>
+                <UploadZone label="Stock Migueletes" icon="📦" onFile={(wb)=>{setWbS3(wb);try{const d=parseStock(wb);localStorage.setItem("stockM",JSON.stringify(d));setStockMDirecto(d);}catch{}}} loaded={!!wbS3||!!stockMDirecto} uid="m0"/>
+              </div>
+              <div style={{fontSize:9,color:C.creamDim,marginBottom:6,fontWeight:600}}>VENTAS (subí las que tengas):</div>
+              <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                <UploadZone label="Últimos 5 días" icon="📈" onFile={setWbV3a} loaded={!!wbV3a} uid="m1"/>
+                <UploadZone label="Mes corriente" icon="📈" onFile={setWbV3d} loaded={!!wbV3d} uid="m2"/>
+                <UploadZone label="Mes anterior" icon="📈" onFile={setWbV3b} loaded={!!wbV3b} uid="m3"/>
+                <UploadZone label="Ant.+Corriente" icon="📈" onFile={setWbV3c} loaded={!!wbV3c} uid="m4"/>
               </div>
             </div>
             {(wbV1d||wbV2d)&&(
@@ -1393,7 +1445,7 @@ export default function App(){
             <div style={{marginBottom:12}}>
               <div style={{fontSize:10,fontWeight:700,color:C.gold,marginBottom:8,textTransform:"uppercase",letterSpacing:1}}>Para que sucursal calcular?</div>
               <div style={{display:"flex",gap:8}}>
-                {[["","Ambas"],["C",SUC1],["A",SUC2]].map(([v,lb])=>(
+                {[["","Ambas"],["C",SUC1],["A",SUC2],["M",SUC3]].map(([v,lb])=>(
                   <div key={v} onClick={()=>cambiarSucursal(v)}
                     style={{flex:1,background:sucursal===v?C.terracotta:C.surface,border:"2px solid "+(sucursal===v?C.terracotta:C.border),borderRadius:12,padding:"10px 6px",textAlign:"center",cursor:"pointer"}}>
                     <div style={{fontSize:11,fontWeight:800,color:sucursal===v?"#fff":C.cream}}>{lb}</div>
@@ -1422,7 +1474,6 @@ export default function App(){
               </div>
             </div>
             {err&&<div style={{background:"#FDECEA",borderRadius:10,padding:"9px 12px",fontSize:12,color:C.terracotta,marginBottom:10}}>{err}</div>}
-            {diag&&<div style={{background:"#FFF8E1",borderRadius:10,padding:"9px 12px",fontSize:11,color:"#7A5C00",marginBottom:10,fontFamily:"monospace",wordBreak:"break-word"}}>{diag}</div>}
             <button onClick={procesar} disabled={!todosListos||proc}
               style={{width:"100%",background:!todosListos?C.border:C.terracotta,color:"#fff",border:"none",borderRadius:14,padding:15,fontSize:15,fontWeight:800,cursor:!todosListos?"not-allowed":"pointer",opacity:!todosListos?0.5:1}}>
               {proc?"Procesando...":"Generar pedidos"}
