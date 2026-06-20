@@ -202,9 +202,9 @@ function calcular(stockC,ventasC,stockA,ventasA,diasV,soloQuiebre,sucursal,venta
     } else {
       ventaDiaria=diasV>0?vend/diasV:0;
     }
-    // "Vend." real para mostrar en pantalla: vendido estimado durante el periodo analizado
-    // (antes mostraba siempre 0 porque venia de un parametro muerto, ventasC/ventasA=[] fijo)
-    const vendReal=Math.round(ventaDiaria*(diasV||0));
+    // "Vend." real para mostrar en pantalla: vendido estimado en la misma ventana que la proyeccion
+    // (antes usaba diasV global, que colapsa a 1 si Castex no tiene ventas cargadas en la sesion)
+    const vendReal=Math.round(ventaDiaria*diasProy);
     const proy=Math.round(ventaDiaria*diasProy);
     const cantBruta=Math.max(falt,Math.max(0,proy-sR));
     const bulto=getBulto(prov,ean,cod,nombre);
