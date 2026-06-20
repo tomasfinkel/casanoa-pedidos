@@ -237,6 +237,7 @@ function calcular(stockC,ventasC,stockA,ventasA,diasV,soloQuiebre,sucursal,venta
     let cantF=bulto?redondear(Math.round(cantNeta),bulto):Math.round(cantNeta);
     if(BULTO_MIN[prov]&&cantF>0&&cantF<BULTO_MIN[prov])cantF=BULTO_MIN[prov];
     if(BULTO_MAX[prov]&&cantF>BULTO_MAX[prov])cantF=BULTO_MAX[prov];
+    if(cantF>0&&cantF<2)cantF=2; // nunca pedir 1 sola unidad
     // Para no semanales: solo aparecer si dias de cobertura < umbral
     if(!soloQuiebre&&frecProv!==7&&frecProv!==undefined&&frecProv!==0){
       const diasCobertura=ventaDiaria>0?sR/ventaDiaria:999;
