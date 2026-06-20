@@ -202,6 +202,9 @@ function calcular(stockC,ventasC,stockA,ventasA,diasV,soloQuiebre,sucursal,venta
     } else {
       ventaDiaria=diasV>0?vend/diasV:0;
     }
+    // "Vend." real para mostrar en pantalla: vendido estimado durante el periodo analizado
+    // (antes mostraba siempre 0 porque venia de un parametro muerto, ventasC/ventasA=[] fijo)
+    const vendReal=Math.round(ventaDiaria*(diasV||0));
     const proy=Math.round(ventaDiaria*diasProy);
     const cantBruta=Math.max(falt,Math.max(0,proy-sR));
     const bulto=getBulto(prov,ean,cod,nombre);
@@ -246,7 +249,7 @@ function calcular(stockC,ventasC,stockA,ventasA,diasV,soloQuiebre,sucursal,venta
     if(soloQuiebre&&(!esQuiebre||FRECUENCIAS[prov]===0))return;
     if(!soloQuiebre&&!debeAparecer(prov,diasV))return;
     if(cantF<=0&&cantTransf===0&&!esQuiebre)return;
-    res.push({cod,ean,nombre,prov,sR,sRC,sRA,sRM,falt,vend,vendC,vendA,proy,cant:cantF,cantBruta:Math.round(cantBruta),bulto,esQuiebre,transferDesde,cantTransf:Math.round(cantTransf)});
+    res.push({cod,ean,nombre,prov,sR,sRC,sRA,sRM,falt,vend:vendReal,vendC,vendA,proy,cant:cantF,cantBruta:Math.round(cantBruta),bulto,esQuiebre,transferDesde,cantTransf:Math.round(cantTransf)});
   });
   return res;
 }
