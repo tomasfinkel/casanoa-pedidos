@@ -249,7 +249,8 @@ function calcular(stockC,ventasC,stockA,ventasA,diasV,soloQuiebre,sucursal,venta
     if(soloQuiebre&&(!esQuiebre||FRECUENCIAS[prov]===0))return;
     if(!soloQuiebre&&!debeAparecer(prov,diasV))return;
     if(cantF<=0&&cantTransf===0&&!esQuiebre)return;
-    res.push({cod,ean,nombre,prov,sR,sRC,sRA,sRM,falt,vend:vendReal,vendC,vendA,proy,cant:cantF,cantBruta:Math.round(cantBruta),bulto,esQuiebre,transferDesde,cantTransf:Math.round(cantTransf)});
+    const costo=parseFloat((pC||pA||pM||{})["Costo"])||0;
+    res.push({cod,ean,nombre,prov,sR,sRC,sRA,sRM,falt,vend:vendReal,vendC,vendA,proy,cant:cantF,cantBruta:Math.round(cantBruta),bulto,esQuiebre,transferDesde,cantTransf:Math.round(cantTransf),costo});
   });
   return res;
 }
@@ -390,15 +391,21 @@ function calcularPedidosConjuntos(stockC,stockA,stockM,vmC,vmA,vmM,dias){
 function agrupar(productos){
   const map={};
   productos.forEach(p=>{if(!map[p.prov])map[p.prov]=[];map[p.prov].push(p);});
-  return Object.entries(map).map(([prov,items])=>({
-    prov,items,nombre:nCorto(prov),
-    total:items.reduce((s,i)=>s+i.cant,0),
-    esLink:!!LINKS[prov],url:LINKS[prov]||null,
-    esWeb:WEB_PROVS.has(prov),tieneBulto:tieneBultoConf(prov),
-    frecDias:FRECUENCIAS[prov]||null,
-    tieneQuiebre:items.some(i=>i.esQuiebre),
-    tieneTransf:items.some(i=>i.transferDesde),
-  })).sort((a,b)=>b.items.length-a.items.length);
+  const MONTO_MINIMO=150000;
+  return Object.entries(map).map(([prov,items])=>{
+    const montoTotal=items.reduce((s,i)=>s+((i.costo||0)*i.cant),0);
+    return{
+      prov,items,nombre:nCorto(prov),
+      total:items.reduce((s,i)=>s+i.cant,0),
+      montoTotal:Math.round(montoTotal),
+      bajoMinimo:montoTotal>0&&montoTotal<MONTO_MINIMO,
+      esLink:!!LINKS[prov],url:LINKS[prov]||null,
+      esWeb:WEB_PROVS.has(prov),tieneBulto:tieneBultoConf(prov),
+      frecDias:FRECUENCIAS[prov]||null,
+      tieneQuiebre:items.some(i=>i.esQuiebre),
+      tieneTransf:items.some(i=>i.transferDesde),
+    };
+  }).sort((a,b)=>b.items.length-a.items.length);
 }
 
 // Ajusta cantidades para proveedores con bulto total o medio bulto
@@ -419,7 +426,8 @@ function ajustarCantidadesProv(grupos){
         const iMax=items.reduce((mi,p,i)=>p.cant>items[mi].cant?i:mi,0);
         items[iMax]={...items[iMax],cant:items[iMax].cant+extra};
       }
-      return{...g,items,total:totalRedondeado};
+      const montoTotal=items.reduce((s,p)=>s+((p.costo||0)*p.cant),0);
+      return{...g,items,total:totalRedondeado,montoTotal:Math.round(montoTotal),bajoMinimo:montoTotal>0&&montoTotal<150000};
     }
     // MARQUISSE - medio bulto permitido
     if(MEDIO_BULTO.has(g.prov)){
@@ -429,7 +437,8 @@ function ajustarCantidadesProv(grupos){
         const cant=Math.ceil(p.cant/medioBulto)*medioBulto;
         return{...p,cant};
       });
-      return{...g,items,total:items.reduce((s,p)=>s+p.cant,0)};
+      const montoTotal=items.reduce((s,p)=>s+((p.costo||0)*p.cant),0);
+      return{...g,items,total:items.reduce((s,p)=>s+p.cant,0),montoTotal:Math.round(montoTotal),bajoMinimo:montoTotal>0&&montoTotal<150000};
     }
     return g;
   });
@@ -569,14 +578,15 @@ function Card({g,num,onCantChange,esAlerta,pedido,onMarcarPedido,numOrden,sucLab
   }
 
   return(
-    <div style={{background:C.card,borderRadius:16,border:"1.5px solid "+(esAlerta?C.red:g.tieneTransf?C.orange:C.borderCard),overflow:"hidden",marginBottom:10}}>
+    <div style={{background:C.card,borderRadius:16,border:"1.5px solid "+(esAlerta?C.red:g.bajoMinimo?"#C9A252":g.tieneTransf?C.orange:C.borderCard),overflow:"hidden",marginBottom:10}}>
       <div onClick={()=>setOpen(!open)} style={{padding:"13px 14px",display:"flex",alignItems:"center",gap:10,cursor:"pointer",background:open?C.cardDark:C.card}}>
         <div style={{background:esAlerta?C.red:C.terracotta,color:"#fff",borderRadius:8,width:26,height:26,display:"flex",alignItems:"center",justifyContent:"center",fontSize:esAlerta?14:11,fontWeight:800,flexShrink:0}}>{esAlerta?"!":num}</div>
         <div style={{flex:1,minWidth:0}}>
           <div style={{fontSize:13,fontWeight:700,color:C.dark,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{g.nombre}</div>
           <div style={{fontSize:10,color:esAlerta?C.red:g.tieneTransf?C.orange:C.muted,fontWeight:700}}>
-            {esAlerta?"QUIEBRE · ":g.tieneTransf?"⚠️ HAY TRANSFERENCIAS · ":""}{g.items.length} prod · {g.total} u.{g.frecDias&&!esAlerta?" · "+frecLabel(g.frecDias):""}
+            {esAlerta?"QUIEBRE · ":g.tieneTransf?"⚠️ HAY TRANSFERENCIAS · ":""}{g.items.length} prod · {g.total} u.{g.frecDias&&!esAlerta?" · "+frecLabel(g.frecDias):""}{g.montoTotal>0?" · $"+g.montoTotal.toLocaleString("es-AR"):""}
           </div>
+          {g.bajoMinimo&&<div style={{fontSize:9,color:"#8B6914",fontWeight:700,marginTop:1}}>⚠️ No llega al mínimo de $150.000 (faltan {Math.round(150000-g.montoTotal).toLocaleString("es-AR")})</div>}
         </div>
         <div style={{display:"flex",gap:5,alignItems:"center",flexShrink:0}}>
           <span style={{background:badge.bg,borderRadius:7,padding:"3px 7px",fontSize:9,fontWeight:700,color:badge.color}}>{badge.label}</span>
@@ -600,7 +610,7 @@ function Card({g,num,onCantChange,esAlerta,pedido,onMarcarPedido,numOrden,sucLab
                     <span style={{color:C.dark,flex:1}}>{p.nombre}</span>
                     <span style={{color:C.terracotta,fontWeight:700,marginLeft:8}}>{getC(p.cod,p.cant)} u.</span>
                   </div>
-                  {p.transferDesde&&<div style={{fontSize:9,color:C.green,fontWeight:700,marginTop:2}}>↔️ Transferir {p.cantTransf}u. desde {p.transferDesde===SUC1?"Castex":"Siria"} → pedir {p.cant}u.</div>}
+                  {p.transferDesde&&<div style={{fontSize:9,color:C.green,fontWeight:700,marginTop:2}}>↔️ Transferir {p.cantTransf}u. desde {labelSuc(p.transferDesde)} → pedir {p.cant}u.</div>}
                 </div>
               ))}
             </div>
@@ -629,7 +639,7 @@ function Card({g,num,onCantChange,esAlerta,pedido,onMarcarPedido,numOrden,sucLab
                         <tr key={p.cod} style={{background:rowBg}}>
                           <td style={{padding:"5px 8px",maxWidth:150,fontSize:10}}>
                             <div style={{color:p.esQuiebre?C.red:C.dark,fontWeight:p.esQuiebre?700:400}}>{p.nombre}</div>
-                            {p.transferDesde&&<div style={{fontSize:9,color:C.green,fontWeight:700,marginTop:1}}>↔️ Transferir {p.cantTransf}u. desde {p.transferDesde===SUC1?"Castex":"Siria"} → pedir {p.cant}u. al proveedor</div>}
+                            {p.transferDesde&&<div style={{fontSize:9,color:C.green,fontWeight:700,marginTop:1}}>↔️ Transferir {p.cantTransf}u. desde {labelSuc(p.transferDesde)} → pedir {p.cant}u. al proveedor</div>}
                           </td>
                           <td style={{padding:"5px 4px",textAlign:"center",color:p.sRC===0?C.red:C.dark,fontWeight:p.sRC===0?800:400,fontSize:10}}>{p.sRC}</td>
                           <td style={{padding:"5px 4px",textAlign:"center",color:p.sRA===0?C.red:C.dark,fontWeight:p.sRA===0?800:400,fontSize:10}}>{p.sRA}</td>
