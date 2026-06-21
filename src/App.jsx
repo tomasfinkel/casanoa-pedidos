@@ -7,6 +7,74 @@ const SUC2 = "Rep. Arabe Siria 2990";
 const SUC3 = "Migueletes";
 const MIN_TRANSF = 3;
 function labelSuc(s){return s===SUC1?"Castex":s===SUC2?"Siria":s===SUC3?"Migueletes":s;}
+// Frecuencias reales calculadas desde el historial de compras (pisan solo las aproximadas, no las semanales=7 ni la bandera 0)
+let FRECUENCIAS_REAL={};
+function frecEfectiva(prov){
+  const base=FRECUENCIAS[prov];
+  const real=FRECUENCIAS_REAL[prov];
+  if(real===undefined)return base;
+  if(base===7||base===0)return base; // semanales confirmados y la bandera "sin reposicion periodica" no se tocan
+  return real;
+}
+function excelSerialToDate(serial){
+  const utcDays=Math.floor(serial-25569);
+  return new Date(utcDays*86400*1000);
+}
+function parseFechaCompra(v){
+  if(v==null||v==="")return null;
+  if(typeof v==="number")return excelSerialToDate(v);
+  const s=String(v).trim();
+  let m=s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+  if(m){let[,d,mo,y]=m;if(y.length===2)y="20"+y;const dt=new Date(+y,+mo-1,+d);return isNaN(dt)?null:dt;}
+  m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if(m){const[,y,mo,d]=m;const dt=new Date(+y,+mo-1,+d);return isNaN(dt)?null:dt;}
+  return null;
+}
+function parseCompras(wb){
+  const ws=wb.Sheets[wb.SheetNames[0]];
+  const raw=XLSX.utils.sheet_to_json(ws,{header:1});
+  let hr=-1;
+  for(let i=0;i<raw.length;i++){if(raw[i]&&raw[i].some(c=>String(c).toLowerCase().includes("proveedor"))){hr=i;break;}}
+  if(hr===-1)return[];
+  const headers=raw[hr].map(h=>String(h||"").trim());
+  const idxProv=headers.findIndex(h=>h.toLowerCase().includes("proveedor"));
+  const idxFecha=headers.findIndex(h=>h.toLowerCase()==="fecha");
+  const idxTipo=headers.findIndex(h=>h.toLowerCase().includes("tipo comprobante"));
+  if(idxProv===-1||idxFecha===-1)return[];
+  return raw.slice(hr+1).filter(r=>r&&r[idxProv]).map(r=>({
+    proveedor:String(r[idxProv]||"").trim(),
+    fecha:parseFechaCompra(r[idxFecha]),
+    tipo:idxTipo>=0?String(r[idxTipo]||"").trim():""
+  })).filter(c=>c.proveedor&&c.fecha);
+}
+function calcularFrecuenciasReales(compras){
+  const porProv={};
+  const tiposVistos={};
+  compras.forEach(c=>{
+    if(!porProv[c.proveedor])porProv[c.proveedor]={fechas:new Set()};
+    porProv[c.proveedor].fechas.add(c.fecha.toDateString());
+    tiposVistos[c.tipo]=(tiposVistos[c.tipo]||0)+1;
+  });
+  const porProveedor={};
+  Object.entries(porProv).forEach(([prov,d])=>{
+    const fechas=[...d.fechas].map(s=>new Date(s)).sort((a,b)=>a-b);
+    if(fechas.length<2){porProveedor[prov]={diasProm:null,nCompras:fechas.length,suficiente:false};return;}
+    const totalDias=(fechas[fechas.length-1]-fechas[0])/86400000;
+    const diasProm=Math.round(totalDias/(fechas.length-1));
+    porProveedor[prov]={diasProm,nCompras:fechas.length,suficiente:true};
+  });
+  return{porProveedor,tiposVistos};
+}
+function aplicarFrecuenciasReales(porProveedor){
+  const nuevo={};
+  Object.entries(porProveedor).forEach(([prov,d])=>{
+    if(!d.suficiente)return;
+    const base=FRECUENCIAS[prov];
+    if(base===7||base===0)return;
+    nuevo[prov]=d.diasProm;
+  });
+  FRECUENCIAS_REAL=nuevo;
+}
 
 const BULTOS_EAN = {
   "CONYNTRA S.A.": {"8001250008503": 12, "8001250008510": 12, "8001250220011": 12, "8001250220028": 12, "8001250115058": 12, "8001250410122": 20, "8001250410412": 12, "8001250145345": 12, "8001250253033": 8, "8001250152015": 8, "8001250152039": 8, "8001250120069": 24, "8001250120076": 24, "8001250120090": 24, "8001250120106": 24, "8001250120113": 24, "8001250120120": 24, "8001250120144": 24, "8001250121707": 24, "8001250120243": 24, "8001250120342": 24, "8001250120410": 24, "8001250120731": 24, "8001250120182": 24, "8001250120052": 24, "8001250120915": 24, "8001250120939": 24, "8001250121264": 12, "8001250121318": 12, "8001250121257": 12, "8001250201010": 12, "8001250201034": 12, "8001250501073": 12, "8001250001085": 12, "8001250009999": 12, "8001250000699": 12, "8001250009852": 12, "8001250039705": 12, "8001250069139": 12, "8001250069146": 12, "8001250069160": 12, "8001250099198": 12, "8001250019769": 12, "8001250009821": 12, "8001250007759": 12, "8001250014078": 12, "8001250014115": 12, "8001250013859": 12, "8001250019745": 12, "8001250019806": 12, "8001250861764": 10, "8001250891778": 10, "8001250160126": 12, "8001250160072": 12, "8001250160416": 12, "8001250160348": 12, "8001250009760": 6, "8002210500105": 12, "8002210500204": 12, "8002210560000": 12, "8002210124202": 8, "8002210135109": 6, "8002210116566": 6, "8002210122499": 12, "8002210128439": 6, "8002210112445": 6, "8002210112704": 6, "8002210132337": 6, "8002210133174": 6, "8002210133211": 6, "8002210133198": 6, "8001876002138": 12, "8001876020019": 6, "8001876020088": 6, "8001876020026": 6, "8001876020033": 12, "8001876000998": 6, "8001876550561": 12, "8001876552442": 12, "8001876550325": 6, "8001876002152": 12, "8001876002169": 12, "8004323110028": 24, "8004323110035": 24, "8004323110042": 24, "8004323110134": 24, "8004323110141": 24, "8004323110158": 24, "8004323110325": 24, "8004323110318": 24, "8004323130378": 24, "8004323110493": 24, "8004323110707": 24, "8004323111605": 20, "8004323111643": 20, "8004323212685": 12, "8004323212708": 12, "8004323312675": 12, "8004323413402": 20, "8001876003036": 12, "8001876003012": 6, "80330370": 6, "80479130": 6, "80330318": 6, "80330349": 6, "8001876060077": 12, "8001876060008": 12, "8001876060015": 12, "8001876060060": 12, "8001876060053": 12, "3083680041713": 12, "3083680004657": 12, "3083680002929": 12, "3083680003841": 12, "3083680002561": 12, "3083680026154": 12, "3083681017656": 12, "3083680001151": 12, "3083680043144": 12, "3083681108019": 12, "3083681003437": 24, "3083681003420": 24, "7891079012208": 30, "7891079012215": 30, "7891079012444": 30, "7891079013939": 30, "7891079012895": 24, "7891079012901": 24, "7891079012918": 24, "7891079013274": 24, "7891079013922": 24, "7891079013946": 24, "7896007810017": 24, "7896007810123": 24, "7896007800001": 24, "7896007811007": 24, "7896007840007": 1, "7896007800124": 24, "7896007800056": 24, "7896007840120": 1, "7896007865130": 12, "7896007833368": 12, "7896007833214": 12, "7896007830763": 24, "7896007811304": 24, "7896007811311": 24, "7896007811403": 24, "7896007865864": 12, "7896007840861": 1, "7896007826476": 12, "8426944001071": 15, "8426944021253": 15, "8426944051502": 15, "8426944000012": 15, "8426944041503": 15, "8426944000081": 17, "8426944610808": 15, "8426944600014": 15, "4102430015305": 24, "41024348": 24, "41024355": 24, "4102430000806": 2, "4100770077120": 24, "4100770005550": 24, "4014964111524": 24, "4014964112514": 24, "4014964117663": 2, "4052197002455": 24, "4102430075095": 24, "4052197001281": 24, "8714800007191": 24, "8714800004114": 24, "8714800014182": 24, "8714800036214": 12, "8711406032602": 24, "8711406000564": 24, "8711406000496": 24, "8711406022207": 24, "8000070038769": 20, "8000070035805": 20, "8000070019911": 20, "8000070010000": 20, "8000070038158": 12, "8000070036166": 12, "8000070012141": 12, "8000070011052": 12, "8000070036321": 12, "8000070053526": 10, "8000070053465": 10, "8000070053564": 10, "8000070053571": 10, "8000070053625": 10, "8000070054271": 10, "8000070053502": 10, "7798348430018": 12, "7798348430056": 12, "7798348430063": 12, "7798348430025": 12, "7798348430032": 12, "7798348430049": 12, "7798348430308": 12, "5056701000530": 12, "5063270100905": 12, "5063270100752": 12, "5063270101353": 12, "5063270101391": 12, "5063270103524": 12, "8720608014064": 12, "8720608014231": 12, "8720608014248": 12, "3045320089332": 6, "3045320089325": 6, "3045320089318": 6, "3045320089677": 6, "3045320096101": 6, "3045320089356": 6, "3045320089301": 6, "3045320089349": 6, "3045320089363": 6, "3178530402988": 12, "3178530402995": 12, "3178530403022": 12, "0016000264601": 12, "0016000289208": 12, "0016000413146": 12, "0016000411265": 12, "0016000407619": 12, "0016000439801": 12, "0016000277076": 12, "0016000278554": 12, "0016000457249": 12, "4000539142567": 14, "8003340095905": 18, "8003340801216": 12, "8003340801674": 8, "8003340098098": 8, "8003340807751": 8, "8003340807775": 8, "8003340096230": 10, "8003340096247": 10, "7610400014649": 12, "7610400068369": 12, "7610400074155": 12, "3046920028004": 20, "3046920028363": 20, "3046920029759": 20, "3046920028370": 20, "3046920029674": 20, "7610400010016": 12, "7610400010023": 12, "7610400014038": 12, "7610400010108": 12, "7610400014571": 12, "7610400013857": 11, "7610400013864": 10, "7610400078559": 15, "8003340803449": 8, "8003340803456": 8, "3046920040150": 8, "NaN": 1, "8003340590684": 1, "4000539680625": 30, "4000539694509": 30, "8003340095400": 18, "8003340095417": 18, "4000539671289": 32, "4000539671180": 16, "4000539689772": 30, "8003340801919": 16, "4000417018007": 12, "4000417025005": 12, "4000417294005": 11, "4000417022004": 12, "4000417702005": 10, "4000417703002": 11, "4000417701008": 10, "4000417700001": 10, "4000417707000": 12, "4000417933003": 12, "4000417118301": 8, "4000417117106": 8, "0046000273426": 12, "0046000273419": 12, "0046000279183": 12, "0046000821214": 24, "0046000413594": 12, "0046000288697": 32, "8410223710280": 24, "8410223710297": 24, "8410223720012": 12, "638564700847": 12, "8410223602493": 12, "8410223607726": 12, "8410223706016": 12, "8410223705774": 6, "8410223608105": 10, "8410223605913": 10, "8410223800424": 24, "8410223800882": 24, "8410223872681": 12, "8410223872995": 16, "8410223872971": 16, "8410223905396": 16, "8410223902821": 12, "8410223873435": 12, "8410223908977": 15, "8410223908984": 15, "8410223908991": 15, "0074570610051": 8, "3415581117288": 8, "0074570274000": 8, "0074570810116": 8, "0074570174003": 8, "0074570024001": 8, "0074570950010": 8, "0074570004003": 8, "3415581187281": 8, "3415587117053": 8, "3415583003053": 8, "3415583012055": 8, "3415583011058": 8, "3415587401053": 24, "3415587403057": 24, "3415587404054": 24, "3415587405051": 24, "7790975000152": 6, "7790975000374": 4, "7790975022345": 6, "7790975194417": 6, "7790975194431": 6, "7790975204468": 6, "7790975198699": 6, "7790975198736": 6, "7790975198750": 6, "7790975198613": 3, "7790975206332": 24, "7790975198774": 6, "7790975199016": 4, "7790975199054": 4, "7790975199139": 1, "7790975198637": 6, "7790975198590": 6, "7790975206219": 24, "7790975198651": 6, "7790975206370": 24, "7790975202150": 4, "7790975198675": 6, "7790975206257": 24, "7790975200941": 6, "7790975200149": 6, "7790975201634": 6, "7790975203584": 6, "7790975202365": 6, "7790975202372": 6, "7790975202389": 6, "7790975206837": 6, "7790975001487": 6, "7790975001494": 6, "7790975195674": 6, "7790975205168": 6, "7790975196770": 6, "7790975001500": 6, "7790975017013": 6, "7790975017020": 6, "7790975017037": 6, "7790975017518": 6, "7790975017495": 6, "7790975204123": 6, "7790975202204": 1, "3185370737316": 1, "3185370000335": 1, "3185370457054": 1, "3049614152337": 1, "3049610004104": 1, "3049614003417": 1, "3245990250203": 1, "5010494560282": 1, "5010494574272": 1, "5010494985498": 1, "5901041003003": 1, "7503023842396": 1, "7503023842433": 1, "7503023844314": 1, "9418408030016": 1, "3666140034007": 1, "3185370772768": 1, "3049614236181": 1, "3049614236808": 1, "3049614229510": 1},
@@ -75,13 +143,13 @@ function getBulto(prov,ean,cod,nombre){
 function tieneBultoConf(prov){return!!(BULTOS_EAN[prov]||BULTOS_COD[prov]||BULTOS_NOMBRE[prov]||BULTOS_FIJO[prov]);}
 const DIAS_COBERTURA_UMBRAL=15; // Umbral de cobertura para no semanales
 function debeAparecer(prov,dias){
-  const f=FRECUENCIAS[prov];
+  const f=frecEfectiva(prov);
   if(f===undefined)return true;
   if(f===0)return false;
   if(f===7)return f<=dias; // Semanales respetan frecuencia
   return true; // No semanales siempre pasan el filtro (se filtra por cobertura en calcular)
 }
-function frecLabel(d){return d===7?"Semanal":d===15?"Quincenal":d===30?"Mensual":d===60?"Bimestral":"";}
+function frecLabel(d){return d===7?"Semanal":d===15?"Quincenal":d===30?"Mensual":d===60?"Bimestral":d?"Cada "+d+"d":"";}
 function nCorto(prov){return NOMBRES[prov]||prov;}
 
 function parseStock(wb){
@@ -186,7 +254,7 @@ function calcular(stockC,ventasC,stockA,ventasA,diasV,soloQuiebre,sucursal,venta
     else if(sucursal==="M"){sR=sRM;falt=faltM;vend=vendM;}
     else{sR=sRC+sRA+sRM;falt=faltC+faltA+faltM;vend=vendC+vendA+vendM;}
     const esQuiebre=sR===0||falt>0;
-    const frecProv=FRECUENCIAS[prov];
+    const frecProv=frecEfectiva(prov);
     // Semanales: proyectar frecuencia+4 dias. No semanales: proyectar 15 dias fijos
     const diasProy=frecProv===7?(frecProv+4):DIAS_COBERTURA_UMBRAL;
     // Calcular venta diaria combinada
@@ -347,7 +415,7 @@ function calcularPedidosConjuntos(stockC,stockA,stockM,vmC,vmA,vmM,dias){
     const bulto=getBulto(prov,ean,cod,nombre);
     if(!bulto||bulto<=1)return;
     if(NO_CONJUNTO.has(prov))return; // Excluir proveedores sin pedido conjunto
-    const frecProv=FRECUENCIAS[prov];
+    const frecProv=frecEfectiva(prov);
     const diasProy=(frecProv&&frecProv>0)?frecProv+3:dias+3;
     let totalNecesita=0;
     const porSuc={};
@@ -401,7 +469,7 @@ function agrupar(productos){
       bajoMinimo:montoTotal>0&&montoTotal<MONTO_MINIMO,
       esLink:!!LINKS[prov],url:LINKS[prov]||null,
       esWeb:WEB_PROVS.has(prov),tieneBulto:tieneBultoConf(prov),
-      frecDias:FRECUENCIAS[prov]||null,
+      frecDias:frecEfectiva(prov)||null,
       tieneQuiebre:items.some(i=>i.esQuiebre),
       tieneTransf:items.some(i=>i.transferDesde),
     };
@@ -1100,6 +1168,15 @@ export default function App(){
   const [stockMDirecto,setStockMDirecto]=useState(()=>{
     try{const d=localStorage.getItem("stockM");return d?JSON.parse(d):null;}catch{return null;}
   });
+  const [wbCompras1,setWbCompras1]=useState(null); // Compras Castex
+  const [wbCompras2,setWbCompras2]=useState(null); // Compras Siria
+  const [wbCompras3,setWbCompras3]=useState(null); // Compras Migueletes
+  const [frecResumen,setFrecResumen]=useState(()=>{
+    try{const d=localStorage.getItem("frecResumen");return d?JSON.parse(d):null;}catch{return null;}
+  });
+  if(frecResumen&&frecResumen.porProveedor&&Object.keys(FRECUENCIAS_REAL).length===0){
+    aplicarFrecuenciasReales(frecResumen.porProveedor);
+  }
   const DIAS_A=5,DIAS_B=30,DIAS_C=51,DIAS_D=new Date().getDate();
   const [grupos,setGrupos]=useState(null);
   const [alertas,setAlertas]=useState(null);
@@ -1122,7 +1199,7 @@ export default function App(){
       const validos={};
       Object.entries(saved).forEach(([prov,data])=>{
         if(!data||!data.fecha)return;
-        const freq=(FRECUENCIAS[prov]||7)*24*60*60*1000;
+        const freq=(frecEfectiva(prov)||7)*24*60*60*1000;
         if(hoy-data.fecha<freq)validos[prov]=data;
       });
       return validos;
@@ -1139,6 +1216,28 @@ export default function App(){
   const sucLabel=sucursal==="C"?SUC1:sucursal==="A"?SUC2:sucursal==="M"?SUC3:"";
 
   // Recalcular al cambiar sucursal si ya hay datos cargados
+  const procesarCompras=(wb,slot)=>{
+    if(slot===1)setWbCompras1(wb);
+    else if(slot===2)setWbCompras2(wb);
+    else if(slot===3)setWbCompras3(wb);
+    setTimeout(()=>{
+      try{
+        const w1=slot===1?wb:wbCompras1;
+        const w2=slot===2?wb:wbCompras2;
+        const w3=slot===3?wb:wbCompras3;
+        // Juntar las fechas de los 3 archivos en una sola bolsa por proveedor (no son 3 frecuencias, es 1)
+        const comprasTotal=[...(w1?parseCompras(w1):[]),...(w2?parseCompras(w2):[]),...(w3?parseCompras(w3):[])];
+        if(!comprasTotal.length)return;
+        const{porProveedor,tiposVistos}=calcularFrecuenciasReales(comprasTotal);
+        aplicarFrecuenciasReales(porProveedor);
+        const resumen={porProveedor,tiposVistos,fecha:Date.now()};
+        setFrecResumen(resumen);
+        try{localStorage.setItem("frecResumen",JSON.stringify(resumen));}catch{}
+        if(wbS1&&wbS2)cambiarSucursal(sucursal);
+      }catch(e){console.error("Error procesando compras:",e);}
+    },50);
+  };
+
   const cambiarSucursal=(v)=>{
     setSucursal(v);
     if(wbS1&&wbS2){
@@ -1444,6 +1543,47 @@ export default function App(){
                 <UploadZone label="Mes anterior" icon="📈" onFile={setWbV3b} loaded={!!wbV3b} uid="m3"/>
                 <UploadZone label="Ant.+Corriente" icon="📈" onFile={setWbV3c} loaded={!!wbV3c} uid="m4"/>
               </div>
+            </div>
+            {/* HISTORIAL DE COMPRAS - frecuencia real */}
+            <div style={{marginBottom:14,background:C.bg,borderRadius:12,padding:12,border:"1px solid "+C.border}}>
+              <div style={{fontSize:10,fontWeight:700,color:C.gold,marginBottom:8,textTransform:"uppercase",letterSpacing:1}}>Historial de compras (opcional)</div>
+              <div style={{fontSize:10,color:C.creamDim,marginBottom:8}}>Subí un export de compras (cualquier rango de fechas que puedas sacar de DUX) para calcular la frecuencia real de reposicion por proveedor. Pisa solo los valores aproximados — no toca los semanales ni los proveedores marcados en 0.</div>
+              <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                <UploadZone label="Compras Castex" icon="🧾" onFile={(wb)=>procesarCompras(wb,1)} loaded={!!wbCompras1} uid="cp1"/>
+                <UploadZone label="Compras Siria" icon="🧾" onFile={(wb)=>procesarCompras(wb,2)} loaded={!!wbCompras2} uid="cp2"/>
+                <UploadZone label="Compras Migueletes" icon="🧾" onFile={(wb)=>procesarCompras(wb,3)} loaded={!!wbCompras3} uid="cp3"/>
+              </div>
+              {frecResumen&&(
+                <div style={{marginTop:10}}>
+                  <div style={{fontSize:9,color:C.muted,marginBottom:6}}>
+                    Tipos de comprobante detectados: {Object.entries(frecResumen.tiposVistos).map(([t,n])=>(t||"(sin tipo)")+" ("+n+")").join(", ")}
+                  </div>
+                  <div style={{maxHeight:180,overflowY:"auto",background:C.card,borderRadius:8,border:"1px solid "+C.border}}>
+                    <table style={{width:"100%",fontSize:9,borderCollapse:"collapse"}}>
+                      <thead><tr style={{background:C.dark}}>
+                        <th style={{padding:"4px 6px",color:"#fff",textAlign:"left"}}>Proveedor</th>
+                        <th style={{padding:"4px 6px",color:"#fff"}}>Config. actual</th>
+                        <th style={{padding:"4px 6px",color:"#fff"}}>Real calculada</th>
+                        <th style={{padding:"4px 6px",color:"#fff"}}>N° compras</th>
+                      </tr></thead>
+                      <tbody>
+                        {Object.entries(frecResumen.porProveedor).sort((a,b)=>a[0].localeCompare(b[0])).map(([prov,d])=>{
+                          const base=FRECUENCIAS[prov];
+                          const seUsa=d.suficiente&&base!==7&&base!==0;
+                          return(
+                            <tr key={prov} style={{borderTop:"1px solid "+C.border}}>
+                              <td style={{padding:"4px 6px",color:C.dark}}>{nCorto(prov)}</td>
+                              <td style={{padding:"4px 6px",textAlign:"center",color:C.muted}}>{base===undefined?"sin config":base+"d"}</td>
+                              <td style={{padding:"4px 6px",textAlign:"center",fontWeight:700,color:seUsa?C.green:C.muted}}>{d.suficiente?d.diasProm+"d"+(seUsa?" ✓":" (no se usa)"):"insuficiente"}</td>
+                              <td style={{padding:"4px 6px",textAlign:"center",color:C.muted}}>{d.nCompras}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
             </div>
             {(wbV1d||wbV2d)&&(
               <div style={{background:C.bg,borderRadius:10,padding:"10px 12px",marginBottom:10,border:"1px solid "+C.border}}>
