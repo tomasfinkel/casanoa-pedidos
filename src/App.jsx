@@ -796,7 +796,7 @@ function TransfCard({t,sucursal}){
         <div style={{fontSize:12,fontWeight:700,color:C.dark,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{t.nombre}</div>
         <div style={{fontSize:10,color:C.muted}}>{nCorto(t.prov)}</div>
         <div style={{fontSize:10,color:C.orange,fontWeight:600,marginTop:2}}>
-          {t.desde===SUC1?"Castex":"Siria"} → {t.hacia===SUC1?"Castex":"Siria"}
+          {labelSuc(t.desde)} → {labelSuc(t.hacia)}
         </div>
         <div style={{fontSize:9,color:C.muted,marginTop:1}}>
           Stock Cast:{t.sRC} / Siria:{t.sRA} · Proy Cast:{t.proyC||0} / Siria:{t.proyA||0}
@@ -1398,6 +1398,7 @@ export default function App(){
     const transfFilt=transferencias.filter(t=>{
       if(sucursal==="C")return t.hacia===SUC1;
       if(sucursal==="A")return t.hacia===SUC2;
+      if(sucursal==="M")return t.hacia===SUC3;
       return true;
     });
     const lines=["Producto,Desde,Hacia,Cantidad"];
@@ -1423,7 +1424,7 @@ export default function App(){
   const realizados=lista.filter(g=>pedidosRealizados[g.prov]?.realizado);
   const transfFiltradas=transferencias.filter(t=>{
     const mb=t.nombre.toLowerCase().includes(busq.toLowerCase())||nCorto(t.prov).toLowerCase().includes(busq.toLowerCase());
-    const sf=sucursal==="C"?t.hacia===SUC1:sucursal==="A"?t.hacia===SUC2:true;
+    const sf=sucursal==="C"?t.hacia===SUC1:sucursal==="A"?t.hacia===SUC2:sucursal==="M"?t.hacia===SUC3:true;
     // Excluir si el proveedor ya fue pedido
     const yaPedido=pedidosRealizados[t.prov]?.realizado;
     return mb&&sf&&!yaPedido;
@@ -1703,14 +1704,14 @@ export default function App(){
                     📥 Descargar CSV
                   </button>
                 </div>
-                {/* Separar por dirección */}
-                {["C","A"].map(dir=>{
-                  const items=transfFiltradas.filter(t=>dir==="C"?t.hacia===SUC1:t.hacia===SUC2);
+                {/* Separar por destino */}
+                {[SUC1,SUC2,SUC3].map(dirSuc=>{
+                  const items=transfFiltradas.filter(t=>t.hacia===dirSuc);
                   if(items.length===0)return null;
                   return(
-                    <div key={dir}>
+                    <div key={dirSuc}>
                       <div style={{fontSize:11,fontWeight:700,color:C.orange,margin:"10px 0 6px",letterSpacing:1,textTransform:"uppercase"}}>
-                        {dir==="C"?`→ Para ${SUC1} (transferir desde Siria)`:`→ Para ${SUC2} (transferir desde Castex)`}
+                        → Para {labelSuc(dirSuc)}
                       </div>
                       {items.map((t,i)=><TransfCard key={t.cod+i} t={t} sucursal={sucursal}/>)}
                     </div>
