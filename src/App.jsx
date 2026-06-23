@@ -142,6 +142,13 @@ function getBulto(prov,ean,cod,nombre){
 }
 function tieneBultoConf(prov){return!!(BULTOS_EAN[prov]||BULTOS_COD[prov]||BULTOS_NOMBRE[prov]||BULTOS_FIJO[prov]);}
 const DIAS_COBERTURA_UMBRAL=15; // Umbral de cobertura para no semanales
+// Tiempo de entrega por proveedor (dias desde que se pide hasta que llega).
+// Vacio a proposito: completar caso por caso cuando se sepa el dato real.
+// Ej: const LEAD_TIME={"GALA GOURMET S.A.":10};
+const LEAD_TIME={};
+const LEAD_TIME_DEFAULT=3; // dias de entrega asumidos si no esta en LEAD_TIME
+const BUFFER_SEGURIDAD=2; // dias extra de margen para variaciones de venta o demoras
+function leadTimeEfectivo(prov){return LEAD_TIME[prov]!==undefined?LEAD_TIME[prov]:LEAD_TIME_DEFAULT;}
 function debeAparecer(prov,dias){
   const f=frecEfectiva(prov);
   if(f===undefined)return true;
@@ -256,7 +263,9 @@ function calcular(stockC,ventasC,stockA,ventasA,diasV,soloQuiebre,sucursal,venta
     const esQuiebre=sR===0||falt>0;
     const frecProv=frecEfectiva(prov);
     // Semanales: proyectar frecuencia+4 dias. No semanales: proyectar 15 dias fijos
-    const diasProy=frecProv===7?(frecProv+4):DIAS_COBERTURA_UMBRAL;
+    // + tiempo de entrega del proveedor + margen de seguridad, para no quebrar mientras llega el pedido
+    const diasProyBase=frecProv===7?(frecProv+4):DIAS_COBERTURA_UMBRAL;
+    const diasProy=diasProyBase+leadTimeEfectivo(prov)+BUFFER_SEGURIDAD;
     // Calcular venta diaria combinada
     let ventaDiaria;
     const vdC=ventasDiariaC?ventasDiariaC[cod]||0:0;
@@ -309,10 +318,11 @@ function calcular(stockC,ventasC,stockA,ventasA,diasV,soloQuiebre,sucursal,venta
     if(BULTO_MIN[prov]&&cantF>0&&cantF<BULTO_MIN[prov])cantF=BULTO_MIN[prov];
     if(BULTO_MAX[prov]&&cantF>BULTO_MAX[prov])cantF=BULTO_MAX[prov];
     if(cantF>0&&cantF<2)cantF=2; // nunca pedir 1 sola unidad
-    // Para no semanales: solo aparecer si dias de cobertura < umbral
+    // Para no semanales: solo aparecer si dias de cobertura < la misma ventana usada para calcular cantidad
+    // (antes usaba el umbral fijo de 15, generando inconsistencia con diasProy ya extendido por lead time)
     if(!soloQuiebre&&frecProv!==7&&frecProv!==undefined&&frecProv!==0){
       const diasCobertura=ventaDiaria>0?sR/ventaDiaria:999;
-      if(diasCobertura>=DIAS_COBERTURA_UMBRAL&&!esQuiebre)return;
+      if(diasCobertura>=diasProy&&!esQuiebre)return;
     }
     if(soloQuiebre&&(!esQuiebre||FRECUENCIAS[prov]===0))return;
     if(!soloQuiebre&&!debeAparecer(prov,diasV))return;
@@ -416,7 +426,8 @@ function calcularPedidosConjuntos(stockC,stockA,stockM,vmC,vmA,vmM,dias){
     if(!bulto||bulto<=1)return;
     if(NO_CONJUNTO.has(prov))return; // Excluir proveedores sin pedido conjunto
     const frecProv=frecEfectiva(prov);
-    const diasProy=(frecProv&&frecProv>0)?frecProv+3:dias+3;
+    const diasProyBase=(frecProv&&frecProv>0)?frecProv+3:dias+3;
+    const diasProy=diasProyBase+leadTimeEfectivo(prov)+BUFFER_SEGURIDAD;
     let totalNecesita=0;
     const porSuc={};
     datos.forEach(d=>{
