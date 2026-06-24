@@ -59,10 +59,11 @@ function calcularFrecuenciasReales(compras){
   const porProveedor={};
   Object.entries(porProv).forEach(([prov,d])=>{
     const fechas=[...d.fechas].map(s=>new Date(s)).sort((a,b)=>a-b);
-    if(fechas.length<2){porProveedor[prov]={diasProm:null,nCompras:fechas.length,suficiente:false};return;}
+    const ultimaCompra=fechas[fechas.length-1].getTime();
+    if(fechas.length<2){porProveedor[prov]={diasProm:null,nCompras:fechas.length,suficiente:false,ultimaCompra};return;}
     const totalDias=(fechas[fechas.length-1]-fechas[0])/86400000;
     const diasProm=Math.round(totalDias/(fechas.length-1));
-    porProveedor[prov]={diasProm,nCompras:fechas.length,suficiente:true};
+    porProveedor[prov]={diasProm,nCompras:fechas.length,suficiente:true,ultimaCompra};
   });
   return{porProveedor,tiposVistos};
 }
@@ -1248,6 +1249,31 @@ export default function App(){
         const resumen={porProveedor,tiposVistos,fecha:Date.now()};
         setFrecResumen(resumen);
         try{localStorage.setItem("frecResumen",JSON.stringify(resumen));}catch{}
+        // Sincronizar "ya pedido" con la fecha real de ultima compra: si la compra real es mas
+        // nueva que lo que ya tenia marcado (o no habia nada marcado), usar esa fecha real.
+        // Asi no hace falta acordarse de tocar el boton manual - el archivo de compras confirma solo.
+        setPedidosRealizados(prev=>{
+          const nuevo={...prev};
+          let cambio=false;
+          Object.entries(porProveedor).forEach(([prov,d])=>{
+            if(!d.ultimaCompra)return;
+            const freq=(frecEfectiva(prov)||7)*24*60*60*1000;
+            const vigente=(Date.now()-d.ultimaCompra)<freq;
+            const actual=nuevo[prov];
+            if(!vigente){
+              // La compra real ya vencio segun la frecuencia: si lo unico que la sostenia
+              // era esa misma fecha, hay que dejarla aparecer de nuevo en vez de seguir oculta.
+              if(actual&&actual.fecha<=d.ultimaCompra){delete nuevo[prov];cambio=true;}
+              return;
+            }
+            if(!actual||!actual.fecha||d.ultimaCompra>actual.fecha){
+              nuevo[prov]={fecha:d.ultimaCompra,realizado:true};
+              cambio=true;
+            }
+          });
+          if(cambio){try{localStorage.setItem("pedidos_realizados",JSON.stringify(nuevo));}catch{}}
+          return cambio?nuevo:prev;
+        });
         if(wbS1&&wbS2)cambiarSucursal(sucursal);
       }catch(e){console.error("Error procesando compras:",e);}
     },50);
@@ -1298,7 +1324,7 @@ export default function App(){
 
   const procesar=()=>{
     if(!todosListos){setErr("Subi los 4 archivos primero");return;}
-    setErr("");setProc(true);setCantsPorProv({});setPedidosRealizados({});
+    setErr("");setProc(true);setCantsPorProv({});
     setTimeout(()=>{
       try{
         const sC=stockCDirecto||(wbS1?parseStock(wbS1):[]);
@@ -1383,11 +1409,11 @@ export default function App(){
     }catch(e){alert("Error: "+e.message);}
   };
 
-  const marcarPedido=(prov,estado)=>{
+  const marcarPedido=(prov,estado,fechaOverride)=>{
     setPedidosRealizados(prev=>{
       const nuevo={...prev};
       if(estado){
-        nuevo[prov]={fecha:Date.now(),realizado:true};
+        nuevo[prov]={fecha:fechaOverride||Date.now(),realizado:true};
       } else {
         delete nuevo[prov];
       }
