@@ -7,6 +7,7 @@ const SUC2 = "Rep. Arabe Siria 2990";
 const SUC3 = "Migueletes";
 const MIN_TRANSF = 3;
 function labelSuc(s){return s===SUC1?"Castex":s===SUC2?"Siria":s===SUC3?"Migueletes":s;}
+function stockDeSuc(t,suc){return suc===SUC1?t.sRC:suc===SUC2?t.sRA:suc===SUC3?t.sRM:null;}
 // Frecuencias reales calculadas desde el historial de compras (pisan solo las aproximadas, no las semanales=7 ni la bandera 0)
 let FRECUENCIAS_REAL={};
 function frecEfectiva(prov){
@@ -789,6 +790,9 @@ function Card({g,num,onCantChange,esAlerta,pedido,onMarcarPedido,numOrden,sucLab
 function TransfCard({t,sucursal}){
   if(sucursal==="C"&&t.hacia!==SUC1)return null;
   if(sucursal==="A"&&t.hacia!==SUC2)return null;
+  if(sucursal==="M"&&t.hacia!==SUC3)return null;
+  const stockOrigen=stockDeSuc(t,t.desde);
+  const stockDestino=stockDeSuc(t,t.hacia);
   return(
     <div style={{background:C.card,borderRadius:12,border:"1.5px solid "+C.orange,padding:"10px 14px",marginBottom:8,display:"flex",alignItems:"center",gap:10}}>
       <div style={{fontSize:20}}>↔️</div>
@@ -799,7 +803,7 @@ function TransfCard({t,sucursal}){
           {labelSuc(t.desde)} → {labelSuc(t.hacia)}
         </div>
         <div style={{fontSize:9,color:C.muted,marginTop:1}}>
-          Stock Cast:{t.sRC} / Siria:{t.sRA} · Proy Cast:{t.proyC||0} / Siria:{t.proyA||0}
+          Stock {labelSuc(t.desde)}:{stockOrigen} → {labelSuc(t.hacia)}:{stockDestino}
         </div>
       </div>
       <div style={{textAlign:"right",flexShrink:0}}>
@@ -1401,9 +1405,11 @@ export default function App(){
       if(sucursal==="M")return t.hacia===SUC3;
       return true;
     });
-    const lines=["Producto,Desde,Hacia,Cantidad"];
+    const lines=["Producto,Desde,Stock Origen,Hacia,Stock Destino,Cantidad"];
     transfFilt.forEach(t=>{
-      lines.push(`"${t.nombre}","${t.desde}","${t.hacia}",${t.cant}`);
+      const stockOrigen=stockDeSuc(t,t.desde);
+      const stockDestino=stockDeSuc(t,t.hacia);
+      lines.push(`"${t.nombre}","${labelSuc(t.desde)}",${stockOrigen??""},"${labelSuc(t.hacia)}",${stockDestino??""},${t.cant}`);
     });
     const blob=new Blob([lines.join("\n")],{type:"text/csv;charset=utf-8;"});
     const url=URL.createObjectURL(blob);
