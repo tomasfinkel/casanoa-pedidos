@@ -1249,31 +1249,8 @@ export default function App(){
         const resumen={porProveedor,tiposVistos,fecha:Date.now()};
         setFrecResumen(resumen);
         try{localStorage.setItem("frecResumen",JSON.stringify(resumen));}catch{}
-        // Sincronizar "ya pedido" con la fecha real de ultima compra: si la compra real es mas
-        // nueva que lo que ya tenia marcado (o no habia nada marcado), usar esa fecha real.
-        // Asi no hace falta acordarse de tocar el boton manual - el archivo de compras confirma solo.
-        setPedidosRealizados(prev=>{
-          const nuevo={...prev};
-          let cambio=false;
-          Object.entries(porProveedor).forEach(([prov,d])=>{
-            if(!d.ultimaCompra)return;
-            const freq=(frecEfectiva(prov)||7)*24*60*60*1000;
-            const vigente=(Date.now()-d.ultimaCompra)<freq;
-            const actual=nuevo[prov];
-            if(!vigente){
-              // La compra real ya vencio segun la frecuencia: si lo unico que la sostenia
-              // era esa misma fecha, hay que dejarla aparecer de nuevo en vez de seguir oculta.
-              if(actual&&actual.fecha<=d.ultimaCompra){delete nuevo[prov];cambio=true;}
-              return;
-            }
-            if(!actual||!actual.fecha||d.ultimaCompra>actual.fecha){
-              nuevo[prov]={fecha:d.ultimaCompra,realizado:true};
-              cambio=true;
-            }
-          });
-          if(cambio){try{localStorage.setItem("pedidos_realizados",JSON.stringify(nuevo));}catch{}}
-          return cambio?nuevo:prev;
-        });
+        // Nota: el archivo de compras solo ajusta la frecuencia calculada (frecEfectiva).
+        // NO marca proveedores como "ya pedido" - eso queda 100% manual, con el boton de cada tarjeta.
         if(wbS1&&wbS2)cambiarSucursal(sucursal);
       }catch(e){console.error("Error procesando compras:",e);}
     },50);
