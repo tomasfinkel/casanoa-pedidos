@@ -21,30 +21,23 @@ async function getPrecioRealtime(codItem) {
     const url = `${DUX_BASE}/items?codigoItem=${codItem}&idListaPrecio=${ID_LISTA}&limit=1`;
     const r = await fetch(url, { headers: { Authorization: DUX_TOKEN } });
     if (!r.ok) {
-      console.error('[precio-realtime] DUX respondio', r.status, 'para codigo', codItem, 'url:', url);
-      return null;
+      return { precio: null, debugReason: 'HTTP ' + r.status };
     }
     const data = await r.json();
     const item = (data.results || [])[0];
     if (!item) {
-      console.error('[precio-realtime] DUX no devolvio resultados para codigo', codItem, '- filtro codigoItem probablemente no es el parametro correcto');
-      return null;
+      return { precio: null, debugReason: 'DUX devolvio 0 resultados para codigoItem=' + codItem };
     }
-    // Verificacion de seguridad: el item que volvio realmente es el que pedimos?
-    // Si DUX ignoro el filtro codigoItem y devolvio "cualquier" item, esto lo detecta.
     if (String(item.cod_item || '').trim() !== String(codItem).trim()) {
-      console.error('[precio-realtime] MISMATCH: pedi codigo', codItem, 'pero DUX devolvio', item.cod_item, '- el filtro codigoItem no esta funcionando como se espera');
-      return null;
+      return { precio: null, debugReason: 'MISMATCH: pedi ' + codItem + ', DUX devolvio ' + item.cod_item };
     }
     const precioObj = (item.precios || []).find(p => p.id === ID_LISTA);
     if (!precioObj) {
-      console.error('[precio-realtime] item', codItem, 'encontrado pero sin precio para lista', ID_LISTA, '- precios disponibles:', JSON.stringify(item.precios));
-      return null;
+      return { precio: null, debugReason: 'item encontrado pero sin precio para lista ' + ID_LISTA + '. Listas disponibles: ' + JSON.stringify((item.precios||[]).map(p=>p.id)) };
     }
-    return parseFloat(precioObj.precio);
+    return { precio: parseFloat(precioObj.precio), debugReason: null };
   } catch (e) {
-    console.error('[precio-realtime] excepcion para codigo', codItem, ':', e.message);
-    return null;
+    return { precio: null, debugReason: 'excepcion: ' + e.message };
   }
 }
 const norm = t => t.toLowerCase().replace(/[-–—]/g, ' ').replace(/\s+/g, ' ').trim();
@@ -63,9 +56,9 @@ export default async function handler(req, res) {
     );
     if (porBarcode.length > 0) {
       const producto = { ...porBarcode[0] };
-      const precioLive = await getPrecioRealtime(producto.codigo);
-      if (precioLive !== null) producto.precio = precioLive;
-      return res.json({ resultados: [producto], modo: 'barcode', precioTiempoReal: precioLive !== null });
+      const r = await getPrecioRealtime(producto.codigo);
+      if (r.precio !== null) producto.precio = r.precio;
+      return res.json({ resultados: [producto], modo: 'barcode', precioTiempoReal: r.precio !== null, debugReason: r.debugReason });
     }
     // Nombre: búsqueda flexible
     const palabras = norm(busqueda).split(' ').filter(Boolean);
@@ -78,8 +71,8 @@ export default async function handler(req, res) {
     // Precio en tiempo real para todos los resultados en paralelo
     const conPrecios = await Promise.all(
       matches.map(async p => {
-        const precioLive = await getPrecioRealtime(p.codigo);
-        return { ...p, precio: precioLive !== null ? precioLive : p.precio, precioActualizado: precioLive !== null };
+        const r = await getPrecioRealtime(p.codigo);
+        return { ...p, precio: r.precio !== null ? r.precio : p.precio, precioActualizado: r.precio !== null, debugReason: r.debugReason };
       })
     );
     const algunoActualizado = conPrecios.some(p => p.precioActualizado);
