@@ -1569,6 +1569,14 @@ export default function App(){
             <div style={{marginBottom:14,background:C.bg,borderRadius:12,padding:12,border:"1px solid "+C.border}}>
               <div style={{fontSize:10,fontWeight:700,color:C.gold,marginBottom:8,textTransform:"uppercase",letterSpacing:1}}>Historial de compras (opcional)</div>
               <div style={{fontSize:10,color:C.creamDim,marginBottom:8}}>Subí un export de compras (cualquier rango de fechas que puedas sacar de DUX) para calcular la frecuencia real de reposicion por proveedor. Pisa solo los valores aproximados — no toca los semanales ni los proveedores marcados en 0.</div>
+              <button onClick={()=>{
+                if(!confirm("Esto borra TODOS los proveedores marcados como \"ya pedido\", sin distinguir cuales tildaste a mano. ¿Seguro?"))return;
+                setPedidosRealizados({});
+                try{localStorage.removeItem("pedidos_realizados");}catch{}
+                if(wbS1&&wbS2)cambiarSucursal(sucursal);
+              }} style={{fontSize:9,color:C.red,background:"transparent",border:"1px solid "+C.red,borderRadius:6,padding:"4px 10px",cursor:"pointer",marginBottom:10}}>
+                🗑️ Borrar todos los "ya pedido" marcados (limpieza total)
+              </button>
               <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
                 <UploadZone label="Compras Castex" icon="🧾" onFile={(wb)=>procesarCompras(wb,1)} loaded={!!wbCompras1} uid="cp1"/>
                 <UploadZone label="Compras Siria" icon="🧾" onFile={(wb)=>procesarCompras(wb,2)} loaded={!!wbCompras2} uid="cp2"/>
