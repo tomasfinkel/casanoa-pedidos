@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Sumar puntos · Casa NOA</title>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, system-ui, sans-serif; background: #e7e3db; color: #3c2c23; padding: 1.5rem; }
+  h1 { font-size: 1.2rem; margin-bottom: 0.3rem; }
+  .sucursal-actual { font-size: 0.85rem; color: #7a6048; margin-bottom: 1rem; }
+  .sucursal-actual button { width: auto; display: inline; background: none; border: none; text-decoration: underline; color: #7a6048; padding: 0; font-weight: 400; cursor: pointer; }
+  .card { background: #fff; border-radius: 12px; padding: 1.2rem; margin-bottom: 1rem; border: 1px solid #e2ded6; }
+  button { background: #3c2c23; color: #e7e3db; border: none; border-radius: 8px; padding: 0.9rem; font-size: 1rem; font-weight: 700; cursor: pointer; width: 100%; }
+  button.secundario { background: #fff; color: #3c2c23; border: 1px solid #3c2c23; }
+  input { width: 100%; padding: 0.8rem; border: 1px solid #d8d3c8; border-radius: 8px; font-size: 1rem; margin-bottom: 0.7rem; }
+  #video { width: 100%; border-radius: 8px; display: none; }
+  .fila { display: flex; gap: 0.5rem; margin-bottom: 0.7rem; align-items: center; }
+  .estado { padding: 1rem; text-align: center; color: #7a6048; }
+  .error { color: #b00020; }
+  .cliente-nombre { font-size: 1.1rem; font-weight: 800; }
+  .cliente-puntos { color: #7a6048; margin-bottom: 1rem; }
+  .oculto { display: none; }
+  .boton-suc { display: block; width: 100%; padding: 1rem; margin-bottom: 0.6rem; border-radius: 8px; border: 1px solid #3c2c23; background: #fff; color: #3c2c23; font-weight: 700; cursor: pointer; }
+</style>
+</head>
+<body>
+  <h1>Casa NOA — Sumar puntos</h1>
+  <div class="sucursal-actual oculto" id="sucursal-actual-box">
+    Sucursal: <strong id="sucursal-actual-nombre"></strong>
+    · <button onclick="elegirSucursal(null)">cambiar</button>
+  </div>
+
+  <div class="card" id="paso-sucursal">
+    <p style="margin-bottom:0.8rem;">¿Desde qué sucursal estás sumando puntos?</p>
+    <button class="boton-suc" onclick="elegirSucursal('castex')">Castex</button>
+    <button class="boton-suc" onclick="elegirSucursal('siria')">Av. República Árabe Siria</button>
+    <button class="boton-suc" onclick="elegirSucursal('migueletes')">Migueletes</button>
+  </div>
+
+  <div class="card oculto" id="paso-buscar">
+    <button onclick="iniciarCamara()">Escanear QR del cliente</button>
+    <video id="video" playsinline></video>
+    <canvas id="canvas" class="oculto"></canvas>
+    <p style="text-align:center; margin: 0.8rem 0; color:#7a6048;">— o —</p>
+    <input type="tel" id="telefono-manual" placeholder="Número de teléfono" />
+    <button class="secundario" onclick="buscarPorTelefono(document.getElementById('telefono-manual').value)">Buscar por teléfono</button>
+  </div>
+
+  <div class="card oculto" id="paso-cliente">
+    <div class="cliente-nombre" id="nombre-cliente"></div>
+    <div class="cliente-puntos" id="puntos-cliente"></div>
+    <input type="number" id="monto" placeholder="Monto de esta venta ($)" />
+    <div class="fila">
+      <input type="checkbox" id="novedad" style="width:auto;" />
+      <label for="novedad">Incluye producto de novedad (+10 puntos)</label>
+    </div>
+    <button onclick="sumarPuntos()">Confirmar venta y sumar puntos</button>
+    <button class="secundario" style="margin-top:0.5rem;" onclick="volver()">Buscar otro cliente</button>
+  </div>
+
+  <div id="mensaje" class="estado"></div>
+
+<script>
+  const JSONBIN_BIN_ID = '6a41818ef5f4af5e293e7862';
+  const JSONBIN_MASTER_KEY = '$2a$10$1BGyO1jHwbMeYO1q//l4cONT1jPzR454VBh9kchyu6xE.xsmMtxz2';
+  const JSONBIN_URL = 'https://api.jsonbin.io/v3/b/' + JSONBIN_BIN_ID;
+  const NOMBRES_SUCURSAL = { castex: 'Castex', siria: 'Av. República Árabe Siria', migueletes: 'Migueletes' };
+
+  let telefonoActual = null;
+  let streamCamara = null;
+  let escaneando = false;
+  let sucursalActual = null;
+
+  function mostrarMensaje(texto, esError) {
+    const el = document.getElementById('mensaje');
+    el.textContent = texto;
+    el.className = 'estado' + (esError ? ' error' : '');
+  }
+
+  function elegirSucursal(id) {
+    sucursalActual = id;
+    if (id) {
+      try { localStorage.setItem('casanoa-pedidos-sucursal-staff', id); } catch {}
+      document.getElementById('paso-sucursal').classList.add('oculto');
+      document.getElementById('paso-buscar').classList.remove('oculto');
+      document.getElementById('sucursal-actual-box').classList.remove('oculto');
+      document.getElementById('sucursal-actual-nombre').textContent = NOMBRES_SUCURSAL[id];
+    } else {
+      try { localStorage.removeItem('casanoa-pedidos-sucursal-staff'); } catch {}
+      document.getElementById('paso-sucursal').classList.remove('oculto');
+      document.getElementById('paso-buscar').classList.add('oculto');
+      document.getElementById('paso-cliente').classList.add('oculto');
+      document.getElementById('sucursal-actual-box').classList.add('oculto');
+    }
+  }
+
+  (function initSucursal() {
+    try {
+      const guardada = localStorage.getItem('casanoa-pedidos-sucursal-staff');
+      if (guardada) elegirSucursal(guardada);
+    } catch {}
+  })();
+
+  async function leerClientes() {
+    const res = await fetch(JSONBIN_URL + '/latest', { headers: { 'X-Master-Key': JSONBIN_MASTER_KEY } });
+    if (!res.ok) throw new Error('No se pudo leer el registro de clientes');
+    const data = await res.json();
+    return data.record?.clientes ?? {};
+  }
+
+  async function guardarClientes(clientes) {
+    const res = await fetch(JSONBIN_URL, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'X-Master-Key': JSONBIN_MASTER_KEY },
+      body: JSON.stringify({ clientes }),
+    });
+    if (!res.ok) throw new Error('No se pudo guardar');
+  }
+
+  async function buscarPorTelefono(telefono) {
+    telefono = (telefono || '').trim();
+    if (!telefono) return;
+    mostrarMensaje('Buscando...');
+    detenerCamara();
+    try {
+      const clientes = await leerClientes();
+      const cliente = clientes[telefono];
+      if (!cliente) {
+        mostrarMensaje('No encontramos ningún cliente con ese teléfono. Pedile que se registre en la app primero (pestaña "Mi cuenta").', true);
+        return;
+      }
+      telefonoActual = telefono;
+      document.getElementById('nombre-cliente').textContent = 'Hola, ' + cliente.nombre;
+      document.getElementById('puntos-cliente').textContent = cliente.puntos + ' puntos actuales';
+      document.getElementById('paso-buscar').classList.add('oculto');
+      document.getElementById('paso-cliente').classList.remove('oculto');
+      mostrarMensaje('');
+    } catch (e) {
+      mostrarMensaje('Error: ' + e.message, true);
+    }
+  }
+
+  async function sumarPuntos() {
+    const monto = parseFloat(document.getElementById('monto').value) || 0;
+    if (monto <= 0) {
+      mostrarMensaje('Ingresá el monto de la venta.', true);
+      return;
+    }
+    const incluyeNovedad = document.getElementById('novedad').checked;
+    const puntosGanados = Math.floor(monto / 1000) + (incluyeNovedad ? 10 : 0);
+    try {
+      const clientes = await leerClientes();
+      const cliente = clientes[telefonoActual];
+      cliente.puntos = (cliente.puntos || 0) + puntosGanados;
+      if (!cliente.historial) cliente.historial = [];
+      cliente.historial.push({
+        fecha: new Date().toISOString(),
+        monto,
+        puntosGanados,
+        sucursal: sucursalActual,
+      });
+      await guardarClientes(clientes);
+      mostrarMensaje('Venta confirmada. ' + cliente.nombre + ' ahora tiene ' + cliente.puntos + ' puntos (+' + puntosGanados + ').');
+      volver();
+    } catch (e) {
+      mostrarMensaje('Error al guardar: ' + e.message, true);
+    }
+  }
+
+  function volver() {
+    document.getElementById('paso-cliente').classList.add('oculto');
+    document.getElementById('paso-buscar').classList.remove('oculto');
+    document.getElementById('telefono-manual').value = '';
+    document.getElementById('monto').value = '';
+    document.getElementById('novedad').checked = false;
+    telefonoActual = null;
+  }
+
+  async function iniciarCamara() {
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    try {
+      streamCamara = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      video.srcObject = streamCamara;
+      video.style.display = 'block';
+      await video.play();
+      escaneando = true;
+      requestAnimationFrame(tickEscaneo);
+    } catch (e) {
+      mostrarMensaje('No se pudo abrir la cámara: ' + e.message, true);
+    }
+  }
+
+  function detenerCamara() {
+    escaneando = false;
+    if (streamCamara) {
+      streamCamara.getTracks().forEach((t) => t.stop());
+      streamCamara = null;
+    }
+    document.getElementById('video').style.display = 'none';
+  }
+
+  function tickEscaneo() {
+    if (!escaneando) return;
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    if (video.readyState === video.HAVE_ENOUGH_DATA) {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const codigo = jsQR(imageData.data, imageData.width, imageData.height);
+      if (codigo && codigo.data) {
+        buscarPorTelefono(codigo.data);
+        return;
+      }
+    }
+    requestAnimationFrame(tickEscaneo);
+  }
+</script>
+</body>
+</html>
