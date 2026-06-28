@@ -41,6 +41,86 @@
       "schedule": "9 7 * * *"
     },
     {
+      "path": "/api/sync-price-step",
+      "schedule": "10 7 * * *"
+    },
+    {
+      "path": "/api/sync-price-step",
+      "schedule": "11 7 * * *"
+    },
+    {
+      "path": "/api/sync-price-step",
+      "schedule": "12 7 * * *"
+    },
+    {
+      "path": "/api/sync-price-step",
+      "schedule": "13 7 * * *"
+    },
+    {
+      "path": "/api/sync-price-step",
+      "schedule": "14 7 * * *"
+    },
+    {
+      "path": "/api/sync-price-step",
+      "schedule": "15 7 * * *"
+    },
+    {
+      "path": "/api/sync-price-step",
+      "schedule": "16 7 * * *"
+    },
+    {
+      "path": "/api/sync-price-step",
+      "schedule": "17 7 * * *"
+    },
+    {
+      "path": "/api/sync-price-step",
+      "schedule": "18 7 * * *"
+    },
+    {
+      "path": "/api/sync-price-step",
+      "schedule": "19 7 * * *"
+    },
+    {
+      "path": "/api/sync-price-step",
+      "schedule": "20 7 * * *"
+    },
+    {
+      "path": "/api/sync-price-step",
+      "schedule": "21 7 * * *"
+    },
+    {
+      "path": "/api/sync-price-step",
+      "schedule": "22 7 * * *"
+    },
+    {
+      "path": "/api/sync-price-step",
+      "schedule": "23 7 * * *"
+    },
+    {
+      "path": "/api/sync-price-step",
+      "schedule": "24 7 * * *"
+    },
+    {
+      "path": "/api/sync-price-step",
+      "schedule": "25 7 * * *"
+    },
+    {
+      "path": "/api/sync-price-step",
+      "schedule": "26 7 * * *"
+    },
+    {
+      "path": "/api/sync-price-step",
+      "schedule": "27 7 * * *"
+    },
+    {
+      "path": "/api/sync-price-step",
+      "schedule": "28 7 * * *"
+    },
+    {
+      "path": "/api/sync-price-step",
+      "schedule": "29 7 * * *"
+    },
+    {
       "path": "/api/sync-stock-step",
       "schedule": "0 8 * * *"
     },
