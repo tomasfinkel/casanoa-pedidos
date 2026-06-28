@@ -31,6 +31,11 @@ const TIEMPO_MAX_MS = 50000
 const URL_BASE = 'https://casanoa-pedidos.vercel.app'
 const CLAVE_PROGRESO = 'stock-sync-progreso.json'
 const CLAVE_STOCK_FINAL = 'stock.json'
+// head() necesita la URL completa, no solo el nombre — por eso antes
+// nunca encontraba el progreso guardado y arrancaba de cero cada vez.
+const BASE_BLOB = 'https://sjczw9fimmonkf7t.public.blob.vercel-storage.com'
+const URL_PROGRESO = `${BASE_BLOB}/${CLAVE_PROGRESO}`
+const URL_STOCK_FINAL = `${BASE_BLOB}/${CLAVE_STOCK_FINAL}`
 
 function autorizado(req) {
   const auth = req.headers['authorization']
@@ -46,10 +51,10 @@ function hoyArgentina() {
   return new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString().slice(0, 10)
 }
 
-async function leerJSON(clave, valorDefault) {
+async function leerJSON(url, valorDefault) {
   try {
-    const info = await head(clave)
-    const res = await fetch(info.url)
+    await head(url) // confirma que existe antes de pedirlo
+    const res = await fetch(url)
     return await res.json()
   } catch {
     return valorDefault
@@ -94,13 +99,13 @@ export default async function handler(req, res) {
 
   // Si ya se completó una sincronización hoy, no arrancar otra de cero con
   // los disparos del cron que todavía falten para llegar a las 60.
-  const stockActual = await leerJSON(CLAVE_STOCK_FINAL, null)
+  const stockActual = await leerJSON(URL_STOCK_FINAL, null)
   if (stockActual?.fechaArgentina === hoyArgentina()) {
     return res.status(200).json({ ok: true, yaSincronizadoHoy: true })
   }
 
   const inicio = Date.now()
-  const progreso = await leerJSON(CLAVE_PROGRESO, { depIndex: 0, offset: 0, acumulado: {} })
+  const progreso = await leerJSON(URL_PROGRESO, { depIndex: 0, offset: 0, acumulado: {} })
   let { depIndex, offset, acumulado } = progreso
 
   let paginasEstaTanda = 0
