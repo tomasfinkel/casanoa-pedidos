@@ -3,6 +3,10 @@
     {
       "path": "/api/cron",
       "schedule": "0 12 * * *"
+    },
+    {
+      "path": "/api/sync-stock-step",
+      "schedule": "0 8 * * *"
     }
   ],
   "functions": {
@@ -14,6 +18,9 @@
     },
     "api/sync-page.js": {
       "maxDuration": 15
+    },
+    "api/sync-stock-step.js": {
+      "maxDuration": 60
     }
   }
 }
