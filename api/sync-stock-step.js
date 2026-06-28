@@ -3,15 +3,13 @@
 // Sincroniza el stock de los 3 depósitos de DUX (Castex, Siria, Migueletes)
 // SIN exceder el límite de 60 segundos por función del plan Hobby.
 //
-// Cómo funciona (posta de relevos):
-//   1. El cron lo dispara una vez por día (ver vercel.json).
-//   2. Esta función hace una tanda chica de llamadas a DUX (respetando
-//      el límite de 5.5s entre llamadas, que ya maneja /api/dux),
-//      guarda el progreso parcial en Blob, y antes de responder le
-//      pide a SÍ MISMA que siga (vía waitUntil + fetch).
-//   3. Eso se repite solo, tanda tras tanda, hasta cubrir los 3 depósitos.
-//   4. Recién en la última tanda se escribe el stock.json final que lee
-//      casanoa-tienda — nunca un archivo a medio escribir.
+// Cómo funciona AHORA (sin auto-llamada — esa parte no andaba confiable):
+//   Vercel mismo dispara esta función 60 veces seguidas, una por minuto,
+//   de madrugada (ver los 60 crons en vercel.json). Cada disparo hace una
+//   tanda chica de llamadas a DUX y guarda el progreso. El próximo disparo,
+//   un minuto después, sigue desde donde quedó. No hace falta que la
+//   función se avise a sí misma — el cron de Vercel hace ese trabajo,
+//   que es justamente lo que Vercel garantiza que funciona.
 //
 // Confirmado contra una respuesta real de DUX (28/6):
 //   - La lista de productos viene en "results", no en "items".
@@ -20,7 +18,6 @@
 //     Se usa "stock_real", igual que ya hace api/cron.js.
 
 import { put, head } from '@vercel/blob'
-import { waitUntil } from '@vercel/functions'
 
 const DEPOSITOS = [
   { id: '7301', clave: 'castex', nombre: 'Castex' },
@@ -29,7 +26,7 @@ const DEPOSITOS = [
 ]
 
 const TAMANIO_PAGINA = 50
-const PAGINAS_MAX_POR_TANDA = 8 // ~8 * 5.5s ≈ 44s, deja margen bajo el techo de 60s de Hobby
+const PAGINAS_MAX_POR_TANDA = 8
 const TIEMPO_MAX_MS = 50000
 const URL_BASE = 'https://casanoa-pedidos.vercel.app'
 const CLAVE_PROGRESO = 'stock-sync-progreso.json'
@@ -43,13 +40,19 @@ function autorizado(req) {
   )
 }
 
-async function leerProgreso() {
+function hoyArgentina() {
+  // Fecha (sin hora) en horario argentino, para no resincronizar de nuevo
+  // si ya terminó hoy.
+  return new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString().slice(0, 10)
+}
+
+async function leerJSON(clave, valorDefault) {
   try {
-    const info = await head(CLAVE_PROGRESO)
+    const info = await head(clave)
     const res = await fetch(info.url)
     return await res.json()
   } catch {
-    return { depIndex: 0, offset: 0, acumulado: {} }
+    return valorDefault
   }
 }
 
@@ -65,6 +68,7 @@ async function guardarProgreso(progreso) {
 async function guardarStockFinal(acumulado) {
   const cuerpo = {
     syncedAt: new Date().toISOString(),
+    fechaArgentina: hoyArgentina(),
     stock: acumulado,
   }
   await put(CLAVE_STOCK_FINAL, JSON.stringify(cuerpo), {
@@ -88,8 +92,15 @@ export default async function handler(req, res) {
   const token = process.env.DUX_TOKEN
   if (!token) return res.status(500).json({ error: 'Token DUX no configurado' })
 
+  // Si ya se completó una sincronización hoy, no arrancar otra de cero con
+  // los disparos del cron que todavía falten para llegar a las 60.
+  const stockActual = await leerJSON(CLAVE_STOCK_FINAL, null)
+  if (stockActual?.fechaArgentina === hoyArgentina()) {
+    return res.status(200).json({ ok: true, yaSincronizadoHoy: true })
+  }
+
   const inicio = Date.now()
-  const progreso = await leerProgreso()
+  const progreso = await leerJSON(CLAVE_PROGRESO, { depIndex: 0, offset: 0, acumulado: {} })
   let { depIndex, offset, acumulado } = progreso
 
   let paginasEstaTanda = 0
@@ -144,14 +155,6 @@ export default async function handler(req, res) {
   }
 
   await guardarProgreso({ depIndex, offset, acumulado })
-
-  const siguienteUrl = `${URL_BASE}/api/sync-stock-step?secret=${process.env.CRON_SECRET}`
-  waitUntil(
-    Promise.race([
-      fetch(siguienteUrl).catch(() => {}),
-      new Promise((resolve) => setTimeout(resolve, 3000)),
-    ]),
-  )
 
   return res.status(200).json({
     ok: true,
