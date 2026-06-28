@@ -151,7 +151,7 @@ export default async function handler(req, res) {
 
   if (terminado) {
     await guardarStockFinal(acumulado)
-    await guardarProgreso({ depIndex: 0, offset: 0, acumulado: {} })
+    await guardarProgreso({ depIndex: 0, offset: 0, acumulado: {}, ultimaEjecucion: new Date().toISOString() })
     return res.status(200).json({
       ok: true,
       terminado: true,
@@ -159,7 +159,7 @@ export default async function handler(req, res) {
     })
   }
 
-  await guardarProgreso({ depIndex, offset, acumulado })
+  await guardarProgreso({ depIndex, offset, acumulado, ultimaEjecucion: new Date().toISOString() })
 
   return res.status(200).json({
     ok: true,
