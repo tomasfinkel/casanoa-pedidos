@@ -1,6 +1,46 @@
 {
   "crons": [
     {
+      "path": "/api/sync-price-step",
+      "schedule": "0 7 * * *"
+    },
+    {
+      "path": "/api/sync-price-step",
+      "schedule": "1 7 * * *"
+    },
+    {
+      "path": "/api/sync-price-step",
+      "schedule": "2 7 * * *"
+    },
+    {
+      "path": "/api/sync-price-step",
+      "schedule": "3 7 * * *"
+    },
+    {
+      "path": "/api/sync-price-step",
+      "schedule": "4 7 * * *"
+    },
+    {
+      "path": "/api/sync-price-step",
+      "schedule": "5 7 * * *"
+    },
+    {
+      "path": "/api/sync-price-step",
+      "schedule": "6 7 * * *"
+    },
+    {
+      "path": "/api/sync-price-step",
+      "schedule": "7 7 * * *"
+    },
+    {
+      "path": "/api/sync-price-step",
+      "schedule": "8 7 * * *"
+    },
+    {
+      "path": "/api/sync-price-step",
+      "schedule": "9 7 * * *"
+    },
+    {
       "path": "/api/sync-stock-step",
       "schedule": "0 8 * * *"
     },
@@ -256,6 +296,9 @@
       "maxDuration": 15
     },
     "api/sync-stock-step.js": {
+      "maxDuration": 60
+    },
+    "api/sync-price-step.js": {
       "maxDuration": 60
     }
   }
