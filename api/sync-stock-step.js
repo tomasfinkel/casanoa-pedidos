@@ -13,9 +13,11 @@
 //   4. Recién en la última tanda se escribe el stock.json final que lee
 //      casanoa-tienda — nunca un archivo a medio escribir.
 //
-// AJUSTAR si hace falta: el nombre exacto de los campos de stock no está
-// 100% confirmado (mismo problema que tuvimos con productos.json) — se
-// intentan varios nombres posibles, igual que ya hacía cargarStockDuxAuto.
+// Confirmado contra una respuesta real de DUX (28/6):
+//   - La lista de productos viene en "results", no en "items".
+//   - El código de producto es "cod_item", el nombre es "item".
+//   - El stock es un ARRAY (un objeto por depósito), no un número suelto.
+//     Se usa "stock_real", igual que ya hace api/cron.js.
 
 import { put, head } from '@vercel/blob'
 import { waitUntil } from '@vercel/functions'
@@ -28,7 +30,7 @@ const DEPOSITOS = [
 
 const TAMANIO_PAGINA = 50
 const PAGINAS_MAX_POR_TANDA = 8 // ~8 * 5.5s ≈ 44s, deja margen bajo el techo de 60s de Hobby
-const TIEMPO_MAX_MS = 50000 // corte de seguridad adicional, por si una llamada tarda de más
+const TIEMPO_MAX_MS = 50000
 const URL_BASE = 'https://casanoa-pedidos.vercel.app'
 const CLAVE_PROGRESO = 'stock-sync-progreso.json'
 const CLAVE_STOCK_FINAL = 'stock.json'
@@ -73,18 +75,9 @@ async function guardarStockFinal(acumulado) {
   })
 }
 
-function extraerStock(item) {
-  return (
-    item.stock ??
-    item.stockActual ??
-    item.stockDisponible ??
-    item.cantidad ??
-    0
-  )
-}
-
-function extraerCodigo(item) {
-  return String(item.codigoItem || item.codigo || item.idItem || '').trim()
+function extraerStockDeposito(item, idDeposito) {
+  const entrada = (item.stock || []).find((s) => String(s.id) === String(idDeposito))
+  return entrada ? parseFloat(entrada.stock_real) || 0 : 0
 }
 
 export default async function handler(req, res) {
@@ -100,7 +93,6 @@ export default async function handler(req, res) {
   let { depIndex, offset, acumulado } = progreso
 
   let paginasEstaTanda = 0
-  let muestraDebug = null
 
   while (
     depIndex < DEPOSITOS.length &&
@@ -117,34 +109,21 @@ export default async function handler(req, res) {
       const resp = await fetch(url, { headers: { Authorization: token } })
       data = await resp.json()
     } catch (e) {
-      muestraDebug = { error: 'fetch falló: ' + e.message }
       break
     }
 
-    if (!muestraDebug) {
-      // Guardamos cómo viene la primera respuesta real, para diagnosticar
-      // sin adivinar más nombres de campo.
-      muestraDebug = {
-        esArray: Array.isArray(data),
-        claves: Array.isArray(data) ? null : Object.keys(data ?? {}),
-        primerasClavesItem: Array.isArray(data) && data[0] ? Object.keys(data[0]) : null,
-        muestraCruda: JSON.stringify(data).slice(0, 1500),
-      }
-    }
-
-    const items = Array.isArray(data) ? data : Array.isArray(data?.items) ? data.items : []
+    const items = Array.isArray(data?.results) ? data.results : []
 
     items.forEach((item) => {
-      const cod = extraerCodigo(item)
+      const cod = String(item.cod_item || '').trim()
       if (!cod) return
       if (!acumulado[cod]) acumulado[cod] = {}
-      acumulado[cod][deposito.clave] = extraerStock(item)
+      acumulado[cod][deposito.clave] = extraerStockDeposito(item, deposito.id)
     })
 
     paginasEstaTanda++
 
     if (items.length < TAMANIO_PAGINA) {
-      // Este depósito se terminó, pasamos al siguiente
       depIndex++
       offset = 0
     } else {
@@ -156,21 +135,16 @@ export default async function handler(req, res) {
 
   if (terminado) {
     await guardarStockFinal(acumulado)
-    await guardarProgreso({ depIndex: 0, offset: 0, acumulado: {} }) // reset para el próximo día
+    await guardarProgreso({ depIndex: 0, offset: 0, acumulado: {} })
     return res.status(200).json({
       ok: true,
       terminado: true,
       productos: Object.keys(acumulado).length,
-      debug: muestraDebug,
     })
   }
 
   await guardarProgreso({ depIndex, offset, acumulado })
 
-  // Pedirle a la próxima tanda que arranque, sin esperar a que termine
-  // (si esperáramos su respuesta completa, bloquearíamos esta función
-  // hasta que TODA la cadena termine, perdiendo el sentido de cortarla
-  // en tandas).
   const siguienteUrl = `${URL_BASE}/api/sync-stock-step?secret=${process.env.CRON_SECRET}`
   waitUntil(
     Promise.race([
@@ -185,6 +159,5 @@ export default async function handler(req, res) {
     deposito: DEPOSITOS[depIndex]?.nombre,
     offset,
     productosHastaAhora: Object.keys(acumulado).length,
-    debug: muestraDebug,
   })
 }
