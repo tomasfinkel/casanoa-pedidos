@@ -97,6 +97,12 @@ export default async function handler(req, res) {
   const token = process.env.DUX_TOKEN
   if (!token) return res.status(500).json({ error: 'Token DUX no configurado' })
 
+  // Parámetro ?reset=true para forzar un ciclo nuevo desde cero
+  if (req.query?.reset === 'true') {
+    await guardarProgreso({ depIndex: 0, offset: 0, acumulado: {} })
+    return res.status(200).json({ ok: true, reseteado: true })
+  }
+
   // Si ya se completó una sincronización hoy, no arrancar otra de cero con
   // los disparos del cron que todavía falten para llegar a las 60.
   const stockActual = await leerJSON(URL_STOCK_FINAL, null)
