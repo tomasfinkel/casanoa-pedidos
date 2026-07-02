@@ -53,9 +53,19 @@ async function guardarStockDeposito(clave, parcial) {
 
 async function combinarYGuardarStockFinal() {
   const stockFinal = {}
-  for (const dep of DEPOSITOS) {
-    const parcial = await leerJSON(urlDepStock(dep.clave), {})
-    for (const cod of Object.keys(parcial)) {
+  for (var i = 0; i < DEPOSITOS.length; i++) {
+    var dep = DEPOSITOS[i]
+    var url = urlDepStock(dep.clave)
+    var parcial = {}
+    try {
+      var resp = await fetch(url)
+      if (resp.ok) parcial = await resp.json()
+    } catch (e) {
+      // archivo no existe todavía, seguir
+    }
+    var cods = Object.keys(parcial)
+    for (var j = 0; j < cods.length; j++) {
+      var cod = cods[j]
       if (!stockFinal[cod]) stockFinal[cod] = {}
       stockFinal[cod][dep.clave] = parcial[cod]
     }
