@@ -1,149 +1,79 @@
-{
-  "crons": [
-    {
-      "path": "/api/sync-price-step",
-      "schedule": "0 7 * * *"
-    },
-    {
-      "path": "/api/sync-price-step",
-      "schedule": "1 7 * * *"
-    },
-    {
-      "path": "/api/sync-price-step",
-      "schedule": "2 7 * * *"
-    },
-    {
-      "path": "/api/sync-price-step",
-      "schedule": "3 7 * * *"
-    },
-    {
-      "path": "/api/sync-price-step",
-      "schedule": "4 7 * * *"
-    },
-    {
-      "path": "/api/sync-price-step",
-      "schedule": "5 7 * * *"
-    },
-    {
-      "path": "/api/sync-price-step",
-      "schedule": "6 7 * * *"
-    },
-    {
-      "path": "/api/sync-price-step",
-      "schedule": "7 7 * * *"
-    },
-    {
-      "path": "/api/sync-price-step",
-      "schedule": "8 7 * * *"
-    },
-    {
-      "path": "/api/sync-price-step",
-      "schedule": "9 7 * * *"
-    },
-    {
-      "path": "/api/sync-price-step",
-      "schedule": "10 7 * * *"
-    },
-    {
-      "path": "/api/sync-price-step",
-      "schedule": "11 7 * * *"
-    },
-    {
-      "path": "/api/sync-price-step",
-      "schedule": "12 7 * * *"
-    },
-    {
-      "path": "/api/sync-price-step",
-      "schedule": "13 7 * * *"
-    },
-    {
-      "path": "/api/sync-price-step",
-      "schedule": "14 7 * * *"
-    },
-    {
-      "path": "/api/sync-price-step",
-      "schedule": "15 7 * * *"
-    },
-    {
-      "path": "/api/sync-price-step",
-      "schedule": "16 7 * * *"
-    },
-    {
-      "path": "/api/sync-price-step",
-      "schedule": "17 7 * * *"
-    },
-    {
-      "path": "/api/sync-price-step",
-      "schedule": "18 7 * * *"
-    },
-    {
-      "path": "/api/sync-price-step",
-      "schedule": "19 7 * * *"
-    },
-    {
-      "path": "/api/sync-price-step",
-      "schedule": "20 7 * * *"
-    },
-    {
-      "path": "/api/sync-price-step",
-      "schedule": "21 7 * * *"
-    },
-    {
-      "path": "/api/sync-price-step",
-      "schedule": "22 7 * * *"
-    },
-    {
-      "path": "/api/sync-price-step",
-      "schedule": "23 7 * * *"
-    },
-    {
-      "path": "/api/sync-price-step",
-      "schedule": "24 7 * * *"
-    },
-    {
-      "path": "/api/sync-price-step",
-      "schedule": "25 7 * * *"
-    },
-    {
-      "path": "/api/sync-price-step",
-      "schedule": "26 7 * * *"
-    },
-    {
-      "path": "/api/sync-price-step",
-      "schedule": "27 7 * * *"
-    },
-    {
-      "path": "/api/sync-price-step",
-      "schedule": "28 7 * * *"
-    },
-    {
-      "path": "/api/sync-price-step",
-      "schedule": "29 7 * * *"
-    },
-    {
-      "path": "/api/sync-stock-step",
-      "schedule": "0 8 * * *"
-    },
-    {
-      "path": "/api/cron",
-      "schedule": "0 12 * * *"
-    }
-  ],
-  "functions": {
-    "api/cron.js": {
-      "maxDuration": 300
-    },
-    "api/save-productos.js": {
-      "maxDuration": 30
-    },
-    "api/sync-page.js": {
-      "maxDuration": 15
-    },
-    "api/sync-stock-step.js": {
-      "maxDuration": 900
-    },
-    "api/sync-price-step.js": {
-      "maxDuration": 60
+const { put } = require('@vercel/blob')
+
+const DEPOSITOS = [
+  { id: '7301', clave: 'castex', nombre: 'Castex' },
+  { id: '15932', clave: 'siria', nombre: 'Siria' },
+  { id: '7199', clave: 'migueletes', nombre: 'Migueletes' },
+]
+
+const TAMANIO_PAGINA = 50
+const PAUSA_MS = 1500
+const URL_BASE = 'https://casanoa-pedidos.vercel.app'
+const CLAVE_STOCK_FINAL = 'stock.json'
+
+function autorizado(req) {
+  const auth = req.headers['authorization']
+  const qs = req.query && req.query.secret
+  return auth === `Bearer ${process.env.CRON_SECRET}` || qs === process.env.CRON_SECRET
+}
+
+function hoyArgentina() {
+  return new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString().slice(0, 10)
+}
+
+function sleep(ms) {
+  return new Promise(function(resolve) { setTimeout(resolve, ms) })
+}
+
+function extraerStock(item, idDeposito) {
+  var entrada = (item.stock || []).find(function(s) { return String(s.id) === String(idDeposito) })
+  return entrada ? parseFloat(entrada.stock_real) || 0 : 0
+}
+
+module.exports = async function handler(req, res) {
+  if (!autorizado(req)) return res.status(401).json({ error: 'No autorizado' })
+
+  const token = process.env.DUX_TOKEN
+  if (!token) return res.status(500).json({ error: 'Token DUX no configurado' })
+
+  const stockFinal = {}
+
+  for (var d = 0; d < DEPOSITOS.length; d++) {
+    var deposito = DEPOSITOS[d]
+    var offset = 0
+
+    while (true) {
+      var url = URL_BASE + '/api/dux?endpoint=items&idDeposito=' + deposito.id +
+        '&offset=' + offset + '&limit=' + TAMANIO_PAGINA
+
+      var data
+      try {
+        var resp = await fetch(url, { headers: { Authorization: token } })
+        data = await resp.json()
+      } catch (e) {
+        break
+      }
+
+      var items = Array.isArray(data && data.results) ? data.results : []
+
+      items.forEach(function(item) {
+        var cod = String(item.cod_item || '').trim()
+        if (!cod) return
+        if (!stockFinal[cod]) stockFinal[cod] = {}
+        stockFinal[cod][deposito.clave] = extraerStock(item, deposito.id)
+      })
+
+      if (items.length < TAMANIO_PAGINA) break
+      offset += TAMANIO_PAGINA
+      await sleep(PAUSA_MS)
     }
   }
+
+  await put(CLAVE_STOCK_FINAL, JSON.stringify({
+    syncedAt: new Date().toISOString(),
+    fechaArgentina: hoyArgentina(),
+    stock: stockFinal,
+  }), { access: 'public', addRandomSuffix: false, allowOverwrite: true, contentType: 'application/json' })
+
+  return res.status(200).json({ ok: true, productos: Object.keys(stockFinal).length })
 }
