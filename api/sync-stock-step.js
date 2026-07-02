@@ -1,3 +1,4 @@
+// api/sync-stock-step.js
 const { put } = require('@vercel/blob')
 
 const DEPOSITOS = [
@@ -47,14 +48,33 @@ module.exports = async function handler(req, res) {
         '&offset=' + offset + '&limit=' + TAMANIO_PAGINA
 
       var data
-      try {
-        var resp = await fetch(url, { headers: { Authorization: token } })
-        data = await resp.json()
-      } catch (e) {
+      var intentos = 0
+      while (intentos < 3) {
+        try {
+          var resp = await fetch(url, { headers: { Authorization: token } })
+          console.log('[sync]', deposito.nombre, 'offset', offset, 'status', resp.status)
+          if (!resp.ok) {
+            console.log('[sync] error HTTP', resp.status, '- reintentando')
+            await sleep(3000)
+            intentos++
+            continue
+          }
+          data = await resp.json()
+          console.log('[sync] results:', data && data.results ? data.results.length : 'sin results', 'keys:', data ? Object.keys(data) : [])
+          break
+        } catch (e) {
+          console.log('[sync] excepcion:', e.message)
+          intentos++
+          await sleep(3000)
+        }
+      }
+
+      if (!data) {
+        console.log('[sync] sin data tras 3 intentos, saliendo de', deposito.nombre)
         break
       }
 
-      var items = Array.isArray(data && data.results) ? data.results : []
+      var items = Array.isArray(data.results) ? data.results : []
 
       items.forEach(function(item) {
         var cod = String(item.cod_item || '').trim()
@@ -63,7 +83,12 @@ module.exports = async function handler(req, res) {
         stockFinal[cod][deposito.clave] = extraerStock(item, deposito.id)
       })
 
-      if (items.length < TAMANIO_PAGINA) break
+      console.log('[sync]', deposito.nombre, 'offset', offset, 'items procesados:', items.length, 'total acumulado:', Object.keys(stockFinal).length)
+
+      if (items.length < TAMANIO_PAGINA) {
+        console.log('[sync] fin de', deposito.nombre)
+        break
+      }
       offset += TAMANIO_PAGINA
       await sleep(PAUSA_MS)
     }
