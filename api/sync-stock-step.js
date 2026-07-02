@@ -58,9 +58,9 @@ async function combinarYGuardarStockFinal() {
   const stockFinal = {}
   for (const dep of DEPOSITOS) {
     const parcial = await leerJSON(urlDepStock(dep.clave), {})
-    for (const [cod, val] of Object.entries(parcial)) {
+    for (const [cod, cantidad] of Object.entries(parcial)) {
       if (!stockFinal[cod]) stockFinal[cod] = {}
-      stockFinal[cod][dep.clave] = val
+      stockFinal[cod][dep.clave] = cantidad
     }
   }
   await put(CLAVE_STOCK_FINAL, JSON.stringify({
@@ -126,7 +126,6 @@ export default async function handler(req, res) {
     items.forEach((item) => {
       const cod = String(item.cod_item || '').trim()
       if (!cod) return
-      if (!acumuladoTick[cod]) acumuladoTick[cod] = {}
       acumuladoTick[cod] = extraerStockDeposito(item, deposito.id)
     })
 
