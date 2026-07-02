@@ -361,6 +361,246 @@
       "schedule": "59 8 * * *"
     },
     {
+      "path": "/api/sync-stock-step",
+      "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/sync-stock-step",
+      "schedule": "1 9 * * *"
+    },
+    {
+      "path": "/api/sync-stock-step",
+      "schedule": "2 9 * * *"
+    },
+    {
+      "path": "/api/sync-stock-step",
+      "schedule": "3 9 * * *"
+    },
+    {
+      "path": "/api/sync-stock-step",
+      "schedule": "4 9 * * *"
+    },
+    {
+      "path": "/api/sync-stock-step",
+      "schedule": "5 9 * * *"
+    },
+    {
+      "path": "/api/sync-stock-step",
+      "schedule": "6 9 * * *"
+    },
+    {
+      "path": "/api/sync-stock-step",
+      "schedule": "7 9 * * *"
+    },
+    {
+      "path": "/api/sync-stock-step",
+      "schedule": "8 9 * * *"
+    },
+    {
+      "path": "/api/sync-stock-step",
+      "schedule": "9 9 * * *"
+    },
+    {
+      "path": "/api/sync-stock-step",
+      "schedule": "10 9 * * *"
+    },
+    {
+      "path": "/api/sync-stock-step",
+      "schedule": "11 9 * * *"
+    },
+    {
+      "path": "/api/sync-stock-step",
+      "schedule": "12 9 * * *"
+    },
+    {
+      "path": "/api/sync-stock-step",
+      "schedule": "13 9 * * *"
+    },
+    {
+      "path": "/api/sync-stock-step",
+      "schedule": "14 9 * * *"
+    },
+    {
+      "path": "/api/sync-stock-step",
+      "schedule": "15 9 * * *"
+    },
+    {
+      "path": "/api/sync-stock-step",
+      "schedule": "16 9 * * *"
+    },
+    {
+      "path": "/api/sync-stock-step",
+      "schedule": "17 9 * * *"
+    },
+    {
+      "path": "/api/sync-stock-step",
+      "schedule": "18 9 * * *"
+    },
+    {
+      "path": "/api/sync-stock-step",
+      "schedule": "19 9 * * *"
+    },
+    {
+      "path": "/api/sync-stock-step",
+      "schedule": "20 9 * * *"
+    },
+    {
+      "path": "/api/sync-stock-step",
+      "schedule": "21 9 * * *"
+    },
+    {
+      "path": "/api/sync-stock-step",
+      "schedule": "22 9 * * *"
+    },
+    {
+      "path": "/api/sync-stock-step",
+      "schedule": "23 9 * * *"
+    },
+    {
+      "path": "/api/sync-stock-step",
+      "schedule": "24 9 * * *"
+    },
+    {
+      "path": "/api/sync-stock-step",
+      "schedule": "25 9 * * *"
+    },
+    {
+      "path": "/api/sync-stock-step",
+      "schedule": "26 9 * * *"
+    },
+    {
+      "path": "/api/sync-stock-step",
+      "schedule": "27 9 * * *"
+    },
+    {
+      "path": "/api/sync-stock-step",
+      "schedule": "28 9 * * *"
+    },
+    {
+      "path": "/api/sync-stock-step",
+      "schedule": "29 9 * * *"
+    },
+    {
+      "path": "/api/sync-stock-step",
+      "schedule": "30 9 * * *"
+    },
+    {
+      "path": "/api/sync-stock-step",
+      "schedule": "31 9 * * *"
+    },
+    {
+      "path": "/api/sync-stock-step",
+      "schedule": "32 9 * * *"
+    },
+    {
+      "path": "/api/sync-stock-step",
+      "schedule": "33 9 * * *"
+    },
+    {
+      "path": "/api/sync-stock-step",
+      "schedule": "34 9 * * *"
+    },
+    {
+      "path": "/api/sync-stock-step",
+      "schedule": "35 9 * * *"
+    },
+    {
+      "path": "/api/sync-stock-step",
+      "schedule": "36 9 * * *"
+    },
+    {
+      "path": "/api/sync-stock-step",
+      "schedule": "37 9 * * *"
+    },
+    {
+      "path": "/api/sync-stock-step",
+      "schedule": "38 9 * * *"
+    },
+    {
+      "path": "/api/sync-stock-step",
+      "schedule": "39 9 * * *"
+    },
+    {
+      "path": "/api/sync-stock-step",
+      "schedule": "40 9 * * *"
+    },
+    {
+      "path": "/api/sync-stock-step",
+      "schedule": "41 9 * * *"
+    },
+    {
+      "path": "/api/sync-stock-step",
+      "schedule": "42 9 * * *"
+    },
+    {
+      "path": "/api/sync-stock-step",
+      "schedule": "43 9 * * *"
+    },
+    {
+      "path": "/api/sync-stock-step",
+      "schedule": "44 9 * * *"
+    },
+    {
+      "path": "/api/sync-stock-step",
+      "schedule": "45 9 * * *"
+    },
+    {
+      "path": "/api/sync-stock-step",
+      "schedule": "46 9 * * *"
+    },
+    {
+      "path": "/api/sync-stock-step",
+      "schedule": "47 9 * * *"
+    },
+    {
+      "path": "/api/sync-stock-step",
+      "schedule": "48 9 * * *"
+    },
+    {
+      "path": "/api/sync-stock-step",
+      "schedule": "49 9 * * *"
+    },
+    {
+      "path": "/api/sync-stock-step",
+      "schedule": "50 9 * * *"
+    },
+    {
+      "path": "/api/sync-stock-step",
+      "schedule": "51 9 * * *"
+    },
+    {
+      "path": "/api/sync-stock-step",
+      "schedule": "52 9 * * *"
+    },
+    {
+      "path": "/api/sync-stock-step",
+      "schedule": "53 9 * * *"
+    },
+    {
+      "path": "/api/sync-stock-step",
+      "schedule": "54 9 * * *"
+    },
+    {
+      "path": "/api/sync-stock-step",
+      "schedule": "55 9 * * *"
+    },
+    {
+      "path": "/api/sync-stock-step",
+      "schedule": "56 9 * * *"
+    },
+    {
+      "path": "/api/sync-stock-step",
+      "schedule": "57 9 * * *"
+    },
+    {
+      "path": "/api/sync-stock-step",
+      "schedule": "58 9 * * *"
+    },
+    {
+      "path": "/api/sync-stock-step",
+      "schedule": "59 9 * * *"
+    },
+    {
       "path": "/api/cron",
       "schedule": "0 12 * * *"
     }
