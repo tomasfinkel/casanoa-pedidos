@@ -26,7 +26,7 @@ const DEPOSITOS = [
 ]
 
 const TAMANIO_PAGINA = 50
-const PAGINAS_MAX_POR_TANDA = 8
+const PAGINAS_MAX_POR_TANDA = 12
 const TIEMPO_MAX_MS = 50000
 const URL_BASE = 'https://casanoa-pedidos.vercel.app'
 const CLAVE_PROGRESO = 'stock-sync-progreso.json'
