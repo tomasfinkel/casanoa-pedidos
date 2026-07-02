@@ -94,6 +94,12 @@ module.exports = async function handler(req, res) {
     await put(CLAVE_STOCK_FINAL, JSON.stringify({ syncedAt: null, fechaArgentina: null, stock: {} }), {
       access: 'public', addRandomSuffix: false, allowOverwrite: true, contentType: 'application/json',
     })
+    // Limpiar también los archivos intermedios de cada depósito
+    for (var d = 0; d < DEPOSITOS.length; d++) {
+      await put(claveDepStock(DEPOSITOS[d].clave), JSON.stringify({}), {
+        access: 'public', addRandomSuffix: false, allowOverwrite: true, contentType: 'application/json',
+      })
+    }
     return res.status(200).json({ ok: true, reseteado: true })
   }
 
