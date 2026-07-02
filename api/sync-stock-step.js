@@ -100,6 +100,10 @@ export default async function handler(req, res) {
   // Parámetro ?reset=true para forzar un ciclo nuevo desde cero
   if (req.query?.reset === 'true') {
     await guardarProgreso({ depIndex: 0, offset: 0, acumulado: {} })
+    // Limpiar también la fecha del stock final para que no corte con yaSincronizadoHoy
+    await put(CLAVE_STOCK_FINAL, JSON.stringify({ syncedAt: null, fechaArgentina: null, stock: {} }), {
+      access: 'public', addRandomSuffix: false, allowOverwrite: true, contentType: 'application/json',
+    })
     return res.status(200).json({ ok: true, reseteado: true })
   }
 
