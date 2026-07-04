@@ -1,4 +1,4 @@
-// api/sync-stock-step.js
+// api/sync-stock-step.js v3
 const { put } = require('@vercel/blob')
 
 const DEPOSITOS = [
