@@ -1,5 +1,5 @@
-// api/sync-stock-step.js v5
-const { put } = require('@vercel/blob')
+// api/sync-stock-step.js v6
+const { put, head } = require('@vercel/blob')
 
 const DEPOSITOS = [
   { id: '7301', clave: 'castex', nombre: 'Castex' },
@@ -8,9 +8,11 @@ const DEPOSITOS = [
 ]
 
 const TAMANIO_PAGINA = 50
-const PAUSA_MS = 6000  // DUX acepta ~5 llamadas/segundo directo; usamos 200ms de margen
+const PAUSA_ENTRE_PAGINAS_MS = 5500
+const PAGINAS_POR_TICK = 9
 const DUX_BASE = 'https://erp.duxsoftware.com.ar/WSERP/rest/services'
-const ID_EMPRESA = '3709'
+const BASE_BLOB = 'https://sjczw9fimmonkf7t.public.blob.vercel-storage.com'
+const URL_PROGRESO = BASE_BLOB + '/stock-sync-progreso.json'
 
 function autorizado(req) {
   var auth = req.headers['authorization']
@@ -31,33 +33,92 @@ function extraerStock(item, idDeposito) {
   return entrada ? parseFloat(entrada.stock_real) || 0 : 0
 }
 
-async function sincronizarDeposito(deposito, token) {
-  var stockDep = {}
-  var offset = 0
+async function leerJSON(url, valorDefault) {
+  try {
+    await head(url)
+    var r = await fetch(url)
+    return await r.json()
+  } catch(e) {
+    return valorDefault
+  }
+}
 
-  while (true) {
-    var url = DUX_BASE + '/items?idEmpresa=' + ID_EMPRESA +
-      '&idDeposito=' + deposito.id +
-      '&offset=' + offset +
-      '&limit=' + TAMANIO_PAGINA
+async function guardarProgreso(p) {
+  await put('stock-sync-progreso.json', JSON.stringify(p), {
+    access: 'public', addRandomSuffix: false, allowOverwrite: true, contentType: 'application/json'
+  })
+}
+
+async function guardarDepStock(clave, data) {
+  await put('stock-dep-' + clave + '.json', JSON.stringify(data), {
+    access: 'public', addRandomSuffix: false, allowOverwrite: true, contentType: 'application/json'
+  })
+}
+
+async function combinarYGuardar() {
+  var stockFinal = {}
+  for (var d = 0; d < DEPOSITOS.length; d++) {
+    var dep = DEPOSITOS[d]
+    var parcial = await leerJSON(BASE_BLOB + '/stock-dep-' + dep.clave + '.json', {})
+    var cods = Object.keys(parcial)
+    for (var i = 0; i < cods.length; i++) {
+      var cod = cods[i]
+      if (!stockFinal[cod]) stockFinal[cod] = {}
+      stockFinal[cod][dep.clave] = parcial[cod]
+    }
+  }
+  await put('stock.json', JSON.stringify({
+    syncedAt: new Date().toISOString(),
+    fechaArgentina: hoyArgentina(),
+    stock: stockFinal
+  }), { access: 'public', addRandomSuffix: false, allowOverwrite: true, contentType: 'application/json' })
+  return Object.keys(stockFinal).length
+}
+
+module.exports = async function handler(req, res) {
+  if (!autorizado(req)) return res.status(401).json({ error: 'No autorizado' })
+
+  var token = process.env.DUX_TOKEN
+  if (!token) return res.status(500).json({ error: 'Token DUX no configurado' })
+
+  // Reset
+  if (req.query && req.query.reset === 'true') {
+    await guardarProgreso({ depIndex: 0, offset: 0 })
+    for (var d = 0; d < DEPOSITOS.length; d++) {
+      await guardarDepStock(DEPOSITOS[d].clave, {})
+    }
+    return res.status(200).json({ ok: true, reseteado: true })
+  }
+
+  var progreso = await leerJSON(URL_PROGRESO, { depIndex: 0, offset: 0 })
+  var depIndex = progreso.depIndex || 0
+  var offset = progreso.offset || 0
+
+  if (depIndex >= DEPOSITOS.length) {
+    return res.status(200).json({ ok: true, yaSincronizadoHoy: true })
+  }
+
+  var deposito = DEPOSITOS[depIndex]
+  var parcial = await leerJSON(BASE_BLOB + '/stock-dep-' + deposito.clave + '.json', {})
+  var paginas = 0
+
+  while (paginas < PAGINAS_POR_TICK) {
+    var url = DUX_BASE + '/items?idDeposito=' + deposito.id +
+      '&offset=' + offset + '&limit=' + TAMANIO_PAGINA
 
     var data = null
     var intentos = 0
     while (intentos < 3) {
       try {
         var resp = await fetch(url, {
-          headers: {
-            'Authorization': token,
-            'Content-Type': 'application/json',
-            'Cache-Control': 'no-cache'
-          }
+          headers: { 'Authorization': token, 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' }
         })
-        if (!resp.ok) { intentos++; await sleep(2000); continue }
+        if (!resp.ok) { intentos++; await sleep(3000); continue }
         data = await resp.json()
         break
-      } catch (e) {
+      } catch(e) {
         intentos++
-        await sleep(2000)
+        await sleep(3000)
       }
     }
 
@@ -67,48 +128,42 @@ async function sincronizarDeposito(deposito, token) {
     items.forEach(function(item) {
       var cod = String(item.cod_item || '').trim()
       if (!cod) return
-      stockDep[cod] = extraerStock(item, deposito.id)
+      parcial[cod] = extraerStock(item, deposito.id)
     })
 
-    console.log('[sync]', deposito.nombre, 'offset', offset, 'items:', items.length, 'total:', Object.keys(stockDep).length)
+    paginas++
 
-    if (items.length < TAMANIO_PAGINA) break
-    offset += TAMANIO_PAGINA
-    await sleep(PAUSA_MS)
-  }
+    if (items.length < TAMANIO_PAGINA) {
+      // Fin de este depósito
+      await guardarDepStock(deposito.clave, parcial)
+      depIndex++
+      offset = 0
 
-  // Guardar depósito apenas termina
-  await put('stock-dep-' + deposito.clave + '.json', JSON.stringify(stockDep), {
-    access: 'public', addRandomSuffix: false, allowOverwrite: true, contentType: 'application/json',
-  })
+      if (depIndex >= DEPOSITOS.length) {
+        // Todos los depósitos completos
+        var total = await combinarYGuardar()
+        await guardarProgreso({ depIndex: DEPOSITOS.length, offset: 0 })
+        return res.status(200).json({ ok: true, terminado: true, productos: total })
+      }
 
-  console.log('[sync] FIN', deposito.nombre, Object.keys(stockDep).length, 'productos guardados')
-  return stockDep
-}
-
-module.exports = async function handler(req, res) {
-  if (!autorizado(req)) return res.status(401).json({ error: 'No autorizado' })
-
-  var token = process.env.DUX_TOKEN
-  if (!token) return res.status(500).json({ error: 'Token DUX no configurado' })
-
-  var stockFinal = {}
-  for (var d = 0; d < DEPOSITOS.length; d++) {
-    var deposito = DEPOSITOS[d]
-    var stockDep = await sincronizarDeposito(deposito, token)
-    var cods = Object.keys(stockDep)
-    for (var i = 0; i < cods.length; i++) {
-      var cod = cods[i]
-      if (!stockFinal[cod]) stockFinal[cod] = {}
-      stockFinal[cod][deposito.clave] = stockDep[cod]
+      // Siguiente depósito
+      deposito = DEPOSITOS[depIndex]
+      parcial = await leerJSON(BASE_BLOB + '/stock-dep-' + deposito.clave + '.json', {})
+      break
     }
+
+    offset += TAMANIO_PAGINA
+    await sleep(PAUSA_ENTRE_PAGINAS_MS)
   }
 
-  await put('stock.json', JSON.stringify({
-    syncedAt: new Date().toISOString(),
-    fechaArgentina: hoyArgentina(),
-    stock: stockFinal,
-  }), { access: 'public', addRandomSuffix: false, allowOverwrite: true, contentType: 'application/json' })
+  await guardarDepStock(deposito.clave, parcial)
+  await guardarProgreso({ depIndex: depIndex, offset: offset })
 
-  return res.status(200).json({ ok: true, productos: Object.keys(stockFinal).length })
+  return res.status(200).json({
+    ok: true,
+    terminado: false,
+    deposito: deposito.nombre,
+    offset: offset,
+    productosEnDeposito: Object.keys(parcial).length
+  })
 }
