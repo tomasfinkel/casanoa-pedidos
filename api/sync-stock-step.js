@@ -8,9 +8,9 @@ const DEPOSITOS = [
 ]
 
 const TAMANIO_PAGINA = 50
-const PAUSA_MS = 200  // DUX acepta ~5 llamadas/segundo directo; usamos 200ms de margen
+const PAUSA_MS = 6000  // DUX acepta ~5 llamadas/segundo directo; usamos 200ms de margen
 const DUX_BASE = 'https://erp.duxsoftware.com.ar/WSERP/rest/services'
-
+const ID_EMPRESA = '3709'
 
 function autorizado(req) {
   var auth = req.headers['authorization']
@@ -36,7 +36,7 @@ async function sincronizarDeposito(deposito, token) {
   var offset = 0
 
   while (true) {
-  var url = DUX_BASE + '/items?idDeposito=' + deposito.id +
+    var url = DUX_BASE + '/items?idEmpresa=' + ID_EMPRESA +
       '&idDeposito=' + deposito.id +
       '&offset=' + offset +
       '&limit=' + TAMANIO_PAGINA
