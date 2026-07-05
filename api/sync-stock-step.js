@@ -36,7 +36,7 @@ async function sincronizarDeposito(deposito, token) {
   var offset = 0
 
   while (true) {
-    var url = DUX_BASE + '/items?idEmpresa=' + ID_EMPRESA +
+  var url = DUX_BASE + '/items?idDeposito=' + deposito.id +
       '&idDeposito=' + deposito.id +
       '&offset=' + offset +
       '&limit=' + TAMANIO_PAGINA
