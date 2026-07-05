@@ -10,7 +10,7 @@ const DEPOSITOS = [
 const TAMANIO_PAGINA = 50
 const PAUSA_MS = 200  // DUX acepta ~5 llamadas/segundo directo; usamos 200ms de margen
 const DUX_BASE = 'https://erp.duxsoftware.com.ar/WSERP/rest/services'
-const ID_EMPRESA = '3709'
+
 
 function autorizado(req) {
   var auth = req.headers['authorization']
