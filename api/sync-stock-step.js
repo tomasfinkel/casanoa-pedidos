@@ -8,8 +8,9 @@ const DEPOSITOS = [
 ]
 
 const TAMANIO_PAGINA = 50
-const PAUSA_MS = 1500
-const URL_BASE = 'https://casanoa-pedidos.vercel.app'
+const PAUSA_MS = 200  // DUX acepta ~5 llamadas/segundo directo; usamos 200ms de margen
+const DUX_BASE = 'https://erp.duxsoftware.com.ar/WSERP/rest/services'
+const ID_EMPRESA = '3709'
 
 function autorizado(req) {
   var auth = req.headers['authorization']
@@ -35,20 +36,28 @@ async function sincronizarDeposito(deposito, token) {
   var offset = 0
 
   while (true) {
-    var url = URL_BASE + '/api/dux?endpoint=items&idDeposito=' + deposito.id +
-      '&offset=' + offset + '&limit=' + TAMANIO_PAGINA
+    var url = DUX_BASE + '/items?idEmpresa=' + ID_EMPRESA +
+      '&idDeposito=' + deposito.id +
+      '&offset=' + offset +
+      '&limit=' + TAMANIO_PAGINA
 
     var data = null
     var intentos = 0
     while (intentos < 3) {
       try {
-        var resp = await fetch(url, { headers: { Authorization: token } })
-        if (!resp.ok) { intentos++; await sleep(3000); continue }
+        var resp = await fetch(url, {
+          headers: {
+            'Authorization': token,
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-cache'
+          }
+        })
+        if (!resp.ok) { intentos++; await sleep(2000); continue }
         data = await resp.json()
         break
       } catch (e) {
         intentos++
-        await sleep(3000)
+        await sleep(2000)
       }
     }
 
@@ -61,15 +70,19 @@ async function sincronizarDeposito(deposito, token) {
       stockDep[cod] = extraerStock(item, deposito.id)
     })
 
+    console.log('[sync]', deposito.nombre, 'offset', offset, 'items:', items.length, 'total:', Object.keys(stockDep).length)
+
     if (items.length < TAMANIO_PAGINA) break
     offset += TAMANIO_PAGINA
     await sleep(PAUSA_MS)
   }
 
+  // Guardar depósito apenas termina
   await put('stock-dep-' + deposito.clave + '.json', JSON.stringify(stockDep), {
     access: 'public', addRandomSuffix: false, allowOverwrite: true, contentType: 'application/json',
   })
 
+  console.log('[sync] FIN', deposito.nombre, Object.keys(stockDep).length, 'productos guardados')
   return stockDep
 }
 
