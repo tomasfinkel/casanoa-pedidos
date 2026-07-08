@@ -1,4 +1,4 @@
-// api/sync-stock-step.js v6
+// api/sync-stock-step.js v7
 const { put, head } = require('@vercel/blob')
 
 const DEPOSITOS = [
@@ -134,8 +134,9 @@ module.exports = async function handler(req, res) {
     paginas++
 
     if (items.length < TAMANIO_PAGINA) {
-      // Fin de este depósito
+      // Fin de este depósito — guardar y escribir stock.json parcial ya
       await guardarDepStock(deposito.clave, parcial)
+      await combinarYGuardar() // escribe stock.json con lo que hay hasta ahora
       depIndex++
       offset = 0
 
