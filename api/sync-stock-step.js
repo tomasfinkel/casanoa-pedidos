@@ -8,8 +8,8 @@ const DEPOSITOS = [
 ]
 
 const TAMANIO_PAGINA = 50
-const PAUSA_ENTRE_PAGINAS_MS = 5500
-const PAGINAS_POR_TICK = 9
+const PAUSA_ENTRE_PAGINAS_MS = 300
+const PAGINAS_POR_TICK = 100
 const DUX_BASE = 'https://erp.duxsoftware.com.ar/WSERP/rest/services'
 const BASE_BLOB = 'https://sjczw9fimmonkf7t.public.blob.vercel-storage.com'
 const URL_PROGRESO = BASE_BLOB + '/stock-sync-progreso.json'
