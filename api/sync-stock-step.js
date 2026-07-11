@@ -277,7 +277,7 @@
     "Dulces y chocolates"
   ],
   "01779": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "01848": [
     "Café e infusiones"
@@ -432,7 +432,7 @@
     "Bebidas y jugos"
   ],
   "06607": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "06972": [
     "Cuidado personal"
@@ -480,7 +480,7 @@
     "Pastas, arroces y salsas"
   ],
   "09136": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "09204": [
     "Snacks"
@@ -607,7 +607,7 @@
     "Dulces y chocolates"
   ],
   "10084": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Panificados",
     "Keto"
   ],
@@ -623,7 +623,7 @@
     "Keto"
   ],
   "10100": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates"
   ],
   "10101": [
@@ -652,7 +652,7 @@
     "Snacks"
   ],
   "10120": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "10121": [
     "Frutos secos y semillas"
@@ -692,13 +692,13 @@
     "Panificados"
   ],
   "10135": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "10138": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "10140": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Congelados"
   ],
   "10142": [
@@ -720,7 +720,7 @@
     "Condimentos, especias y dips"
   ],
   "10148": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "10151": [
     "Congelados"
@@ -750,7 +750,7 @@
     "Condimentos, especias y dips"
   ],
   "10173": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "10191": [
     "Snacks"
@@ -923,7 +923,7 @@
     "Condimentos, especias y dips"
   ],
   "10325": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "10326": [
     "Bebidas y jugos"
@@ -956,10 +956,10 @@
     "Congelados"
   ],
   "10350": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "10351": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "10352": [
     "Cuidado personal"
@@ -1126,10 +1126,10 @@
     "Bebidas y jugos"
   ],
   "10472": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "10473": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "10477": [
     "Dulces y chocolates",
@@ -1154,7 +1154,7 @@
     "Suplementos y superalimentos"
   ],
   "10495": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "10496": [
     "Dulces y chocolates"
@@ -1181,7 +1181,7 @@
     "Snacks"
   ],
   "10513": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "10514": [
     "Condimentos, especias y dips"
@@ -1239,7 +1239,7 @@
     "Dulces y chocolates"
   ],
   "10540": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "10542": [
     "Conservas"
@@ -1261,17 +1261,17 @@
     "Cuidado personal"
   ],
   "10556": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "10557": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates"
   ],
   "10560": [
     "Dulces y chocolates"
   ],
   "10562": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "10566": [
     "Snacks"
@@ -1332,7 +1332,7 @@
     "Dulces y chocolates"
   ],
   "10601": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates"
   ],
   "10602": [
@@ -1347,7 +1347,7 @@
     "Dulces y chocolates"
   ],
   "10605": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates"
   ],
   "10606": [
@@ -1361,7 +1361,7 @@
     "Pastas, arroces y salsas"
   ],
   "10609": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates"
   ],
   "10610": [
@@ -1375,16 +1375,16 @@
     "Dulces y chocolates"
   ],
   "10613": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "10614": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "10615": [
     "Galletas"
   ],
   "10620": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "10621": [
     "Congelados"
@@ -1431,7 +1431,7 @@
     "Miel, mermeladas y untables"
   ],
   "10646": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "10647": [
     "Café e infusiones"
@@ -1452,7 +1452,7 @@
     "Congelados"
   ],
   "10655": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "10657": [
     "Conservas"
@@ -1480,13 +1480,13 @@
     "Dulces y chocolates"
   ],
   "10667": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "10668": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "10669": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "10671": [
     "Snacks"
@@ -1566,14 +1566,14 @@
     "Huevos"
   ],
   "10709": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates"
   ],
   "10710": [
     "Dulces y chocolates"
   ],
   "10712": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Pastas, arroces y salsas"
   ],
   "10713": [
@@ -1664,7 +1664,7 @@
     "Congelados"
   ],
   "10775": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates"
   ],
   "10776": [
@@ -1728,14 +1728,14 @@
     "Conservas"
   ],
   "10810": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "10811": [
     "Dulces y chocolates",
     "Sin gluten / TACC"
   ],
   "10813": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Frutos secos y semillas"
   ],
   "10814": [
@@ -1796,10 +1796,10 @@
     "Conservas"
   ],
   "10862": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "10863": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "10864": [
     "Congelados"
@@ -1830,7 +1830,7 @@
     "Congelados"
   ],
   "10881": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "10884": [
     "Snacks",
@@ -1903,16 +1903,16 @@
     "Cuidado personal"
   ],
   "10928": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "10929": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "1093": [
     "Conservas"
   ],
   "10931": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "10935": [
     "Cuidado personal"
@@ -2002,7 +2002,7 @@
     "Cuidado personal"
   ],
   "11007": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "11008": [
     "Dulces y chocolates"
@@ -2017,7 +2017,7 @@
     "Vinos"
   ],
   "11018": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "11020": [
     "Aceites y vinagres"
@@ -2073,10 +2073,10 @@
     "Panificados"
   ],
   "11073": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "11075": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "11076": [
     "Cereales, legumbres y granolas"
@@ -2304,10 +2304,10 @@
     "Cuidado personal"
   ],
   "11195": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "11196": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "112068": [
     "Dulces y chocolates"
@@ -2316,14 +2316,14 @@
     "Helados y postres"
   ],
   "11209": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Suplementos y superalimentos"
   ],
   "11210": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "11211": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "11213": [
     "Sin gluten / TACC"
@@ -2629,7 +2629,7 @@
     "Dulces y chocolates"
   ],
   "11389": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates"
   ],
   "11390": [
@@ -2639,10 +2639,10 @@
     "Café e infusiones"
   ],
   "11392": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "11393": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Condimentos, especias y dips"
   ],
   "11396": [
@@ -2707,11 +2707,11 @@
     "Cuidado personal"
   ],
   "11423": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates"
   ],
   "11424": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates"
   ],
   "11433": [
@@ -2721,7 +2721,7 @@
     "Aceites y vinagres"
   ],
   "11439": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates",
     "Frutos secos y semillas"
   ],
@@ -2733,7 +2733,7 @@
     "Dulces y chocolates"
   ],
   "11444": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "11445": [
     "Pastas, arroces y salsas"
@@ -3134,7 +3134,7 @@
     "Cuidado personal"
   ],
   "15231": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates"
   ],
   "15234": [
@@ -3297,7 +3297,7 @@
     "Aceites y vinagres"
   ],
   "16370": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "164": [
     "Aceites y vinagres"
@@ -3372,20 +3372,20 @@
     "Condimentos, especias y dips"
   ],
   "1759": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "176": [
     "Aceites y vinagres",
     "Sin gluten / TACC"
   ],
   "1760": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "1761": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "1762": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "1765": [
     "Miel, mermeladas y untables"
@@ -3645,7 +3645,7 @@
     "Condimentos, especias y dips"
   ],
   "20018": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates",
     "Huevos"
   ],
@@ -3802,10 +3802,10 @@
     "Frutos secos y semillas"
   ],
   "2135": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "2136": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "2199": [
     "Keto"
@@ -3820,7 +3820,7 @@
     "Panificados"
   ],
   "2206": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Panificados"
   ],
   "2216": [
@@ -4295,10 +4295,10 @@
     "Pastas, arroces y salsas"
   ],
   "2919": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "2920": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Sin gluten / TACC"
   ],
   "2935": [
@@ -4316,20 +4316,20 @@
     "Sin gluten / TACC"
   ],
   "2943": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "2944": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "2945": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "2953": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Frutos secos y semillas"
   ],
   "2954": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Frutos secos y semillas"
   ],
   "29559": [
@@ -4339,7 +4339,7 @@
     "Bebidas y jugos"
   ],
   "296": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "2960": [
     "Bebidas y jugos"
@@ -4349,7 +4349,7 @@
     "Dulces y chocolates"
   ],
   "297": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "2973": [
     "Bebidas y jugos"
@@ -4362,27 +4362,27 @@
     "Frutos secos y semillas"
   ],
   "2983": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates",
     "Frutos secos y semillas"
   ],
   "2985": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Frutos secos y semillas"
   ],
   "2986": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Frutos secos y semillas"
   ],
   "2987": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Frutos secos y semillas"
   ],
   "2991": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "2994": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "3": [
     "Frutos secos y semillas"
@@ -4579,7 +4579,7 @@
     "Condimentos, especias y dips"
   ],
   "3269": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Keto"
   ],
   "3271": [
@@ -4671,7 +4671,7 @@
     "Carnes y fiambres"
   ],
   "3328": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Condimentos, especias y dips"
   ],
   "333": [
@@ -4706,10 +4706,10 @@
     "Cereales, legumbres y granolas"
   ],
   "3365": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "3366": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "3377": [
     "Carnes y fiambres"
@@ -4722,14 +4722,14 @@
     "Carnes y fiambres"
   ],
   "3389": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "339": [
     "Condimentos, especias y dips"
   ],
   "3390": [
     "Miel, mermeladas y untables",
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "340": [
     "Cereales, legumbres y granolas"
@@ -4750,7 +4750,7 @@
   ],
   "3413": [
     "Miel, mermeladas y untables",
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "341520": [
     "Dulces y chocolates"
@@ -4806,19 +4806,19 @@
   ],
   "3460": [
     "Miel, mermeladas y untables",
-    "Lácteos",
+    "Lácteos y veganos",
     "Sin gluten / TACC"
   ],
   "3461": [
     "Miel, mermeladas y untables",
-    "Lácteos",
+    "Lácteos y veganos",
     "Sin gluten / TACC"
   ],
   "3462": [
     "Condimentos, especias y dips"
   ],
   "3477": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates"
   ],
   "3478": [
@@ -4853,7 +4853,7 @@
     "Aceites y vinagres"
   ],
   "3573": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates"
   ],
   "3574": [
@@ -4933,7 +4933,7 @@
     "Sin gluten / TACC"
   ],
   "3650": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Snacks",
     "Dulces y chocolates",
     "Suplementos y superalimentos",
@@ -5251,7 +5251,7 @@
     "Frutos secos y semillas"
   ],
   "3959": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Frutos secos y semillas"
   ],
   "396": [
@@ -5343,7 +5343,7 @@
     "Panificados"
   ],
   "3988": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates",
     "Panificados"
   ],
@@ -5394,7 +5394,7 @@
     "Panificados"
   ],
   "40067": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "4008400510125": [
     "Dulces y chocolates"
@@ -5412,10 +5412,10 @@
     "Aceites y vinagres"
   ],
   "40122649": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "40173": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "40186": [
     "Congelados"
@@ -5437,7 +5437,7 @@
     "Dulces y chocolates"
   ],
   "40319": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "40320": [
     "Vinos"
@@ -5544,7 +5544,7 @@
     "Condimentos, especias y dips"
   ],
   "4146": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Snacks",
     "Condimentos, especias y dips"
   ],
@@ -5797,7 +5797,7 @@
     "Cereales, legumbres y granolas"
   ],
   "4440": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "4448": [
     "Café e infusiones"
@@ -5997,7 +5997,7 @@
     "Sin gluten / TACC"
   ],
   "46386": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates"
   ],
   "4640": [
@@ -6059,7 +6059,7 @@
     "Snacks"
   ],
   "48261": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "48619": [
     "Dulces y chocolates",
@@ -6082,37 +6082,37 @@
     "Vinos"
   ],
   "4964": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "4965": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "4966": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "4967": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "4969": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "4990": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "4991": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "4992": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "4993": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "49936": [
     "Miel, mermeladas y untables"
   ],
   "4994": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "49943": [
     "Miel, mermeladas y untables"
@@ -6121,13 +6121,13 @@
     "Miel, mermeladas y untables"
   ],
   "4997": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "4999": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "5001": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "50010": [
     "Condimentos, especias y dips"
@@ -6136,13 +6136,13 @@
     "Dulces y chocolates"
   ],
   "5002": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "50027": [
     "Condimentos, especias y dips"
   ],
   "5003": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "50032": [
     "Keto"
@@ -6151,16 +6151,16 @@
     "Dulces y chocolates"
   ],
   "50094": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "5010": [
     "Helados y postres"
   ],
   "50117": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "50120": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Café e infusiones"
   ],
   "502": [
@@ -6168,10 +6168,10 @@
     "Sin gluten / TACC"
   ],
   "50206": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "50257": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Aceites y vinagres"
   ],
   "50294": [
@@ -6200,14 +6200,14 @@
     "Sin gluten / TACC"
   ],
   "5054": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "5055": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates"
   ],
   "5057": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates"
   ],
   "506": [
@@ -6223,85 +6223,85 @@
     "Dulces y chocolates"
   ],
   "5086": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "5087": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "5093": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "5094": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "5097": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "5114": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "5141": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "5142": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "5143": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "5146": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "5149": [
     "Miel, mermeladas y untables"
   ],
   "5150": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "51507": [
     "Galletas"
   ],
   "5151": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "51514": [
     "Snacks"
   ],
   "5152": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "5158": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "517": [
     "Cereales, legumbres y granolas"
   ],
   "5184": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "5185": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "5186": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "5188": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "519": [
     "Harinas y premezclas"
   ],
   "5194": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "5197": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "5198": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "5199": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "520": [
     "Dulces y chocolates"
@@ -6317,7 +6317,7 @@
     "Panificados"
   ],
   "5232": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Suplementos y superalimentos"
   ],
   "52356": [
@@ -6332,7 +6332,7 @@
     "Frutos secos y semillas"
   ],
   "5241": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "5242": [
     "Cuidado personal"
@@ -6385,7 +6385,7 @@
     "Frutos secos y semillas"
   ],
   "53231": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "53650": [
     "Snacks"
@@ -6560,10 +6560,10 @@
     "Panificados"
   ],
   "630165": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "630172": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "63135": [
     "Dulces y chocolates"
@@ -6616,7 +6616,7 @@
     "Bebidas y jugos"
   ],
   "65729": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "65963": [
     "Sin gluten / TACC"
@@ -6791,10 +6791,10 @@
     "Frutos secos y semillas"
   ],
   "772": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "775": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "776": [
     "Condimentos, especias y dips"
@@ -6835,7 +6835,7 @@
     "Condimentos, especias y dips"
   ],
   "7798041520207": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "7798104308629": [
     "Café e infusiones"
@@ -7068,37 +7068,37 @@
     "Condimentos, especias y dips"
   ],
   "7CABR07": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "7CABRI01": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "7CABRI02": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "7CABRI03": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "7CABRI04": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "7CABRI05": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "7CABRI06": [
     "Carnes y fiambres"
   ],
   "7CABRI07": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "7CABRI08": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "7CABRIUNTA": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "7PARME": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "8000139910197": [
     "Pastas, arroces y salsas"
@@ -7179,7 +7179,7 @@
     "Sin gluten / TACC"
   ],
   "80088": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "802": [
     "Condimentos, especias y dips"
@@ -7191,16 +7191,16 @@
     "Dulces y chocolates"
   ],
   "80323": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "80453": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "80552": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "80569": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates"
   ],
   "808": [
@@ -7300,7 +7300,7 @@
     "Condimentos, especias y dips"
   ],
   "8466614": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "85041": [
     "Aceites y vinagres"
@@ -7319,7 +7319,7 @@
     "Frutos secos y semillas"
   ],
   "854705": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates"
   ],
   "86017": [
@@ -7374,10 +7374,10 @@
     "Condimentos, especias y dips"
   ],
   "88876": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "8889425": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "88926": [
     "Cuidado personal"
@@ -7434,7 +7434,7 @@
     "Condimentos, especias y dips"
   ],
   "91228": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates"
   ],
   "915210": [
@@ -7474,7 +7474,7 @@
     "Pastas, arroces y salsas"
   ],
   "939813": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "946": [
     "Condimentos, especias y dips"
@@ -7510,7 +7510,7 @@
     "Snacks"
   ],
   "97513090": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "9780201379624": [
     "Café e infusiones"
@@ -7576,42 +7576,42 @@
     "Café e infusiones"
   ],
   "ABAS1": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "ABAS2": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "ABAS3": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "ABAS5": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Condimentos, especias y dips"
   ],
   "ABASCAY09": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "ABASCAY1": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "ABASCAY12": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "ABASCAY14": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "ABASCAY2": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "ABASCAY3": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "ABASCAY4": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates"
   ],
   "ABASCAY5": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "ACEFRA": [
     "Aceites y vinagres"
@@ -7675,7 +7675,7 @@
     "Congelados"
   ],
   "ALKI03": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Congelados"
   ],
   "ALKI05": [
@@ -7698,13 +7698,13 @@
     "Congelados"
   ],
   "ALLY01": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "ALLY02": [
     "Frutos secos y semillas"
   ],
   "ALLY03": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "ALM01": [
     "Dulces y chocolates"
@@ -7771,14 +7771,14 @@
     "Snacks"
   ],
   "ALMA22": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates"
   ],
   "ALMA24": [
     "Dulces y chocolates"
   ],
   "ALMA25": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "ALMA30": [
     "Suplementos y superalimentos"
@@ -7839,7 +7839,7 @@
     "Sin gluten / TACC"
   ],
   "AMAD09": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Snacks"
   ],
   "AMAN04": [
@@ -7858,7 +7858,7 @@
     "Congelados"
   ],
   "AMOECALAB": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "AMOEPUEPOLL": [
     "Conservas"
@@ -7891,7 +7891,7 @@
     "Sin gluten / TACC"
   ],
   "ANGIALFA": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates",
     "Sin gluten / TACC"
   ],
@@ -7950,34 +7950,34 @@
     "Sin gluten / TACC"
   ],
   "ARLA006": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Aceites y vinagres",
     "Conservas"
   ],
   "ARLA01": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "ARLA02": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "ARLA03": [
     "Condimentos, especias y dips",
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "ARLA04": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "ARLA05": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "ARLA06": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "ARLA07": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "ARLA08": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "ARM07": [
     "Cuidado personal"
@@ -8003,7 +8003,7 @@
     "Sin gluten / TACC"
   ],
   "ARR1": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "ARRO 01": [
     "Pastas, arroces y salsas"
@@ -8045,7 +8045,7 @@
     "Dulces y chocolates"
   ],
   "ATAL03": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "ATHOMX1": [
     "Suplementos y superalimentos",
@@ -8244,7 +8244,7 @@
     "Snacks"
   ],
   "BAS": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Keto"
   ],
   "BASLI": [
@@ -8278,13 +8278,13 @@
     "Bebidas y jugos"
   ],
   "BEAU1": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "BEAU2": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "BEAUD05": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "BEBERRY": [
     "Bebidas y jugos"
@@ -8316,7 +8316,7 @@
     "Suplementos y superalimentos"
   ],
   "BEN2": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates",
     "Suplementos y superalimentos"
   ],
@@ -8359,10 +8359,10 @@
     "Dulces y chocolates"
   ],
   "BEUD29": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "BEUD30": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "BEYOND00": [
     "Congelados"
@@ -8381,18 +8381,18 @@
     "Sin gluten / TACC"
   ],
   "BIAN02": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "BIBA0103": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Frutos secos y semillas"
   ],
   "BIBA0403": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Frutos secos y semillas"
   ],
   "BIBA1": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "BICEN1": [
     "Snacks",
@@ -8610,7 +8610,7 @@
     "Café e infusiones"
   ],
   "BORDER01": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Frutos secos y semillas"
   ],
   "BORNIBUS1": [
@@ -8763,13 +8763,13 @@
     "Snacks"
   ],
   "BRIETTBLU": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "BRIETTMILD": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "BRIETTRED": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "BRIS72": [
     "Bebidas y jugos"
@@ -8823,7 +8823,7 @@
     "Café e infusiones"
   ],
   "BRU02": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Café e infusiones",
     "Frutos secos y semillas"
   ],
@@ -8831,7 +8831,7 @@
     "Dulces y chocolates"
   ],
   "BUBASARA05": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates"
   ],
   "BUBASARA06": [
@@ -8908,12 +8908,12 @@
     "Frutos secos y semillas"
   ],
   "BUTTER04": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates",
     "Frutos secos y semillas"
   ],
   "BUTTER05": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates"
   ],
   "BUTTER06": [
@@ -8934,41 +8934,41 @@
     "Congelados"
   ],
   "BYNA01": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "BYTUR": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates"
   ],
   "BYTURII": [
     "Dulces y chocolates"
   ],
   "CABRANDI1": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "CABRANDI17": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "CABRANDI2": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "CABRANDI3": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "CABRANDI4": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "CABRANDI5": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "CABRANDI6": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "CABRITO": [
     "Vinos"
   ],
   "CACH19": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates"
   ],
   "CACH38": [
@@ -9040,22 +9040,22 @@
     "Dulces y chocolates"
   ],
   "CALI01": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "CALI02": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "CALI03": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "CALI04": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "CALI05": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "CALI06": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "CAMP01": [
     "Bebidas y jugos"
@@ -9113,7 +9113,7 @@
     "Frutos secos y semillas"
   ],
   "CANE11": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates",
     "Frutos secos y semillas"
   ],
@@ -9132,10 +9132,10 @@
     "Keto"
   ],
   "CAPULI123": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "CAPULI456": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "CAR01": [
     "Suplementos y superalimentos"
@@ -9174,7 +9174,7 @@
     "Bebidas y jugos"
   ],
   "CARA": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates"
   ],
   "CARDU01": [
@@ -9224,7 +9224,7 @@
     "Snacks"
   ],
   "CARMELA06": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Snacks",
     "Keto"
   ],
@@ -9334,35 +9334,35 @@
     "Café e infusiones"
   ],
   "CAZON01": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "CAZON02": [
     "Dulces y chocolates"
   ],
   "CAZON03": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates"
   ],
   "CAZON04": [
     "Dulces y chocolates"
   ],
   "CAZON05": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "CAZONMANT": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "CAZONYDESLAGRA": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "CAZONYOGDES": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "CAZOTO": [
     "Dulces y chocolates"
   ],
   "CDV02": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "CEL07": [
     "Snacks",
@@ -9453,22 +9453,22 @@
     "Condimentos, especias y dips"
   ],
   "CERE01": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "CERE02": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "CERE03": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "CERE04": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "CERE05": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "CERE06": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "CERRO01": [
     "Café e infusiones"
@@ -9477,7 +9477,7 @@
     "Aceites y vinagres"
   ],
   "CH11": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates"
   ],
   "CHA01": [
@@ -9499,7 +9499,7 @@
     "Bebidas y jugos"
   ],
   "CHAOKCHIC": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "CHEESE03": [
     "Helados y postres"
@@ -9550,7 +9550,7 @@
     "Dulces y chocolates"
   ],
   "CHINOA02": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "CHOC07": [
     "Dulces y chocolates"
@@ -9583,7 +9583,7 @@
     "Dulces y chocolates"
   ],
   "CHOENV": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "CHOLULA1": [
     "Condimentos, especias y dips"
@@ -9595,10 +9595,10 @@
     "Condimentos, especias y dips"
   ],
   "CHOZA01": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "CHOZA02": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "CHT01": [
     "Condimentos, especias y dips"
@@ -9771,7 +9771,7 @@
     "Bebidas y jugos"
   ],
   "CONAPR": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates"
   ],
   "CONDORELLI01": [
@@ -9877,7 +9877,7 @@
     "Dulces y chocolates"
   ],
   "COSACO01": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "COSACO02": [
     "Frutos secos y semillas"
@@ -9895,10 +9895,10 @@
     "Condimentos, especias y dips"
   ],
   "COWS02": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "COWS2": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "CRACKZEL": [
     "Snacks"
@@ -9960,23 +9960,23 @@
     "Snacks"
   ],
   "CROW9": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Snacks"
   ],
   "CRUD01": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "CRUD03": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "CRUD13": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "CRUD2": [
     "Snacks"
   ],
   "CRUDD11": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Condimentos, especias y dips"
   ],
   "CRUDE20": [
@@ -10029,16 +10029,16 @@
     "Bebidas y jugos"
   ],
   "DA1": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "DA2": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "DA3": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "DA4": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "DAB124": [
     "Cuidado personal"
@@ -10047,16 +10047,16 @@
     "Snacks"
   ],
   "DAHI01": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "DAHI22": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "DAHI23": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "DAHI26": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "DAL01": [
     "Miel, mermeladas y untables"
@@ -10157,50 +10157,50 @@
     "Pastas, arroces y salsas"
   ],
   "DEL00": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "DELC14": [
     "Sin gluten / TACC"
   ],
   "DELF08": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "DELF09": [
     "Condimentos, especias y dips",
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "DELF11": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "DELF12": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "DELF45": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "DELFFRURO": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "DELFI03": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "DELFI04": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "DELFI05": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "DELFI06": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "DELFI12": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "DELFI13": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "DELFINA10": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "DELHI": [
     "Café e infusiones"
@@ -10319,10 +10319,10 @@
     "Miel, mermeladas y untables"
   ],
   "DICO61": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "DICO62": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates"
   ],
   "DICO76": [
@@ -10413,21 +10413,21 @@
     "Aceites y vinagres"
   ],
   "DO1": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "DODONI01": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "DODONI02": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Aceites y vinagres",
     "Condimentos, especias y dips"
   ],
   "DODONI04": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "DODONI21": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "DOLCE01": [
     "Panificados"
@@ -10443,12 +10443,12 @@
     "Dulces y chocolates"
   ],
   "DOÑA": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates"
   ],
   "DOÑA STEVIA": [
     "Miel, mermeladas y untables",
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "DOÑA01": [
     "Pastas, arroces y salsas"
@@ -10566,7 +10566,7 @@
     "Dulces y chocolates"
   ],
   "DULDETVAI": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates"
   ],
   "DUN01": [
@@ -10666,7 +10666,7 @@
     "Suplementos y superalimentos"
   ],
   "EDN9": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "EL ARBOL 1": [
     "Aceites y vinagres"
@@ -10776,16 +10776,16 @@
     "Keto"
   ],
   "EMBORG1": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "EMBORG2": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "EMBORG3": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "EMBORG4": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "EMILY1": [
     "Miel, mermeladas y untables"
@@ -10797,13 +10797,13 @@
     "Snacks"
   ],
   "EMMI01": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "EMPANADAS NOT QUES CEB": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "ENS3": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "ENTR03": [
     "Miel, mermeladas y untables"
@@ -10812,7 +10812,7 @@
     "Miel, mermeladas y untables"
   ],
   "ENTREMONT": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "ENTRENUSALT": [
     "Miel, mermeladas y untables"
@@ -10919,7 +10919,7 @@
     "Sin gluten / TACC"
   ],
   "FELICESMUZZA": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "FELICIA1": [
     "Pastas, arroces y salsas",
@@ -10963,7 +10963,7 @@
     "Condimentos, especias y dips"
   ],
   "FITB05": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "FITB09": [
     "Dulces y chocolates"
@@ -10987,7 +10987,7 @@
     "Congelados"
   ],
   "FOLI18": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Congelados"
   ],
   "FOLIVORA00": [
@@ -11020,7 +11020,7 @@
     "Snacks"
   ],
   "FRANK17": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "FRANMULTI": [
     "Panificados"
@@ -11186,16 +11186,16 @@
     "Pastas, arroces y salsas"
   ],
   "GARCIA1": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "GARCIA2": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "GARCIA3": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "GARCIABAQ": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "GARO01": [
     "Pastas, arroces y salsas"
@@ -11389,22 +11389,22 @@
     "Aceites y vinagres"
   ],
   "GK01": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "GK02": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "GK03": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "GK04": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "GK05": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "GK06": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "GODB13": [
     "Cuidado personal"
@@ -11565,7 +11565,7 @@
     "Galletas"
   ],
   "GULLON3": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Snacks"
   ],
   "GULLON4": [
@@ -11677,7 +11677,7 @@
     "Snacks"
   ],
   "HAPP30": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Sin gluten / TACC"
   ],
   "HARRY": [
@@ -11732,7 +11732,7 @@
     "Condimentos, especias y dips"
   ],
   "HER1": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates"
   ],
   "HER2": [
@@ -11844,11 +11844,11 @@
     "Dulces y chocolates"
   ],
   "HOLSOM13": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates"
   ],
   "HOLSOM16": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates"
   ],
   "HOLSOM19": [
@@ -11950,7 +11950,7 @@
     "Frutos secos y semillas"
   ],
   "IMI09": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates"
   ],
   "IMPORTADO1": [
@@ -12084,10 +12084,10 @@
     "Café e infusiones"
   ],
   "JADORE1": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "JADORE2": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "JALA": [
     "Cuidado personal"
@@ -12100,7 +12100,7 @@
     "Cuidado personal"
   ],
   "JG101": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "JIJONA": [
     "Dulces y chocolates"
@@ -12249,25 +12249,25 @@
     "Sin gluten / TACC"
   ],
   "KARI24": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "KARI26": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "KARI40": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "KARI71": [
     "Dulces y chocolates"
   ],
   "KAY02": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "KAY03": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "KAY04": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "KE01": [
     "Congelados"
@@ -12335,7 +12335,7 @@
     "Keto"
   ],
   "KEYOGUR": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "KIBAR1": [
     "Snacks",
@@ -12579,7 +12579,7 @@
     "Snacks"
   ],
   "LAC20": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates",
     "Huevos"
   ],
@@ -12589,7 +12589,7 @@
     "Huevos"
   ],
   "LAC25": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates"
   ],
   "LAC26": [
@@ -12621,7 +12621,7 @@
     "Frutos secos y semillas"
   ],
   "LACASA23": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates",
     "Huevos"
   ],
@@ -12632,7 +12632,7 @@
     "Suplementos y superalimentos"
   ],
   "LADEL10": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "LAFOLIE02": [
     "Pastas, arroces y salsas"
@@ -12647,7 +12647,7 @@
     "Panificados"
   ],
   "LAFUERTA02": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "LAFUERTE01": [
     "Café e infusiones"
@@ -12738,10 +12738,10 @@
     "Cuidado personal"
   ],
   "LANDANA": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "LANDANA01": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Conservas"
   ],
   "LAO01": [
@@ -12757,10 +12757,10 @@
     "Café e infusiones"
   ],
   "LAPRIMERA01": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "LAPRIMERA02": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "LASBRISAS1": [
     "Bebidas y jugos"
@@ -12874,7 +12874,7 @@
     "Café e infusiones"
   ],
   "LAVACARIE": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "LAVAZZA01": [
     "Café e infusiones"
@@ -12928,11 +12928,11 @@
     "Pastas, arroces y salsas"
   ],
   "LEO02": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Pastas, arroces y salsas"
   ],
   "LEO03": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Pastas, arroces y salsas"
   ],
   "LEO10": [
@@ -12979,7 +12979,7 @@
     "Dulces y chocolates"
   ],
   "LINDOR01": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates"
   ],
   "LINDOR10": [
@@ -13072,7 +13072,7 @@
     "Snacks"
   ],
   "LOMBAR02": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates"
   ],
   "LOR2": [
@@ -13092,7 +13092,7 @@
     "Dulces y chocolates"
   ],
   "LOV789": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates",
     "Sin gluten / TACC"
   ],
@@ -13227,11 +13227,11 @@
     "Keto"
   ],
   "MAMIK01": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Keto"
   ],
   "MAMIK02": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Keto"
   ],
   "MAMIK03": [
@@ -13363,7 +13363,7 @@
     "Dulces y chocolates"
   ],
   "MASAMADRE36": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates"
   ],
   "MASCARILLA": [
@@ -13606,7 +13606,7 @@
     "Keto"
   ],
   "MOMO04": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates",
     "Keto"
   ],
@@ -13632,11 +13632,11 @@
     "Dulces y chocolates"
   ],
   "MOZZARI01": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates"
   ],
   "MOZZARI06": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "MQA00": [
     "Dulces y chocolates"
@@ -13689,7 +13689,7 @@
     "Dulces y chocolates"
   ],
   "MUNCHIS": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates"
   ],
   "MUNS01": [
@@ -13711,13 +13711,13 @@
     "Condimentos, especias y dips"
   ],
   "MUU01": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "MUU02": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "MUU12": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "N6": [
     "Carnes y fiambres"
@@ -13884,7 +13884,7 @@
     "Frutos secos y semillas"
   ],
   "NATALMTARTBRIE": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "NATCRACK": [
     "Snacks",
@@ -14033,7 +14033,7 @@
     "Suplementos y superalimentos"
   ],
   "NAVE001": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "NAVEIA2": [
     "Bebidas y jugos"
@@ -14084,7 +14084,7 @@
     "Café e infusiones"
   ],
   "NEWAY02": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "NEWAY03": [
     "Bebidas y jugos"
@@ -14124,10 +14124,10 @@
     "Suplementos y superalimentos"
   ],
   "NOA0100": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "NOA1": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Café e infusiones"
   ],
   "NOA11": [
@@ -14297,7 +14297,7 @@
     "Congelados"
   ],
   "NOTC96": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates"
   ],
   "NOTCO00": [
@@ -14337,7 +14337,7 @@
     "Frutos secos y semillas"
   ],
   "NS1": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Panificados"
   ],
   "NS2": [
@@ -14370,7 +14370,7 @@
     "Bebidas y jugos"
   ],
   "NUDE2": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "NUDE4": [
     "Bebidas y jugos"
@@ -14385,7 +14385,7 @@
     "Frutos secos y semillas"
   ],
   "NUES13": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Snacks",
     "Condimentos, especias y dips"
   ],
@@ -14435,7 +14435,7 @@
     "Keto"
   ],
   "NUTRILE01": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Bebidas y jugos"
   ],
   "NUTRIR": [
@@ -14501,7 +14501,7 @@
     "Dulces y chocolates"
   ],
   "ODDI": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates",
     "Pastas, arroces y salsas",
     "Frutos secos y semillas"
@@ -14528,7 +14528,7 @@
     "Cuidado personal"
   ],
   "OIKO01": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "OKFSPARK": [
     "Bebidas y jugos"
@@ -14540,7 +14540,7 @@
     "Bebidas y jugos"
   ],
   "OLD1": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "OLEI01": [
     "Aceites y vinagres"
@@ -14571,11 +14571,11 @@
     "Café e infusiones"
   ],
   "ORI123": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates"
   ],
   "ORI124": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates"
   ],
   "ORI125": [
@@ -14589,7 +14589,7 @@
     "Frutos secos y semillas"
   ],
   "ORIGO02": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates"
   ],
   "ORIGO03": [
@@ -14614,7 +14614,7 @@
     "Frutos secos y semillas"
   ],
   "ORIGO11": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates"
   ],
   "ORIGO12": [
@@ -14633,7 +14633,7 @@
     "Dulces y chocolates"
   ],
   "ORIGO17": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates",
     "Frutos secos y semillas"
   ],
@@ -14648,7 +14648,7 @@
     "Dulces y chocolates"
   ],
   "ORIGO22": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates",
     "Panificados"
   ],
@@ -14656,7 +14656,7 @@
     "Huevos"
   ],
   "ORIGO24": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Huevos"
   ],
   "ORIGO25": [
@@ -14737,7 +14737,7 @@
     "Sin gluten / TACC"
   ],
   "PAMP": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Frutos secos y semillas"
   ],
   "PAMP33": [
@@ -14866,11 +14866,11 @@
     "Suplementos y superalimentos"
   ],
   "PAVI02": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Frutos secos y semillas"
   ],
   "PAVI04": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "PAVI05": [
     "Bebidas y jugos",
@@ -14887,7 +14887,7 @@
     "Frutos secos y semillas"
   ],
   "PAZZI01": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "PAZZIARABE": [
     "Panificados"
@@ -15024,13 +15024,13 @@
     "Sin gluten / TACC"
   ],
   "PHILA12": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "PHILAQUE": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "PHILAQUE01": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "PIEL01": [
     "Vinos"
@@ -15154,11 +15154,11 @@
     "Sin gluten / TACC"
   ],
   "POT01": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates"
   ],
   "POT02": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates"
   ],
   "POT05": [
@@ -15168,11 +15168,11 @@
     "Dulces y chocolates"
   ],
   "POT08": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates"
   ],
   "POT10": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "POT12": [
     "Dulces y chocolates"
@@ -15190,7 +15190,7 @@
     "Frutos secos y semillas"
   ],
   "POT21": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates"
   ],
   "PPB": [
@@ -15229,13 +15229,13 @@
     "Snacks"
   ],
   "PRIMA": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "PRINGLES": [
     "Snacks"
   ],
   "PUIE10": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "PUR01": [
     "Café e infusiones"
@@ -15346,7 +15346,7 @@
     "Cuidado personal"
   ],
   "PURO20": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "PURO21": [
     "Cuidado personal"
@@ -15381,22 +15381,22 @@
     "Dulces y chocolates"
   ],
   "QUIM": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "QUIM23": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "QUIM24": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "QUIM27": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "QUIMYA20": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "QUIMYA28": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "QUINAS10": [
     "Miel, mermeladas y untables"
@@ -15405,21 +15405,21 @@
     "Pastas, arroces y salsas"
   ],
   "RABEL": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Condimentos, especias y dips"
   ],
   "RANA04": [
     "Condimentos, especias y dips",
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "RANA05": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "RANA06": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "RANA08": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "RANA09": [
     "Frutos secos y semillas"
@@ -15431,7 +15431,7 @@
     "Carnes y fiambres"
   ],
   "RANA4": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "RAW1": [
     "Frutos secos y semillas"
@@ -15464,7 +15464,7 @@
     "Cuidado personal"
   ],
   "REBE012": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "REBO123": [
     "Sin gluten / TACC"
@@ -15477,7 +15477,7 @@
     "Suplementos y superalimentos"
   ],
   "REES3": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates"
   ],
   "REES4": [
@@ -15611,7 +15611,7 @@
     "Dulces y chocolates"
   ],
   "RIT4": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates"
   ],
   "RIT5": [
@@ -15719,7 +15719,7 @@
     "Pastas, arroces y salsas"
   ],
   "S2": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "SACLA04": [
     "Pastas, arroces y salsas"
@@ -15774,13 +15774,13 @@
     "Condimentos, especias y dips"
   ],
   "SALVIA01": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "SALVIA02": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "SALVIA03": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "SAMK04": [
     "Cuidado personal"
@@ -15843,7 +15843,7 @@
     "Café e infusiones"
   ],
   "SANMAND": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "SANMANDITAR": [
     "Congelados"
@@ -15886,7 +15886,7 @@
     "Café e infusiones"
   ],
   "SAV1": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "SAV2": [
     "Dulces y chocolates"
@@ -15895,7 +15895,7 @@
     "Dulces y chocolates"
   ],
   "SAV4": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates"
   ],
   "SCH00": [
@@ -15935,7 +15935,7 @@
     "Fermentados"
   ],
   "SCHOGE2": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "SCOTTI": [
     "Pastas, arroces y salsas"
@@ -15992,7 +15992,7 @@
     "Café e infusiones"
   ],
   "SER1": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Suplementos y superalimentos"
   ],
   "SERA": [
@@ -16060,7 +16060,7 @@
     "Keto"
   ],
   "SIMPLY01": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Panificados",
     "Keto"
   ],
@@ -16129,7 +16129,7 @@
     "Sin gluten / TACC"
   ],
   "SMAMS01": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Snacks"
   ],
   "SMAMS02": [
@@ -16194,13 +16194,13 @@
     "Condimentos, especias y dips"
   ],
   "SNOWDONIA1": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "SNOWDONIA2": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "SO YA NA": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "SOCO06": [
     "Bebidas y jugos"
@@ -16218,23 +16218,23 @@
     "Bebidas y jugos"
   ],
   "SOIG01": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "SOIG02": [
     "Condimentos, especias y dips",
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "SOIG03": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "SOIG04": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "SOIG05": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "SOIG12": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "SOLAZ01": [
     "Pastas, arroces y salsas",
@@ -16373,7 +16373,7 @@
     "Pastas, arroces y salsas"
   ],
   "ST894": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates"
   ],
   "STABZ01": [
@@ -16477,7 +16477,7 @@
     "Panificados"
   ],
   "STERIL01": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "STERIL02": [
     "Dulces y chocolates"
@@ -16492,7 +16492,7 @@
     "Bebidas y jugos"
   ],
   "SU1": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "SUD": [
     "Suplementos y superalimentos"
@@ -16612,7 +16612,7 @@
     "Keto"
   ],
   "TEQUEMER": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "TERA1": [
     "Snacks"
@@ -16690,19 +16690,19 @@
     "Panificados"
   ],
   "TIROLEZ1": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "TIROLEZ2": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "TIROLEZ3": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "TIROLEZ4": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "TIROLEZ5": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "TIYU01": [
     "Sin gluten / TACC"
@@ -16789,7 +16789,7 @@
     "Café e infusiones"
   ],
   "TURISTAALFA": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates"
   ],
   "TURISTAALFA1": [
@@ -16859,7 +16859,7 @@
     "Conservas"
   ],
   "VALDEZ2": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Café e infusiones",
     "Dulces y chocolates"
   ],
@@ -17014,7 +17014,7 @@
     "Keto"
   ],
   "VENTO91": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Dulces y chocolates",
     "Panificados",
     "Keto"
@@ -17095,10 +17095,10 @@
     "Pastas, arroces y salsas"
   ],
   "VIK01": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "VIK02": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "VINACAP": [
     "Suplementos y superalimentos"
@@ -17167,7 +17167,7 @@
     "Frutos secos y semillas"
   ],
   "WAP": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "WAWF05": [
     "Aceites y vinagres"
@@ -17227,7 +17227,7 @@
     "Condimentos, especias y dips"
   ],
   "Y3": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "YAMASA01": [
     "Condimentos, especias y dips"
@@ -17255,16 +17255,16 @@
     "Conservas"
   ],
   "YGI02": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "YGIARTO": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "YGIARTOGRANDE": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "YGIGRANDE": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "YIN00": [
     "Frutos secos y semillas"
@@ -17282,18 +17282,18 @@
     "Condimentos, especias y dips"
   ],
   "YOGU01": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "YOGU02": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Suplementos y superalimentos"
   ],
   "YOGU03": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Suplementos y superalimentos"
   ],
   "YOGU04": [
-    "Lácteos",
+    "Lácteos y veganos",
     "Suplementos y superalimentos"
   ],
   "YOGUI01": [
@@ -17336,7 +17336,7 @@
     "Sin gluten / TACC"
   ],
   "YUKA YU": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "YUKA01": [
     "Pastas, arroces y salsas",
@@ -17378,28 +17378,28 @@
     "Frutos secos y semillas"
   ],
   "ZAN1": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "ZANET01": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "ZANET02": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "ZANET03": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "ZANET04": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "ZANETT01": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "ZANETTI": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "ZENEMPA02": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "ZENISSIMO01": [
     "Panificados",
@@ -18040,7 +18040,7 @@
     "Pastas, arroces y salsas"
   ],
   "FELICES535": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "FILIPO24": [
     "Conservas"
@@ -18497,10 +18497,10 @@
     "Suplementos y superalimentos"
   ],
   "STER3": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "STER4": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "SUMA02": [
     "Suplementos y superalimentos"
@@ -18695,7 +18695,7 @@
     "Dulces y chocolates"
   ],
   "1779": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "2100": [
     "Panificados",
@@ -18917,7 +18917,7 @@
     "Café e infusiones"
   ],
   "CRUDD01": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "ELI4": [
     "Helados y postres"
@@ -18931,7 +18931,7 @@
     "Bebidas y jugos"
   ],
   "FELICES534": [
-    "Lácteos"
+    "Lácteos y veganos"
   ],
   "LAZARA12": [
     "Galletas"
