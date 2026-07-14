@@ -1207,6 +1207,7 @@ export default function App(){
   const [grupos,setGrupos]=useState(null);
   const [alertas,setAlertas]=useState(null);
   const [transferencias,setTransferencias]=useState([]);
+  const [provExcluidosTransf,setProvExcluidosTransf]=useState(new Set());
   const [conjuntos,setConjuntos]=useState([]);
   const [busq,setBusq]=useState("");
   const [proc,setProc]=useState(false);
@@ -1446,7 +1447,8 @@ export default function App(){
     const sf=sucursal==="C"?t.hacia===SUC1:sucursal==="A"?t.hacia===SUC2:sucursal==="M"?t.hacia===SUC3:true;
     // Excluir si el proveedor ya fue pedido
     const yaPedido=pedidosRealizados[t.prov]?.realizado;
-    return mb&&sf&&!yaPedido;
+    const excluido=provExcluidosTransf.has(t.prov);
+    return mb&&sf&&!yaPedido&&!excluido;
   });
 
   return(
@@ -1732,6 +1734,36 @@ export default function App(){
                   </button>
                 </div>
                 {/* Separar por destino */}
+                {(()=>{
+                  const provsEnTransf=[...new Set(transferencias.map(t=>t.prov))].sort();
+                  if(!provsEnTransf.length)return null;
+                  return(
+                    <div style={{background:C.surface,border:"1px solid "+C.border,borderRadius:10,padding:"10px 12px",marginBottom:10}}>
+                      <div style={{fontSize:10,fontWeight:700,color:C.muted,marginBottom:8,textTransform:"uppercase",letterSpacing:1}}>Excluir proveedores de transferencias</div>
+                      <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+                        {provsEnTransf.map(prov=>{
+                          const excluido=provExcluidosTransf.has(prov);
+                          return(
+                            <button key={prov} onClick={()=>{
+                              setProvExcluidosTransf(prev=>{
+                                const n=new Set(prev);
+                                excluido?n.delete(prov):n.add(prov);
+                                return n;
+                              });
+                            }} style={{background:excluido?"#C0392B":"#E67E2220",color:excluido?"#fff":C.orange,border:"1.5px solid "+(excluido?"#C0392B":"#E67E2250"),borderRadius:8,padding:"4px 10px",fontSize:10,fontWeight:700,cursor:"pointer"}}>
+                              {excluido?"✕ ":""}{nCorto(prov)}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      {provExcluidosTransf.size>0&&(
+                        <button onClick={()=>setProvExcluidosTransf(new Set())} style={{marginTop:8,background:"none",border:"none",color:C.muted,fontSize:10,cursor:"pointer",textDecoration:"underline"}}>
+                          Mostrar todos
+                        </button>
+                      )}
+                    </div>
+                  );
+                })()}
                 {[SUC1,SUC2,SUC3].map(dirSuc=>{
                   const items=transfFiltradas.filter(t=>t.hacia===dirSuc);
                   if(items.length===0)return null;
