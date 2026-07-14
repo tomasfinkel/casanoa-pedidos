@@ -367,32 +367,42 @@ function calcularTransferencias(stockC,stockA,stockM,vmC,vmA,vmM,dias){
     });
     const presentes=datos.filter(Boolean);
     if(presentes.length<2)return; // necesita al menos 2 sucursales con el producto
+    const ean=String(presentes[0].p["Código Barra"]||"").trim();
     const nombre=String(presentes[0].p["Producto"]||"").trim();
-    const prov=String(presentes[0].p["Proveedor"]||"").trim();
+    const provRaw=presentes.map(d=>String(d.p["Proveedor"]||"").trim()).find(p=>p)||"";
+    const prov=EAN_PROV_OVERRIDE[ean]||provRaw;
     if(!nombre)return;
     // Sin datos de venta en ninguna sucursal -> no sugerir
     if(presentes.every(d=>d.vd===0))return;
 
-    // Para cada sucursal que necesita, buscar el mejor donante (mayor sobrante) entre las demas
-    presentes.forEach(receptor=>{
-      if(receptor.faltante<MIN_TRANSF)return;
-      if(receptor.sR>CAP_DESTINO)return; // ya tiene de mas, no seguir empujando stock ahi
-      const candidatos=presentes.filter(d=>d.suc!==receptor.suc&&d.sobrante>=MIN_TRANSF);
+    const sobrantes={}; // sobrante RESTANTE del donante, actualizado a medida que asignamos
+    SUCS.forEach(s=>{
+      const d=datos.find(x=>x.suc===s.suc);
+      if(d)sobrantes[s.suc]=d.sobrante;
+    });
+    // Ordenar receptores por necesidad descendente (el que mas necesita primero)
+    const receptores=presentes.filter(r=>r.faltante>=MIN_TRANSF&&r.sR<=CAP_DESTINO);
+    receptores.sort((a,b)=>b.faltante-a.faltante);
+    receptores.forEach(receptor=>{
+      // Buscar el mejor donante con sobrante RESTANTE (ya descontadas asignaciones previas)
+      const candidatos=presentes
+        .filter(d=>d.suc!==receptor.suc&&sobrantes[d.suc]>=MIN_TRANSF)
+        .map(d=>({...d,sobranteRestante:sobrantes[d.suc]}))
+        .sort((a,b)=>b.sobranteRestante-a.sobranteRestante);
       if(!candidatos.length)return;
-      // Tie-break: el de mayor sobrante
-      candidatos.sort((a,b)=>b.sobrante-a.sobrante);
       const donante=candidatos[0];
-      const cant=Math.min(donante.sobrante,receptor.faltante);
-      const donanteDespues=donante.sR-cant;
+      const cant=Math.min(donante.sobranteRestante,receptor.faltante);
+      const donanteDespues=donante.sR-(donante.sobrante-donante.sobranteRestante)-cant;
       if(cant>=MIN_TRANSF&&donanteDespues>=donante.piso){
+        sobrantes[donante.suc]-=cant; // descontar del sobrante restante del donante
         res.push({
           cod,nombre,prov,
           sRC:mapaC[cod]?parseFloat(mapaC[cod]["Stock Real"])||0:null,
           sRA:mapaA[cod]?parseFloat(mapaA[cod]["Stock Real"])||0:null,
           sRM:mapaM[cod]?parseFloat(mapaM[cod]["Stock Real"])||0:null,
-          proyC:mapaC[cod]?(presentes.find(d=>d.suc===SUC1)||{}).proy||0:null,
-          proyA:mapaA[cod]?(presentes.find(d=>d.suc===SUC2)||{}).proy||0:null,
-          proyM:mapaM[cod]?(presentes.find(d=>d.suc===SUC3)||{}).proy||0:null,
+          proyC:presentes.find(d=>d.suc===SUC1)?.proy||null,
+          proyA:presentes.find(d=>d.suc===SUC2)?.proy||null,
+          proyM:presentes.find(d=>d.suc===SUC3)?.proy||null,
           desde:donante.suc,hacia:receptor.suc,cant:Math.round(cant)
         });
       }
@@ -1197,7 +1207,6 @@ export default function App(){
   const [grupos,setGrupos]=useState(null);
   const [alertas,setAlertas]=useState(null);
   const [transferencias,setTransferencias]=useState([]);
-  const [provExcluidosTransf,setProvExcluidosTransf]=useState(new Set());
   const [conjuntos,setConjuntos]=useState([]);
   const [busq,setBusq]=useState("");
   const [proc,setProc]=useState(false);
@@ -1435,9 +1444,9 @@ export default function App(){
   const transfFiltradas=transferencias.filter(t=>{
     const mb=t.nombre.toLowerCase().includes(busq.toLowerCase())||nCorto(t.prov).toLowerCase().includes(busq.toLowerCase());
     const sf=sucursal==="C"?t.hacia===SUC1:sucursal==="A"?t.hacia===SUC2:sucursal==="M"?t.hacia===SUC3:true;
+    // Excluir si el proveedor ya fue pedido
     const yaPedido=pedidosRealizados[t.prov]?.realizado;
-    const excluido=provExcluidosTransf.has(t.prov);
-    return mb&&sf&&!yaPedido&&!excluido;
+    return mb&&sf&&!yaPedido;
   });
 
   return(
@@ -1722,37 +1731,6 @@ export default function App(){
                     📥 Descargar CSV
                   </button>
                 </div>
-                {/* Exclusión de proveedores */}
-                {(()=>{
-                  const provsEnTransf=[...new Set(transferencias.map(t=>t.prov))].sort();
-                  if(!provsEnTransf.length)return null;
-                  return(
-                    <div style={{background:C.surface,border:"1px solid "+C.border,borderRadius:10,padding:"10px 12px",marginBottom:10}}>
-                      <div style={{fontSize:10,fontWeight:700,color:C.muted,marginBottom:8,textTransform:"uppercase",letterSpacing:1}}>Excluir proveedores de transferencias</div>
-                      <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
-                        {provsEnTransf.map(prov=>{
-                          const excluido=provExcluidosTransf.has(prov);
-                          return(
-                            <button key={prov} onClick={()=>{
-                              setProvExcluidosTransf(prev=>{
-                                const n=new Set(prev);
-                                excluido?n.delete(prov):n.add(prov);
-                                return n;
-                              });
-                            }} style={{background:excluido?"#C0392B":"#E67E2220",color:excluido?"#fff":C.orange,border:"1.5px solid "+(excluido?"#C0392B":"#E67E2250"),borderRadius:8,padding:"4px 10px",fontSize:10,fontWeight:700,cursor:"pointer"}}>
-                              {excluido?"✕ ":""}{nCorto(prov)}
-                            </button>
-                          );
-                        })}
-                      </div>
-                      {provExcluidosTransf.size>0&&(
-                        <button onClick={()=>setProvExcluidosTransf(new Set())} style={{marginTop:8,background:"none",border:"none",color:C.muted,fontSize:10,cursor:"pointer",textDecoration:"underline"}}>
-                          Mostrar todos
-                        </button>
-                      )}
-                    </div>
-                  );
-                })()}
                 {/* Separar por destino */}
                 {[SUC1,SUC2,SUC3].map(dirSuc=>{
                   const items=transfFiltradas.filter(t=>t.hacia===dirSuc);
