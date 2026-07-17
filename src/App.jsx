@@ -715,6 +715,7 @@ function Card({g,num,onCantChange,esAlerta,pedido,onMarcarPedido,numOrden,sucLab
                       <th style={{padding:"7px 8px",color:"#fff",textAlign:"left",fontSize:9}}>Producto</th>
                       <th style={{padding:"7px 5px",color:"#fff",textAlign:"center",fontSize:9}}>Cast.</th>
                       <th style={{padding:"7px 5px",color:"#fff",textAlign:"center",fontSize:9}}>Siria</th>
+                      <th style={{padding:"7px 5px",color:"#fff",textAlign:"center",fontSize:9}}>Mig.</th>
                       <th style={{padding:"7px 5px",color:"#fff",textAlign:"center",fontSize:9}}>Vend.</th>
                       <th style={{padding:"7px 5px",color:"#fff",textAlign:"center",fontSize:9}}>Proy.</th>
                       {g.tieneBulto&&<th style={{padding:"7px 5px",color:"#fff",textAlign:"center",fontSize:9}}>Bulto</th>}
@@ -734,6 +735,7 @@ function Card({g,num,onCantChange,esAlerta,pedido,onMarcarPedido,numOrden,sucLab
                           </td>
                           <td style={{padding:"5px 4px",textAlign:"center",color:p.sRC===0?C.red:C.dark,fontWeight:p.sRC===0?800:400,fontSize:10}}>{p.sRC}</td>
                           <td style={{padding:"5px 4px",textAlign:"center",color:p.sRA===0?C.red:C.dark,fontWeight:p.sRA===0?800:400,fontSize:10}}>{p.sRA}</td>
+                          <td style={{padding:"5px 4px",textAlign:"center",color:p.sRM===0?C.red:C.dark,fontWeight:p.sRM===0?800:400,fontSize:10}}>{p.sRM??"-"}</td>
                           <td style={{padding:"5px 4px",textAlign:"center",color:C.muted,fontSize:10}}>{p.vend}</td>
                           <td style={{padding:"5px 4px",textAlign:"center",color:C.muted,fontSize:10}}>{p.proy}</td>
                           {g.tieneBulto&&<td style={{padding:"5px 4px",textAlign:"center"}}>{p.bulto?<span style={{background:"#C9A25220",color:"#8B6914",borderRadius:6,padding:"2px 5px",fontSize:9,fontWeight:700}}>{"x"+p.bulto}</span>:<span style={{color:C.muted}}>-</span>}</td>}
