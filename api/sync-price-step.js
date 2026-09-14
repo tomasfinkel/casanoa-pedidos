@@ -24,6 +24,10 @@ const LIMIT = 50
 const PAGINAS_MAX_POR_TANDA = 25
 const ESPERA_MS = 1500
 const TIEMPO_MAX_MS = 50000
+// Piso de seguridad: si DUX "corta" la lista con muchos menos productos
+// que esto, asumimos que es un glitch intermitente de su API, no el final
+// real de la lista (el catálogo real ronda los ~7.580 productos).
+const MINIMO_PRODUCTOS_ESPERADOS = 7000
 const BASE_BLOB = 'https://sjczw9fimmonkf7t.public.blob.vercel-storage.com'
 const CLAVE_PROGRESO = 'precio-sync-progreso.json'
 const CLAVE_PRODUCTOS = 'productos.json'
@@ -143,6 +147,35 @@ export default async function handler(req, res) {
     const total = data.paging?.total || 0
     ultimoTotalReportado = total
 
+    paginas++
+
+    // Importante: NO confiamos en data.paging.total para decidir si terminamos —
+    // DUX a veces devuelve total:0 de forma intermitente en el medio de la
+    // paginación, lo que antes hacía cortar el sync mucho antes de tiempo.
+    if (items.length === 0 || items.length < LIMIT) {
+      if (acumulado.length + items.length >= MINIMO_PRODUCTOS_ESPERADOS) {
+        // Esto sí parece el final real: ya juntamos una cantidad razonable,
+        // así que ahora sí sumamos estos últimos productos.
+        items.forEach((p) => {
+          const precioObj = (p.precios || []).find((pr) => pr.id === ID_LISTA)
+          const barcodes = (p.codigos_barra || []).filter((b) => b && b !== '0000' && b.length > 4)
+          acumulado.push({
+            codigo: p.cod_item || '',
+            nombre: p.item || '',
+            precio: precioObj ? parseFloat(precioObj.precio) : 0,
+            barcodes,
+          })
+        })
+        offset = offset + items.length
+        terminado = true
+      }
+      // Si NO llegamos al piso, descartamos esta página entera (no sumamos
+      // nada, no avanzamos el offset) — la próxima llamada reintenta esta
+      // misma página desde cero, sin haber perdido ni duplicado nada.
+      break
+    }
+
+    // Página completa y de tamaño esperado: la sumamos y seguimos.
     items.forEach((p) => {
       const precioObj = (p.precios || []).find((pr) => pr.id === ID_LISTA)
       const barcodes = (p.codigos_barra || []).filter((b) => b && b !== '0000' && b.length > 4)
@@ -153,20 +186,7 @@ export default async function handler(req, res) {
         barcodes,
       })
     })
-
-    paginas++
     const nuevoOffset = offset + items.length
-
-    // Importante: NO confiamos en data.paging.total para decidir si terminamos —
-    // DUX a veces devuelve total:0 de forma intermitente en el medio de la
-    // paginación, lo que antes hacía cortar el sync mucho antes de tiempo.
-    // La única señal confiable es que la página haya venido más corta que
-    // el límite pedido (o vacía), que es como se corta la última página real.
-    if (items.length === 0 || items.length < LIMIT) {
-      offset = nuevoOffset
-      terminado = true
-      break
-    }
     offset = nuevoOffset
     await sleep(ESPERA_MS)
   }
