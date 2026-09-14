@@ -120,7 +120,20 @@ export default async function handler(req, res) {
         await sleep(5000)
         continue
       }
-      data = await r.json()
+      const dataIntento = await r.json()
+      // DUX a veces devuelve una página vacía o más corta de lo pedido en
+      // el medio de la lista (no solo al final de verdad) — parece un
+      // glitch intermitente de su lado. Antes de aceptar eso como "fin
+      // de la lista", reintentamos unas veces con una pausa más larga.
+      const itemsIntento = dataIntento.results || []
+      if (itemsIntento.length < LIMIT) {
+        intentos++
+        if (intentos < 5) {
+          await sleep(3000)
+          continue
+        }
+      }
+      data = dataIntento
       break
     }
 
