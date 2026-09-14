@@ -93,9 +93,13 @@ export default async function handler(req, res) {
   }
 
   const inicio = Date.now()
-  // Si forzamos, arrancamos el progreso desde cero (offset 0), ignorando
-  // cualquier progreso guardado de una corrida anterior del mismo día.
-  const progreso = forzar ? { offset: 0, acumulado: [] } : await leerJSON(URL_PROGRESO, { offset: 0, acumulado: [] })
+  // "force" solo salta el chequeo de arriba (por si ya se guardó, mal, un
+  // productos.json de hoy). El progreso (offset/acumulado) SIEMPRE se
+  // retoma de donde quedó — nunca se reinicia solo, salvo que se pase
+  // reset=true explícitamente (por ejemplo si el progreso guardado quedó
+  // corrupto de alguna corrida vieja y hay que arrancar de cero a propósito).
+  const reiniciar = req.query?.reset === 'true'
+  const progreso = reiniciar ? { offset: 0, acumulado: [] } : await leerJSON(URL_PROGRESO, { offset: 0, acumulado: [] })
   let { offset, acumulado } = progreso
 
   let paginas = 0
