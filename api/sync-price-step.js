@@ -140,7 +140,12 @@ export default async function handler(req, res) {
     paginas++
     const nuevoOffset = offset + items.length
 
-    if (items.length < LIMIT || nuevoOffset >= total) {
+    // Importante: NO confiamos en data.paging.total para decidir si terminamos —
+    // DUX a veces devuelve total:0 de forma intermitente en el medio de la
+    // paginación, lo que antes hacía cortar el sync mucho antes de tiempo.
+    // La única señal confiable es que la página haya venido más corta que
+    // el límite pedido (o vacía), que es como se corta la última página real.
+    if (items.length === 0 || items.length < LIMIT) {
       offset = nuevoOffset
       terminado = true
       break
