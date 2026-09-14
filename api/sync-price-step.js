@@ -10,6 +10,11 @@
 // Se respeta un descanso corto (1.5s) entre llamadas igual, por las dudas,
 // y SÍ se detecta correctamente el error 429 de DUX (el código viejo
 // comparaba la variable equivocada y nunca lo detectaba bien).
+//
+// Agregado: parámetro ?force=true para saltar el chequeo de "ya
+// sincronizado hoy" y el progreso guardado — útil cuando una corrida
+// anterior terminó mal (por ejemplo, con muchos menos productos de los
+// esperados) y hay que forzar que vuelva a correr desde cero el mismo día.
 
 import { put, head } from '@vercel/blob'
 
@@ -80,13 +85,17 @@ export default async function handler(req, res) {
   const token = process.env.DUX_TOKEN
   if (!token) return res.status(500).json({ error: 'Token DUX no configurado' })
 
+  const forzar = req.query?.force === 'true'
+
   const actual = await leerJSON(URL_PRODUCTOS, null)
-  if (actual?.fechaArgentina === hoyArgentina()) {
+  if (!forzar && actual?.fechaArgentina === hoyArgentina()) {
     return res.status(200).json({ ok: true, yaSincronizadoHoy: true })
   }
 
   const inicio = Date.now()
-  const progreso = await leerJSON(URL_PROGRESO, { offset: 0, acumulado: [] })
+  // Si forzamos, arrancamos el progreso desde cero (offset 0), ignorando
+  // cualquier progreso guardado de una corrida anterior del mismo día.
+  const progreso = forzar ? { offset: 0, acumulado: [] } : await leerJSON(URL_PROGRESO, { offset: 0, acumulado: [] })
   let { offset, acumulado } = progreso
 
   let paginas = 0
