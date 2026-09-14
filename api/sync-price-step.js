@@ -100,6 +100,7 @@ export default async function handler(req, res) {
 
   let paginas = 0
   let terminado = false
+  let ultimoTotalReportado = null
 
   while (paginas < PAGINAS_MAX_POR_TANDA && Date.now() - inicio < TIEMPO_MAX_MS) {
     let data = null
@@ -123,6 +124,7 @@ export default async function handler(req, res) {
 
     const items = data.results || []
     const total = data.paging?.total || 0
+    ultimoTotalReportado = total
 
     items.forEach((p) => {
       const precioObj = (p.precios || []).find((pr) => pr.id === ID_LISTA)
@@ -150,7 +152,7 @@ export default async function handler(req, res) {
   if (terminado) {
     await guardarProductosFinal(acumulado)
     await guardarProgreso({ offset: 0, acumulado: [] })
-    return res.status(200).json({ ok: true, terminado: true, productos: acumulado.length })
+    return res.status(200).json({ ok: true, terminado: true, productos: acumulado.length, duxTotalReportado: ultimoTotalReportado })
   }
 
   await guardarProgreso({ offset, acumulado })
@@ -159,5 +161,6 @@ export default async function handler(req, res) {
     terminado: false,
     offset,
     productosHastaAhora: acumulado.length,
+    duxTotalReportado: ultimoTotalReportado,
   })
 }
